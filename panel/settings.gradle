@@ -1,0 +1,10 @@
+pluginManagement {
+	repositories {
+		gradlePluginPortal()
+		mavenCentral()
+	}
+}
+
+// The panel is the only Gradle project in this repository. sasayaki is built by its
+// own Makefile, and proto/ is an input to both rather than a module of either.
+rootProject.name = 'wisper'

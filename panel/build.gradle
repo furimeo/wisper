@@ -1,0 +1,199 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+	// Generates the Java and gRPC stubs from ../proto. The plugin downloads protoc
+	// from Maven Central, so there is no protoc to install on a developer machine.
+	id 'com.google.protobuf' version '0.10.0'
+}
+
+group = 'lhqm.furimeo'
+version = '0.1.0-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+/*
+ * protoc and the gRPC codegen plugin are separate downloads from the runtime
+ * libraries, and their versions have to line up with what Spring Boot's BOM pins -
+ * a protoc newer than protobuf-java emits code the runtime cannot load, and the
+ * error it produces names neither version. Reading the managed versions instead of
+ * writing two more literals means the pair cannot drift.
+ */
+def managedVersion = { String coordinate ->
+	String resolved = dependencyManagement.managedVersions[coordinate]
+	if (resolved == null) {
+		throw new GradleException(
+				"Spring Boot's BOM no longer manages ${coordinate}. Pin protoc and " +
+				"protoc-gen-grpc-java explicitly in build.gradle and keep them in step " +
+				"with the grpc/protobuf jars on the compile classpath.")
+	}
+	return resolved
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	runtimeOnly 'org.postgresql:postgresql'
+
+	// Jobs live in the same PostgreSQL as the data they act on, so enqueueing a job
+	// and writing the row it works on commit or roll back together. That is the whole
+	// reason there is no Redis in this stack.
+	implementation 'com.github.kagkarlsson:db-scheduler-spring-boot-4-starter:16.12.0'
+
+	// The panel is the gRPC *server*; nodes dial in. netty-shaded keeps Netty's
+	// version independent of the one Spring Boot uses for anything else.
+	implementation 'io.grpc:grpc-netty-shaded'
+	implementation 'io.grpc:grpc-protobuf'
+	implementation 'io.grpc:grpc-stub'
+	implementation 'com.google.protobuf:protobuf-java'
+
+	/*
+	 * grpc-java's generated service base classes carry @javax.annotation.Generated,
+	 * which the JDK dropped in 11. Compile-only: the annotation has CLASS retention,
+	 * so nothing needs it at runtime.
+	 */
+	compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
+	testCompileOnly 'javax.annotation:javax.annotation-api:1.3.2'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-jdbc-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+	testImplementation 'io.grpc:grpc-inprocess'
+	testImplementation 'io.grpc:grpc-testing'
+	// The driver is runtimeOnly for the application, which never names a Driver class.
+	// The integration tests do: they build a SimpleDriverDataSource against the local
+	// PostgreSQL 17 rather than a container, so they need it at compile time as well.
+	testImplementation 'org.postgresql:postgresql'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+/*
+ * The .proto files are the single contract between the panel and sasayaki. They live
+ * outside this project on purpose: Go generates from the same directory with buf, so
+ * a field renamed on one side fails to compile on the other instead of turning into a
+ * runtime surprise at two in the morning.
+ */
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:${managedVersion('com.google.protobuf:protobuf-java')}"
+	}
+	plugins {
+		grpc {
+			artifact = "io.grpc:protoc-gen-grpc-java:${managedVersion('io.grpc:grpc-core')}"
+		}
+	}
+	generateProtoTasks {
+		all().configureEach { task ->
+			task.plugins {
+				grpc {}
+			}
+		}
+	}
+}
+
+sourceSets {
+	main {
+		proto {
+			srcDir '../proto'
+		}
+	}
+}
+
+/*
+ * Builds the React client and packages it into the jar.
+ *
+ * Vite writes to build/frontend; this copies that into the jar's static resources
+ * under app/, which WebMvcConfig serves at /assets/app/. Nothing generated is ever
+ * written under src/, so a clean checkout has no build output in it.
+ *
+ * Node is required to build, and only to build. The jar that comes out is a single
+ * self-contained file with the compiled bundle inside it - deploying wisper is still
+ * copying one jar and running it.
+ */
+def npmCommand = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'npm.cmd' : 'npm'
+
+/*
+ * The dev server writes build/frontend-dev/hot while it is alive. When it is, the
+ * Spring side proxies to it and never reads the packaged bundle, so building that
+ * bundle would be a minute of work whose output nothing looks at - and `npm ci` would
+ * delete node_modules out from under the running server. Skipping all three tasks is
+ * what makes `./gradlew bootRun` a fast, Java-only restart during frontend work.
+ */
+def viteIsHot = { -> layout.buildDirectory.file('frontend-dev/hot').get().asFile.exists() }
+
+tasks.register('npmInstall', Exec) {
+	description = 'Installs frontend dependencies.'
+	workingDir = file('frontend')
+	// The lock file is the real input; `npm ci` reads it, and reinstalling on every
+	// unrelated build is minutes of nothing.
+	inputs.file('frontend/package.json')
+	inputs.file('frontend/package-lock.json')
+	/*
+	 * A stamp, not node_modules itself. Vite writes its dependency cache into
+	 * node_modules/.vite, so declaring that directory as an output makes Gradle see it
+	 * change every time the client runs - and re-run `npm ci`, which wipes node_modules
+	 * while the dev server has files open in it. On Windows that fails outright with an
+	 * access violation.
+	 */
+	def stamp = layout.buildDirectory.file('npm-install.stamp')
+	outputs.file(stamp)
+	// The stamp is not proof on its own: node_modules can be deleted by hand.
+	outputs.upToDateWhen { file('frontend/node_modules').isDirectory() }
+	onlyIf { !viteIsHot() }
+	commandLine npmCommand, 'ci', '--no-audit', '--no-fund'
+	doLast {
+		def stampFile = stamp.get().asFile
+		stampFile.parentFile.mkdirs()
+		stampFile.text = "installed from package-lock.json at ${new Date()}\n"
+	}
+}
+
+tasks.register('npmBuild', Exec) {
+	description = 'Type-checks and compiles the React client with Vite.'
+	dependsOn 'npmInstall'
+	workingDir = file('frontend')
+	inputs.dir('frontend/src')
+	inputs.file('frontend/index.html')
+	inputs.file('frontend/package.json')
+	inputs.file('frontend/vite.config.ts')
+	inputs.file('frontend/tsconfig.json')
+	outputs.dir(layout.buildDirectory.dir('frontend'))
+	onlyIf { !viteIsHot() }
+	commandLine npmCommand, 'run', 'build'
+}
+
+tasks.register('frontend', Copy) {
+	description = 'Packages the compiled client into the jar resources.'
+	dependsOn 'npmBuild'
+	from layout.buildDirectory.dir('frontend')
+	into layout.buildDirectory.dir('resources/main/static/app')
+	onlyIf { !viteIsHot() }
+}
+
+// The client is part of the application, so it is built for anything that packages or
+// runs one - and for tests, which read the manifest to answer Inertia's version check.
+tasks.named('frontend') { mustRunAfter 'processResources' }
+tasks.named('classes') { dependsOn 'frontend' }
+
+tasks.named('test') {
+	useJUnitPlatform()
+	// src/test/resources/application-test.yml overlays the real configuration and
+	// points the tests at the wisper_test database. See docs/contracts/panel-configuration.md.
+	systemProperty 'spring.profiles.active', 'test'
+	testLogging {
+		events 'failed'
+		exceptionFormat = 'full'
+	}
+}

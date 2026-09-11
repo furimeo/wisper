@@ -1,0 +1,5 @@
+# Boot loads database-initializer detectors with SpringFactoriesLoader, not from the
+# bean factory - a @Component annotation on the class would have no effect. This is what
+# makes @DependsOnDatabaseInitialization wait for the migration runner.
+org.springframework.boot.sql.init.dependency.DatabaseInitializerDetector=\
+lhqm.furimeo.wisper.migration.SchemaMigrationsDetector

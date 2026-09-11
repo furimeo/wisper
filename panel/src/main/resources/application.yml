@@ -1,0 +1,141 @@
+spring:
+  application:
+    name: wisper
+
+  # Blocking code on virtual threads reads like blocking code. This is the reason the
+  # panel is Spring MVC and not WebFlux (AGENTS.md §1).
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wisper
+    username: ${WISPER_DB_USER:wisper}
+    password: ${WISPER_DB_PASSWORD:wisper}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: wisper-pool
+      # Sized for db-scheduler's worker threads plus request handling. Virtual threads
+      # make it cheap to have many in flight, but PostgreSQL connections are not free.
+      maximum-pool-size: 16
+      minimum-idle: 2
+      connection-timeout: 10s
+
+  sql:
+    init:
+      # lhqm.furimeo.wisper.migration owns the schema. This must stay `never`, but the
+      # key must stay present: leaving spring.sql.init enabled is what registers the
+      # dependency configurer that orders db-scheduler after the migration runner.
+      mode: never
+
+  data:
+    jdbc:
+      dialect: postgresql
+
+  web:
+    error:
+      whitelabel:
+        # Spring registers the whitelabel page as a View bean named, literally, "error",
+        # and BeanNameViewResolver runs ahead of the Inertia resolver - so leaving it on
+        # means it wins the view name our own error page uses. The key moved here in
+        # Boot 4; the old server.error.whitelabel path is silently ignored.
+        enabled: false
+
+  servlet:
+    multipart:
+      enabled: true
+      # The file manager uploads in resumable chunks (design §8.2), so a single part is
+      # small. The ceiling is here for the deploy-a-zip path, which is one large part.
+      max-file-size: 512MB
+      max-request-size: 512MB
+      file-size-threshold: 1MB
+
+  # RFC 7807 problem details are deliberately off. They would turn a framework-raised
+  # 404 into a JSON body, and a person who mistyped a URL would be shown raw JSON
+  # instead of the error page. Endpoints under /api/v1 that want that shape build it
+  # themselves, where the caller is a program.
+
+server:
+  port: 8080
+  # The panel has no public IP; it is reached through a tunnel. Without this, every
+  # generated URL and every logged client address is the tunnel's, not the visitor's.
+  forward-headers-strategy: framework
+  compression:
+    enabled: true
+    mime-types: text/html,text/css,text/plain,application/javascript,application/json,image/svg+xml
+    min-response-size: 2KB
+  servlet:
+    session:
+      timeout: 7d
+      cookie:
+        name: WISPERSESSION
+        http-only: true
+        same-site: lax
+
+# Jobs run on the same PostgreSQL as the data, in the same transactions.
+db-scheduler:
+  enabled: true
+  threads: 8
+  table-name: scheduled_tasks
+  polling-interval: 5s
+  # SELECT ... FOR UPDATE SKIP LOCKED. The reason the queue is PostgreSQL and not Redis.
+  polling-strategy: lock-and-fetch
+  polling-strategy-lower-limit-fraction-of-threads: 0.5
+  polling-strategy-upper-limit-fraction-of-threads: 3.0
+  heartbeat-interval: 2m
+  missed-heartbeats-limit: 6
+  immediate-execution-enabled: true
+  # Starts the scheduler on ContextRefreshedEvent rather than during bean creation, so
+  # the migration runner has finished before the first poll touches scheduled_tasks.
+  delay-startup-until-context-ready: true
+  shutdown-max-wait: 30s
+  always-persist-timestamp-in-utc: true
+  # Requires the `priority` column; see docs/contracts/panel-configuration.md.
+  priority-enabled: true
+  failure-logger-level: WARN
+
+wisper:
+  grpc:
+    # sasayaki dials in here. Separate port from HTTP: the tunnel exposes 8080 to
+    # people and 9090 to nodes, and the two have completely different auth.
+    port: 9090
+    # The control stream lives inside a tunnel, so a dead peer has to be detected by
+    # the application rather than by TCP. Nodes ping every 20s; the server has to
+    # permit that or it will send GOAWAY with ENHANCE_YOUR_CALM.
+    keep-alive-time: 20s
+    keep-alive-timeout: 10s
+    permit-keep-alive-time: 10s
+    permit-keep-alive-without-calls: true
+    max-inbound-message-size: 16MB
+
+  node:
+    # No heartbeat inside this window and the node is shown as lost. Its workloads keep
+    # running - the panel being blind is not a reason to touch a customer's container.
+    heartbeat-timeout: 60s
+    # Single-use bootstrap token (design §7.1). Short on purpose.
+    enrollment-token-ttl: 15m
+    # The cadence sasayaki is told to reconcile at, event or no event (design §5.1).
+    reconcile-interval: 15s
+    # Refuse to place new workloads on a node past these marks, so a full node degrades
+    # instead of dying (design §7.6).
+    cpu-headroom-percent: 15
+    memory-headroom-percent: 15
+    disk-headroom-percent: 20
+
+  storage:
+    # Panel-side working area: uploaded deploy archives, build log overflow, backup
+    # manifests. Customer data lives on the nodes, never here.
+    root: ./var
+
+  files:
+    # Part of the wire contract with the browser (design §8.2): a 4G connection that
+    # drops mid-upload resumes at the last acknowledged chunk.
+    upload-chunk-size: 8MB
+    orphan-chunk-ttl: 24h
+
+logging:
+  level:
+    root: INFO
+    lhqm.furimeo.wisper: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
