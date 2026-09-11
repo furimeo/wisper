@@ -19,7 +19,9 @@ spring:
       # make it cheap to have many in flight, but PostgreSQL connections are not free.
       maximum-pool-size: 16
       minimum-idle: 2
-      connection-timeout: 10s
+      # Milliseconds. HikariCP exposes a plain long here rather than a Duration, so a
+      # Spring-style "10s" fails to bind and the application does not start at all.
+      connection-timeout: 10000
 
   sql:
     init:
@@ -121,6 +123,20 @@ wisper:
     cpu-headroom-percent: 15
     memory-headroom-percent: 15
     disk-headroom-percent: 20
+
+  crypto:
+    # Every reversibly encrypted column is AES-256-GCM under one of these keys, and the
+    # version that wrote a value travels in the value (see SecretEnvelope). Rotating means
+    # adding key 2 and moving current-key-version to it; key 1 stays listed until the last
+    # row written under it has been rewritten, because dropping it does not lose the
+    # ciphertext, it loses the plaintext.
+    #
+    # There is no default and none is generated at boot: a key invented on startup would
+    # encrypt a customer's database password and be unable to read it back after a restart.
+    #   openssl rand -base64 32
+    current-key-version: 1
+    keys:
+      1: ${WISPER_CRYPTO_KEY_1:}
 
   storage:
     # Panel-side working area: uploaded deploy archives, build log overflow, backup
