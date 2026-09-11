@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lhqm.furimeo.wisper.proto.v1.NodeHealth;
 import lhqm.furimeo.wisper.proto.v1.StatusBatch;
+import lhqm.furimeo.wisper.sql.SqlTimestamp;
 
 /**
  * Writes the node-level half of a {@code StatusBatch}: the generation it converged to, its
@@ -85,12 +86,12 @@ public class RecordStatusReport {
                 .param("nodeId", nodeId)
                 .param("state", stateOf(batch).name())
                 .param("appliedGeneration", batch.getAppliedGeneration())
-                .param("observedAt", observedAt)
+                .param("observedAt", SqlTimestamp.at(observedAt))
                 .param("healthDetail", batch.getHealthDetail().isBlank()
                         ? null : batch.getHealthDetail())
                 .param("workloadCount", batch.getWorkloadsCount())
                 .param("partial", batch.getPartial())
-                .param("at", receivedAt)
+                .param("at", SqlTimestamp.at(receivedAt))
                 .update();
 
         if (batch.getPartial()) {

@@ -16,6 +16,7 @@ import lhqm.furimeo.wisper.proto.v1.ApplySpec;
 import lhqm.furimeo.wisper.proto.v1.NodeSpec;
 import lhqm.furimeo.wisper.proto.v1.PanelMessage;
 import lhqm.furimeo.wisper.proto.v1.SpecApplied;
+import lhqm.furimeo.wisper.sql.SqlTimestamp;
 import lhqm.furimeo.wisper.web.NotFoundException;
 
 /**
@@ -147,7 +148,7 @@ public class PublishNodeSpec {
                 // whatever is already there under GREATEST, which is exactly the intent.
                 .param("generation", applied.getAccepted()
                         ? applied.getGeneration() : NodeStatus.NEVER_REPORTED)
-                .param("at", at)
+                .param("at", SqlTimestamp.at(at))
                 .param("error", applied.getAccepted() ? null : applied.getRejectedReason())
                 .update();
     }

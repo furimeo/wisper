@@ -14,6 +14,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import lhqm.furimeo.wisper.proto.v1.DoctorReport;
 import lhqm.furimeo.wisper.proto.v1.MachineFacts;
+import lhqm.furimeo.wisper.sql.SqlTimestamp;
 
 /**
  * Writes what the machine says it is: cores, memory, disk, kernel, Docker, {@code runsc},
@@ -113,8 +114,8 @@ public class RecordMachineFacts {
                 .param("quotaEnforceable", facts.getProjectQuotaSupported()
                         && "xfs".equalsIgnoreCase(facts.getStateFilesystem()))
                 .param("doctorReport", document)
-                .param("doctorReportedAt", document == null ? null : at)
-                .param("at", at)
+                .param("doctorReportedAt", document == null ? null : SqlTimestamp.at(at))
+                .param("at", SqlTimestamp.at(at))
                 .update();
 
         if (!facts.getRunscAvailable()) {

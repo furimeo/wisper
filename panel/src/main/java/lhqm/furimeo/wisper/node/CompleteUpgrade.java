@@ -14,6 +14,7 @@ import lhqm.furimeo.wisper.audit.AuditEntry;
 import lhqm.furimeo.wisper.audit.AuditTarget;
 import lhqm.furimeo.wisper.audit.AuditTrail;
 import lhqm.furimeo.wisper.proto.v1.UpgradeResult;
+import lhqm.furimeo.wisper.sql.SqlTimestamp;
 
 /**
  * Records how a node's self-upgrade ended.
@@ -68,7 +69,7 @@ public class CompleteUpgrade {
             jdbc.sql(SQL)
                     .param("nodeId", nodeId)
                     .param("agentVersion", running)
-                    .param("at", Instant.now())
+                    .param("at", SqlTimestamp.at(Instant.now()))
                     .update();
         }
 

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import lhqm.furimeo.wisper.proto.v1.NodeHello;
+import lhqm.furimeo.wisper.sql.SqlTimestamp;
 import lhqm.furimeo.wisper.web.NotFoundException;
 
 /**
@@ -116,7 +117,7 @@ public class RecordHandshake {
 
         jdbc.sql(CONNECTED_SQL)
                 .param("nodeId", nodeId)
-                .param("at", now)
+                .param("at", SqlTimestamp.at(now))
                 .param("remoteAddress", remoteAddress)
                 .param("agentVersion", hello.getAgentVersion())
                 .param("protocolVersion", hello.getProtocolVersion())
@@ -162,7 +163,7 @@ public class RecordHandshake {
                 .param("agentVersion", hello.getAgentVersion())
                 .param("protocolVersion", hello.getProtocolVersion())
                 .param("remoteAddress", remoteAddress)
-                .param("at", at)
+                .param("at", SqlTimestamp.at(at))
                 .update();
     }
 

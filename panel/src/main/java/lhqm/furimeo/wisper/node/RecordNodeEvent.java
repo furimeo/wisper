@@ -15,6 +15,7 @@ import lhqm.furimeo.wisper.audit.AuditTarget;
 import lhqm.furimeo.wisper.audit.AuditTrail;
 import lhqm.furimeo.wisper.proto.v1.EventSeverity;
 import lhqm.furimeo.wisper.proto.v1.NodeEvent;
+import lhqm.furimeo.wisper.sql.SqlTimestamp;
 
 /**
  * Handles the things a node reports that nobody asked about.
@@ -89,7 +90,7 @@ public class RecordNodeEvent {
                 .param("nodeId", nodeId)
                 .param("healthy", healthy)
                 .param("detail", detail == null || detail.isBlank() ? null : detail)
-                .param("at", at)
+                .param("at", SqlTimestamp.at(at))
                 .update();
     }
 

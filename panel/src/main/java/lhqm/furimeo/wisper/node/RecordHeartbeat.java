@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lhqm.furimeo.wisper.proto.v1.Capacity;
 import lhqm.furimeo.wisper.proto.v1.Heartbeat;
 import lhqm.furimeo.wisper.proto.v1.NodeHealth;
+import lhqm.furimeo.wisper.sql.SqlTimestamp;
 
 /**
  * Writes what arrives on the control stream every twenty seconds: liveness, drift and
@@ -103,7 +104,7 @@ public class RecordHeartbeat {
         jdbc.sql(SQL)
                 .param("nodeId", nodeId)
                 .param("state", stateOf(heartbeat).name())
-                .param("at", receivedAt)
+                .param("at", SqlTimestamp.at(receivedAt))
                 .param("appliedGeneration", heartbeat.getAppliedGeneration())
                 .param("healthDetail", heartbeat.getHealthDetail().isBlank()
                         ? null : heartbeat.getHealthDetail())

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lhqm.furimeo.wisper.node.NodeSettings;
 import lhqm.furimeo.wisper.node.PublishNodeSpec;
+import lhqm.furimeo.wisper.sql.SqlTimestamp;
 
 /**
  * Closes the second half of a move: lets go of the machine a service has left.
@@ -86,7 +87,7 @@ public class FinishDrainedPlacements {
     public int sweep() {
         Instant now = Instant.now();
         List<Finished> finished = jdbc.sql(SQL)
-                .param("staleBefore", now.minus(nodeSettings.heartbeatTimeout()))
+                .param("staleBefore", SqlTimestamp.at(now.minus(nodeSettings.heartbeatTimeout())))
                 .query(FinishDrainedPlacements::map)
                 .list();
         if (finished.isEmpty()) {

@@ -1,5 +1,6 @@
 package lhqm.furimeo.wisper.node;
 
+import lhqm.furimeo.wisper.sql.SqlTimestamp;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -53,7 +54,7 @@ public class RecordDisconnect {
     public void accept(UUID nodeId, String reason) {
         int updated = jdbc.sql(SQL)
                 .param("nodeId", nodeId)
-                .param("at", Instant.now())
+                .param("at", SqlTimestamp.at(Instant.now()))
                 .update();
         if (updated > 0) {
             log.info("Node {} disconnected: {}. Its workloads are unaffected.", nodeId, reason);
