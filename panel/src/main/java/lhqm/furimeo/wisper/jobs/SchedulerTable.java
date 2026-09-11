@@ -1,5 +1,6 @@
 package lhqm.furimeo.wisper.jobs;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.kagkarlsson.scheduler.boot.config.DbSchedulerProperties;
@@ -27,6 +28,7 @@ public class SchedulerTable {
 
     private final String name;
 
+    @Autowired
     public SchedulerTable(DbSchedulerProperties properties) {
         this(properties.getTableName());
     }

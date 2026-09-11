@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
@@ -65,6 +66,7 @@ public class PruneStatHistory {
     private final StatsSettings settings;
     private final Clock clock;
 
+    @Autowired
     public PruneStatHistory(JdbcClient jdbc, CounterDeltas deltas, StatsSettings settings) {
         this(jdbc, deltas, settings, Clock.systemUTC());
     }

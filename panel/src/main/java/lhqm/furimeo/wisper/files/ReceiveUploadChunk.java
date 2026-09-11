@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Locale;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.protobuf.ByteString;
@@ -49,6 +50,7 @@ public class ReceiveUploadChunk {
     private final UploadSessions sessions;
     private final Clock clock;
 
+    @Autowired
     public ReceiveUploadChunk(DispatchFileRequest dispatch, UploadSessions sessions) {
         this(dispatch, sessions, Clock.systemUTC());
     }

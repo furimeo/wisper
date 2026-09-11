@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.protobuf.Timestamp;
@@ -56,6 +57,7 @@ public class IngestStatSample {
     private final StatsSettings settings;
     private final Clock clock;
 
+    @Autowired
     public IngestStatSample(StoreSampleReading store, CounterDeltas deltas, LiveMetricFeed feed,
                             StatsSettings settings) {
         this(store, deltas, feed, settings, Clock.systemUTC());

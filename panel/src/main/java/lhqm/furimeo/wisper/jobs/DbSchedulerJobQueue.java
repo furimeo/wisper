@@ -6,6 +6,7 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -51,6 +52,7 @@ public class DbSchedulerJobQueue implements JobQueue {
     private final ObjectProvider<SchedulerClient> client;
     private final Clock clock;
 
+    @Autowired
     public DbSchedulerJobQueue(ObjectProvider<SchedulerClient> client) {
         this(client, Clock.systemUTC());
     }

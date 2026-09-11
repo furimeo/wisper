@@ -3,6 +3,7 @@ package lhqm.furimeo.wisper.files;
 import java.time.Clock;
 import java.time.Instant;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import lhqm.furimeo.wisper.proto.v1.FileRequest;
@@ -34,6 +35,7 @@ public class BeginUpload {
     private final FilesSettings settings;
     private final Clock clock;
 
+    @Autowired
     public BeginUpload(DispatchFileRequest dispatch, UploadSessions sessions,
                        FilesSettings settings) {
         this(dispatch, sessions, settings, Clock.systemUTC());

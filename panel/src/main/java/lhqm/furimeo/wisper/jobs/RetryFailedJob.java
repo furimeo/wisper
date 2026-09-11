@@ -3,6 +3,7 @@ package lhqm.furimeo.wisper.jobs;
 import java.time.Clock;
 import java.time.Instant;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +42,7 @@ public class RetryFailedJob {
     private final AuditTrail audit;
     private final Clock clock;
 
+    @Autowired
     public RetryFailedJob(SchedulerClient scheduler, ListFailedJobs jobs, AuditTrail audit) {
         this(scheduler, jobs, audit, Clock.systemUTC());
     }

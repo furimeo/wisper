@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -129,6 +130,7 @@ public class RollUpSamples {
     private final StatsSettings settings;
     private final Clock clock;
 
+    @Autowired
     public RollUpSamples(JdbcClient jdbc, StatsSettings settings) {
         this(jdbc, settings, Clock.systemUTC());
     }

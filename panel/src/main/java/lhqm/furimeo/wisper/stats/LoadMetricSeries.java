@@ -10,6 +10,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,6 +70,7 @@ public class LoadMetricSeries {
     private final StatsSettings settings;
     private final Clock clock;
 
+    @Autowired
     public LoadMetricSeries(JdbcClient jdbc, StatsSettings settings) {
         this(jdbc, settings, Clock.systemUTC());
     }

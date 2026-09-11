@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.protobuf.ByteString;
@@ -43,6 +44,7 @@ public class SaveFileContent {
     private final FilesSettings settings;
     private final Clock clock;
 
+    @Autowired
     public SaveFileContent(DispatchFileRequest dispatch, StatFile stat, AuditTrail audit,
                            FilesSettings settings) {
         this(dispatch, stat, audit, settings, Clock.systemUTC());
