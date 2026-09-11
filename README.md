@@ -1,7 +1,7 @@
 # wisper
 
 Self-hosted web hosting. Customers get an isolated slot they can run anything in, and a
-panel they can do everything from — including a real terminal and a real file editor.
+panel they can do everything from - including a real terminal and a real file editor.
 
 Two programs:
 
@@ -10,12 +10,12 @@ Two programs:
 | Panel | **wisper** | Java 21, Spring Boot MVC, PostgreSQL. One executable jar with the React client inside it. |
 | Node daemon | **sasayaki** | Go. One static binary with Caddy linked in. One per machine. |
 
-They talk over gRPC, and **the node always dials the panel** — so a node needs no inbound
-port, no public hostname and no certificate of its own, and the panel can sit behind a
-tunnel with no public address at all.
+They talk over gRPC, and **the node always dials the panel** - so a node needs no inbound
+port, no public hostname and no certificate of its own. The panel can sit on a public
+address or behind a tunnel with no public address at all; nodes reach it either way.
 
 ```
-   customers ──HTTPS──▶ wisper (one jar, behind a tunnel)
+   customers ──HTTPS──▶ wisper (one jar; public address or tunnel)
                               │ gRPC, node dials out
               ┌───────────────┼───────────────┐
               ▼               ▼               ▼
@@ -30,17 +30,17 @@ platform, not the ability to serve it.
 
 ## What a customer gets
 
-- **Apps** — any container: Node, Python, Go, a bot, a worker, a cron job. Deployed from a
+- **Apps** - any container: Node, Python, Go, a bot, a worker, a cron job. Deployed from a
   Git push, an uploaded archive or an image reference.
-- **Static sites** — built in a throwaway container, published by swapping a symlink, so a
+- **Static sites** - built in a throwaway container, published by swapping a symlink, so a
   deploy is atomic, a rollback is instant, and an idle site costs nothing.
-- **Managed databases** — PostgreSQL or MySQL, one shared engine per node, one database and
+- **Managed databases** - PostgreSQL or MySQL, one shared engine per node, one database and
   one least-privilege user per customer.
 - **A terminal and a file manager in the browser.** There is no SSH and no SFTP by design:
-  most customers here work from a phone, and the panel is behind a tunnel. So the web has
-  to carry that weight, and uploads resume after a dropped connection because a 4G
-  connection is the normal case, not the edge case.
-- **Backups** — scheduled snapshots of volumes and databases to S3-compatible storage, and
+  the panel may be behind a tunnel that carries no raw TCP, and plenty of customers work
+  from a phone. So the web has to carry that weight, and uploads resume after a dropped
+  connection because a 4G connection is the normal case, not the edge case.
+- **Backups** - scheduled snapshots of volumes and databases to S3-compatible storage, and
   restore behind one button.
 
 Customers rent a **slot**, not a machine: a plan caps the CPU, memory, disk and counts an
@@ -60,7 +60,7 @@ explaining exactly what is weaker and what it means.
 
 ## Running the panel
 
-Needs a JVM 21 and PostgreSQL 17. Nothing else — no nginx, no PHP, no Redis, no Node at
+Needs a JVM 21 and PostgreSQL 17. Nothing else - no nginx, no PHP, no Redis, no Node at
 runtime.
 
 ```bash
@@ -97,7 +97,7 @@ sudo ./install.sh --token-file token.txt
 
 The installer runs `sasayaki doctor` before it writes anything, and refuses to install onto
 a machine that cannot host workloads. Run `sasayaki doctor` yourself first if you want to
-see what it checks — it changes nothing.
+see what it checks - it changes nothing.
 
 Tokens are never passed on the command line. `argv` is readable by every user on the
 machine through `ps`.
@@ -118,14 +118,14 @@ Early. It runs: a node enrols, the reconcile loop converges, containers come up 
 cgroup limits, the edge serves them, and the panel drives all of it. It has not been run in
 anger.
 
-Not verified anywhere but a real Linux node — see `docs/verify-on-linux.md`: gVisor under a
+Not verified anywhere but a real Linux node - see `docs/verify-on-linux.md`: gVisor under a
 production kernel, XFS project quota, and certificates from a real ACME server.
 
 Deliberately not built: Kubernetes, DNS automation, billing, multi-region, SSH/SFTP.
 
 ## Documentation
 
-`docs/contracts/` holds the binding documents — the seams between panel and node, the HTTP
+`docs/contracts/` holds the binding documents - the seams between panel and node, the HTTP
 and view conventions, the database invariants, the translation rules. They were written
 before the code and the code is held to them.
 

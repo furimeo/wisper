@@ -183,7 +183,7 @@ export function SnapshotList({
             header: 'Expires',
             align: 'right',
             cell: (snapshot) => (
-              <RelativeTime at={snapshot.expiresAt} fallback="—" className="text-xs" />
+              <RelativeTime at={snapshot.expiresAt} fallback="-" className="text-xs" />
             ),
           },
           {

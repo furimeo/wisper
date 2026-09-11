@@ -31,7 +31,7 @@ export interface RelativeTimeProps {
   className?: string
 }
 
-export function RelativeTime({at, fallback = '—', className}: RelativeTimeProps) {
+export function RelativeTime({at, fallback = '-', className}: RelativeTimeProps) {
   const [, tick] = useState(0)
   const parsed = at ? Date.parse(at) : Number.NaN
   const valid = Number.isFinite(parsed)

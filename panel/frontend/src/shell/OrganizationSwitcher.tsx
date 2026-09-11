@@ -129,7 +129,7 @@ export function OrganizationSwitcher({className}: {className?: string}) {
 /** Two letters for the square, so the switcher is recognisable before it is read. */
 function initials(organization: OrganizationSummary | null): string {
   if (!organization) {
-    return '—'
+    return '-'
   }
   const words = organization.name.split(/\s+/).filter((word) => word.length > 0)
   const first = words[0]?.charAt(0) ?? organization.name.charAt(0)

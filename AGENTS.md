@@ -1,4 +1,4 @@
-# wisper — engineering doctrine
+# wisper - engineering doctrine
 
 Read this before you touch anything. It is short on purpose, and every rule in it
 exists because its absence cost this project's predecessor a rewrite.
@@ -12,7 +12,7 @@ Where this file and a contract disagree, the contract wins.
 
 ---
 
-## 1. Stack (locked — do not substitute)
+## 1. Stack (locked - do not substitute)
 
 | Area | Choice | Why it is not negotiable |
 |---|---|---|
@@ -127,7 +127,7 @@ controller lives beside the record and the repository it serves.
 
 ### 3.4 Banned names
 
-Folders — anywhere, in either language:
+Folders - anywhere, in either language:
 
 ```
 util/  utils/  common/  shared/  helpers/  misc/  core/  base/
@@ -142,7 +142,7 @@ inside the feature folder that uses them.
 
 ### 3.5 Split at the real boundary
 
-- `proto/wisper/v1/` splits by domain — `node.proto`, `workload.proto`,
+- `proto/wisper/v1/` splits by domain - `node.proto`, `workload.proto`,
   `terminal.proto`, `files.proto`, `stats.proto`, `backup.proto`. There is no single
   giant `wisper.proto`.
 - Migrations: one file per change, `V{n}__<the specific change>.sql`. Do not pack
@@ -161,7 +161,7 @@ inside the feature folder that uses them.
    directions. `desired_state` comes from the panel; `applied_generation`, health and
    statistics come from the node.
 3. **The node dials out.** The panel has no route to a node. Every stream starts at the
-   node. A dropped connection is normal, not an incident — reconnect with jittered
+   node. A dropped connection is normal, not an incident - reconnect with jittered
    backoff, forever, and resend the **full** spec on reconnect, never a delta.
 4. **Crash-only on the node.** No cleanup on exit. The truth is on disk. Being killed is
    the same as shutting down.
@@ -186,7 +186,7 @@ inside the feature folder that uses them.
   to a workload.**
 - Egress to private ranges and cloud metadata endpoints is blocked by default.
 - Node enrollment tokens are single-use with a 15-minute TTL, are accepted only via
-  `--token-file` or stdin (never argv — argv is world-readable in `ps`), and the panel's
+  `--token-file` or stdin (never argv - argv is world-readable in `ps`), and the panel's
   certificate is pinned on first use.
 - Every state-changing action writes an audit record with actor, IP and node.
 
@@ -195,7 +195,7 @@ inside the feature folder that uses them.
 ## 6. Dependencies
 
 A new dependency needs a concrete reason written next to it. "It is convenient" is not
-one. Use the JDK and the Go standard library first — both are large, and both are
+one. Use the JDK and the Go standard library first - both are large, and both are
 already deployed.
 
 Do not downgrade a version to make an old tutorial compile. Read the current API.

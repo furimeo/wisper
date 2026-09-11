@@ -46,7 +46,7 @@ and §4 lists those.
 The interface files exist in the repository already, fully documented. **Do not change a
 signature in one of them without changing this table in the same commit.**
 
-### 2.1 `node.NodeConnections` — reaching a node
+### 2.1 `node.NodeConnections` - reaching a node
 
 ```java
 public interface NodeConnections {
@@ -65,11 +65,11 @@ Semantics:
   `command_id`. The implementation stamps a fresh id, so correlation has one owner.
 - `send` is for the messages with no reply: `ApplySpec`, `ReconcileNow`, `LogRequest`,
   `StopLogStream`. It throws `NodeOffline` when there is no stream. A caller pushing a
-  spec catches it and does nothing — the reconnect path resends the whole spec, so an
+  spec catches it and does nothing - the reconnect path resends the whole spec, so an
   undeliverable spec is not a lost spec.
 - `call` is for the commands that produce a `CommandResult`: `StartBuild`, `RunBackup`,
   `RestoreBackup`, `ProvisionDatabase`, `RotateDatabasePassword`, `DropDatabase`,
-  `DrainNode`, `UpgradeNode`. It never applies a timeout — the sensible one differs by
+  `DrainNode`, `UpgradeNode`. It never applies a timeout - the sensible one differs by
   two orders of magnitude between rotating a password and restoring a database. Use
   `orTimeout`. The implementation drops its pending entry whenever the future completes,
   including by timeout.
@@ -78,10 +78,10 @@ Semantics:
 - Thread-safe. A `StreamObserver` is not safe for concurrent use, so the implementation
   serialises writes per node.
 
-`StartTerminal` is a `PanelMessage` too, but it is not sent through this port — use
+`StartTerminal` is a `PanelMessage` too, but it is not sent through this port - use
 `NodeTerminals`, which also joins the stream the node dials back.
 
-### 2.2 `node.NodeSpecSource` — building the desired state
+### 2.2 `node.NodeSpecSource` - building the desired state
 
 ```java
 public interface NodeSpecSource {
@@ -101,11 +101,11 @@ only package that may read across `service`, `volume`, `domain`, `env_var`, `sec
 - `issuedAt` is passed in for the same reason: the value on the row and the value on the
   wire are one instant.
 - An empty spec is legitimate and means "run nothing". Do not throw for a drained node.
-- `nodesHosting` returns at most two in v1 — a `DRAINING` placement and its `ACTIVE`
+- `nodesHosting` returns at most two in v1 - a `DRAINING` placement and its `ACTIVE`
   replacement can coexist, and both nodes need telling. Empty for a service that has
   never been placed, which is not an error.
 
-### 2.3 `jobs.JobQueue` — background work
+### 2.3 `jobs.JobQueue` - background work
 
 ```java
 public record JobKind<T>(String taskName, Class<T> payloadType) { String domain(); }
@@ -153,7 +153,7 @@ written exactly twice and both writings are in one file. Names are
 | `stats-sweep-samples` | `Void` | `stats` |
 | `files-sweep-uploads` | `Void` | `files` |
 
-### 2.4 `audit.AuditTrail` — the record of what happened
+### 2.4 `audit.AuditTrail` - the record of what happened
 
 ```java
 public interface AuditTrail { void record(AuditEntry entry); }
@@ -184,7 +184,7 @@ public enum AuditOutcome   { SUCCEEDED, FAILED, DENIED }
   ones that were refused. `DENIED` is the entry an incident is reconstructed from.
 - The implementation writes in `REQUIRES_NEW` and never propagates a failure: an audit
   write that could not happen is logged at `ERROR` and the action continues. This is the
-  only place in the codebase where a failed write is tolerated, and it is deliberate — a
+  only place in the codebase where a failed write is tolerated, and it is deliberate - a
   panel that refuses to stop a container because it could not append a log line has
   turned its audit trail into an outage.
 - The records validate the `audit_log_actor_consistent` and `audit_log_action_shape`
@@ -227,7 +227,7 @@ that is not one of them. The database only enforces the *shape*
 (`audit_log_action_shape`), so adding an action here without adding it to that list, or
 the other way round, is how the two drift apart.
 
-### 2.5 `org.QuotaGuard` — limits
+### 2.5 `org.QuotaGuard` - limits
 
 ```java
 public interface QuotaGuard {
@@ -256,7 +256,7 @@ Never unlimited. Reading a missing row as "no limit" turns forgetting to seed a 
 an unmetered platform.
 
 - `require` goes in the use-case, inside the write transaction, before the insert. Not in
-  the controller — the form route and the API route would each need a copy.
+  the controller - the form route and the API route would each need a copy.
 - `amount` is `1` for a count and a byte figure for an amount. On a resize, pass the
   increase and nothing at all when it shrinks.
 - A suspended organization is refused every resource. Suspension stops the panel writing
@@ -269,7 +269,7 @@ an unmetered platform.
 > normally; `org.springframework.util.StringUtils.hasText(x)` written out in a method
 > body inside this package does not. Always import.
 
-### 2.6 `crypto.SecretCipher` — encryption at rest
+### 2.6 `crypto.SecretCipher` - encryption at rest
 
 ```java
 public interface SecretCipher {
@@ -295,7 +295,7 @@ Columns: `account.totp_secret`, `service.webhook_secret`,
 `managed_database.db_password`, `backup_destination.secret_access_key`,
 `backup_destination.archive_passphrase`.
 
-Never through this interface: anything the panel only compares — `account.password_hash`
+Never through this interface: anything the panel only compares - `account.password_hash`
 (BCrypt), `account_recovery_code.code_hash`, `session.session_id_hash`,
 `node.credential_hash`, `node_enrollment_token.token_hash`, `api_token.token_hash`. And
 never a TLS private key: the node owns its certificates and the key never leaves it.
@@ -310,7 +310,7 @@ wisper.crypto.keys                  Map<Integer,String>, base64 32-byte keys, no
 No default for the keys. A cipher that invents one encrypts everything with a key that is
 in the source tree.
 
-### 2.7 `files.NodeFiles` — the file manager's back end
+### 2.7 `files.NodeFiles` - the file manager's back end
 
 ```java
 public interface NodeFiles {
@@ -335,7 +335,7 @@ Also in `files`: `FileOperationFailed extends RuntimeException`, exposing
 - `FILE_ERROR_CODE_PATH_ESCAPES_ROOT` is recorded as `files.path_escape` with
   `AuditOutcome.DENIED` and answered flatly. It is never a customer's typo.
 
-### 2.8 `files.NodeTerminals` — the web shell
+### 2.8 `files.NodeTerminals` - the web shell
 
 ```java
 public interface NodeTerminals {
@@ -365,7 +365,7 @@ Also in `files`: `TerminalUnavailable extends RuntimeException`.
 - `idle_timeout_seconds` and `max_duration_seconds` on the request are not optional.
 - `close()` throws nothing: it is called from a `finally` and from an SSE callback.
 
-### 2.9 `stats.NodeLogs` — log feeds
+### 2.9 `stats.NodeLogs` - log feeds
 
 ```java
 public interface NodeLogs {
@@ -380,7 +380,7 @@ public interface LogSubscription extends AutoCloseable {
 
 - One path for all four `LogSource` values. `deploy` is the second consumer, for build
   output, and additionally persists each line into `deployment_log` keyed by
-  `(deployment_id, sequence)` — that unique index is what makes a chunk redelivered after
+  `(deployment_id, sequence)` - that unique index is what makes a chunk redelivered after
   a reconnect a rejected duplicate rather than a doubled line.
 - Chunks, not lines. A chunk boundary can fall inside a multi-byte character.
 - Register `close()` on the `SseEmitter`'s completion, timeout **and** error callbacks.
@@ -514,8 +514,8 @@ migration ── depends on nothing.
 
 Two arrows are forbidden and everything above is arranged to avoid them:
 
-- `node → grpc` — broken by `NodeConnections`.
-- `node → placement` — broken by `NodeSpecSource`.
+- `node → grpc` - broken by `NodeConnections`.
+- `node → placement` - broken by `NodeSpecSource`.
 
 ### Packages this file adds
 

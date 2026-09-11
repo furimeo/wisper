@@ -174,7 +174,7 @@ export function BackupPolicyList({
             header: 'Next',
             align: 'right',
             cell: (policy) => (
-              <RelativeTime at={policy.nextRunAt} fallback="—" className="text-xs" />
+              <RelativeTime at={policy.nextRunAt} fallback="-" className="text-xs" />
             ),
           },
         ]}

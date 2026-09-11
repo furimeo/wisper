@@ -66,7 +66,7 @@ export function MigrateDialog({
             {...form.bind('nodeId')}
             options={elsewhere.map((node) => ({
               value: node.nodeId,
-              label: isFull(node) ? `${node.name} — full` : node.name,
+              label: isFull(node) ? `${node.name} - full` : node.name,
               disabled: isFull(node),
             }))}
           />

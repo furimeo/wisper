@@ -60,7 +60,7 @@ export function QuotaAlert({
         {[...over, ...near].map((allowance) => (
           <li key={allowance.resource} className="text-sm leading-relaxed text-ink-800 dark:text-ink-200">
             <span className="font-medium">{quotaLabel(allowance.resource)}</span>
-            {' — '}
+            {' - '}
             {quotaSentence(allowance.resource, allowance.used, allowance.limit)}.{' '}
             <span className="text-ink-600 dark:text-ink-400">
               {quotaConsequence(allowance.resource)}

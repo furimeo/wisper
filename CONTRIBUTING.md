@@ -1,7 +1,7 @@
 # Contributing
 
 Thanks for looking. This project has strong opinions about how it is built, and they are
-written down rather than enforced by review comments after you have done the work — read
+written down rather than enforced by review comments after you have done the work - read
 [AGENTS.md](AGENTS.md) before you write anything. It is short.
 
 ## The short version of the doctrine
@@ -15,7 +15,7 @@ written down rather than enforced by review comments after you have done the wor
 - **No dependency without a concrete reason**, and no abstraction with one implementation.
 - **Comment why, not what.** The reason a line exists outlives the line.
 - Code, comments, commit messages and docs are in English. The product itself ships in
-  English and Vietnamese — see [docs/contracts/i18n.md](docs/contracts/i18n.md).
+  English and Vietnamese - see [docs/contracts/i18n.md](docs/contracts/i18n.md).
 
 ## The contracts are binding
 
@@ -38,7 +38,7 @@ cd panel && ./gradlew bootRun --args='--spring.profiles.active=dev'
 
 The dev profile carries a fixed encryption key so a laptop survives a restart without an
 environment variable. It is in a committed file, which means it is public, which means it
-protects nothing — that is the trade for a laptop and never the trade for a node.
+protects nothing - that is the trade for a laptop and never the trade for a node.
 
 For the daemon:
 
@@ -67,7 +67,7 @@ Next to the code: `_test.go` in the same package, and the mirrored package under
 in-memory stand-in, because half of what they check is whether the migrations apply.
 
 Some things cannot be tested on a developer's machine and are not faked into looking as
-though they were — gVisor under a production kernel, XFS project quota, a real ACME
+though they were - gVisor under a production kernel, XFS project quota, a real ACME
 certificate. Those live in [docs/verify-on-linux.md](docs/verify-on-linux.md) and are
 checked on a real node.
 

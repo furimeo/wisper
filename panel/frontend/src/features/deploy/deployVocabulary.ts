@@ -151,7 +151,7 @@ export function durationOf(deployment: DeploymentSummary, now?: number): number 
 /** "4.2s", "1m 12s", "1h 03m". Never "0ms": a build that fast did not happen. */
 export function formatDuration(millis: number | null): string {
   if (millis === null || !Number.isFinite(millis)) {
-    return '—'
+    return '-'
   }
   const seconds = Math.max(0, Math.round(millis / 1000))
   if (seconds < 60) {

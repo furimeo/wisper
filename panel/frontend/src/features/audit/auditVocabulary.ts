@@ -73,7 +73,7 @@ export function domainLabel(domain: string): string {
 /** Mirrors `AuditLogEntry.target()`, which Jackson leaves in Java. */
 export function targetOf(entry: AuditLogEntry): string {
   if (entry.targetKind === null) {
-    return '—'
+    return '-'
   }
   if (entry.targetLabel && entry.targetLabel.trim().length > 0) {
     return `${domainLabel(entry.targetKind)} ${entry.targetLabel}`

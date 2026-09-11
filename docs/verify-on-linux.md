@@ -27,7 +27,7 @@ docker inspect "$(docker ps -q --filter label=wisper.managed=true | head -1)" \
 ```
 
 It must print `runsc`. If it prints `runc`, the panel should already be showing that node
-in red — check that it is. **A node running `runc` while the panel believes otherwise is
+in red - check that it is. **A node running `runc` while the panel believes otherwise is
 the one failure gVisor was adopted to prevent.**
 
 Inside the container, the kernel should be gVisor's and not yours:
@@ -41,7 +41,7 @@ docker exec <container> cat /proc/version
 
 CPU and memory are cgroup ceilings and hold everywhere. **Disk does not.** It needs XFS
 with project quota, and on any other filesystem the limit is a number in the database that
-nothing enforces — one customer can fill the disk and take every service on the machine
+nothing enforces - one customer can fill the disk and take every service on the machine
 with them.
 
 Give `/var/lib/wisper` its own XFS filesystem mounted with `prjquota`, then:
@@ -65,7 +65,7 @@ moving that data.
 ## 3. Certificates from a real authority
 
 The edge issues on demand through ACME. That path needs a real domain, port 80 reachable
-from the internet, and Let's Encrypt's production or staging directory — none of which
+from the internet, and Let's Encrypt's production or staging directory - none of which
 exists on a laptop.
 
 Point a hostname at the node, add it as a domain in the panel, and:
@@ -93,7 +93,7 @@ Not impossible elsewhere, but only meaningful here:
 - **Kill the daemon mid-flight** (`kill -9`) and start it again. It must reconverge from
   its own SQLite, not from the panel.
 - **Stop Docker** while the daemon runs. The node must report `degraded` and **must not
-  remove a single container** — mistaking "cannot see it" for "does not exist" is the
+  remove a single container** - mistaking "cannot see it" for "does not exist" is the
   fastest way to destroy a customer's data.
 - **Re-run the installer.** It is an upgrade, not a break.
 - **`sasayaki uninstall`** must leave `/var/lib/wisper` untouched.

@@ -8,7 +8,7 @@ body:
         Some things are deliberately absent. Before writing, check the "Deliberately not
         built" list in the [README](../../blob/main/README.md): Kubernetes, DNS automation,
         billing, multi-region, and SSH/SFTP are choices rather than gaps. Arguing one of
-        them should change is welcome — just make the argument.
+        them should change is welcome - just make the argument.
 
   - type: textarea
     id: problem

@@ -51,7 +51,7 @@ body:
     attributes:
       label: The node it happened on
       description: |
-        `sasayaki doctor` output is ideal — it answers most of this at once, and it changes
+        `sasayaki doctor` output is ideal - it answers most of this at once, and it changes
         nothing. Otherwise: OS, kernel, Docker version, whether `runsc` is registered, and
         the filesystem under `/var/lib/wisper`.
       render: text
@@ -62,6 +62,6 @@ body:
       label: Logs
       description: |
         The panel's log around the failure, and the daemon's if the node was involved.
-        Redact tokens and credentials — the daemon does not log them, but your shell history
+        Redact tokens and credentials - the daemon does not log them, but your shell history
         might have put one in.
       render: text

@@ -223,19 +223,19 @@ function MachineWeaknesses({machine}: {machine: DoctorMachine | null}) {
 /** What the machine is. Useful, unalarming, and therefore at the bottom. */
 function MachineFacts({machine}: {machine: DoctorMachine}) {
   const facts: Array<[string, string]> = [
-    ['Hostname', machine.hostname || '—'],
-    ['Operating system', machine.operatingSystem || '—'],
-    ['Kernel', machine.kernelVersion || '—'],
-    ['Architecture', machine.architecture || '—'],
+    ['Hostname', machine.hostname || '-'],
+    ['Operating system', machine.operatingSystem || '-'],
+    ['Kernel', machine.kernelVersion || '-'],
+    ['Architecture', machine.architecture || '-'],
     ['CPU cores', String(machine.cpuCores)],
-    ['Docker', `${machine.dockerVersion || '—'} (API ${machine.dockerApiVersion || '—'})`],
+    ['Docker', `${machine.dockerVersion || '-'} (API ${machine.dockerApiVersion || '-'})`],
     ['gVisor', machine.runscAvailable ? machine.runscVersion || 'present' : 'not installed'],
-    ['Volume filesystem', machine.stateFilesystem || '—'],
+    ['Volume filesystem', machine.stateFilesystem || '-'],
     ['Port 80', machine.port80Free ? 'free' : 'in use by something else'],
     ['Port 443', machine.port443Free ? 'free' : 'in use by something else'],
     [
       'Advertised addresses',
-      machine.advertiseAddresses.length === 0 ? '—' : machine.advertiseAddresses.join(', '),
+      machine.advertiseAddresses.length === 0 ? '-' : machine.advertiseAddresses.join(', '),
     ],
   ]
 

@@ -18,7 +18,7 @@ export interface ByteSizeProps {
   className?: string
 }
 
-export function ByteSize({bytes, fallback = '—', className}: ByteSizeProps) {
+export function ByteSize({bytes, fallback = '-', className}: ByteSizeProps) {
   if (bytes == null || !Number.isFinite(bytes)) {
     return <span className={className}>{fallback}</span>
   }

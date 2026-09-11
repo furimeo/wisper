@@ -15,7 +15,7 @@ Tell us what you can. A rough report today beats a perfect one next month:
 
 - what you did, and what happened that should not have;
 - which version, and whether the node was running `runsc` or `runc`;
-- whether it crosses a boundary — one tenant reaching another, a customer reaching the
+- whether it crosses a boundary - one tenant reaching another, a customer reaching the
   node, a node reaching the panel, or anyone reaching the host.
 
 We will confirm we have it, tell you what we think it is, and tell you when it is fixed. If

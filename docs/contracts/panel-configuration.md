@@ -6,15 +6,16 @@ Binding. See [README.md](README.md).
 
 | Port | What | Configured by |
 |---|---|---|
-| 8080 | Panel HTTP. People reach this, through a tunnel. | `server.port` |
+| 8080 | Panel HTTP. People reach this, directly or through a tunnel. | `server.port` |
 | 9090 | gRPC. Nodes dial in here and nothing else does. | `wisper.grpc.port` |
 | 5173 | Vite dev server. Loopback only, proxied by the panel. | `frontend/vite.config.ts` |
 | 5432 | PostgreSQL 17, database `wisper` (`wisper_test` for tests). | `spring.datasource.url` |
 | 80 / 443 | Caddy, **on each node**. Never on the panel. | sasayaki |
 
 Two ports rather than one because the two audiences share nothing: 8080 carries session
-cookies and CSRF, 9090 carries node tokens and long-lived bidirectional streams, and the
-tunnel in front of them is configured differently for each.
+cookies and CSRF, 9090 carries node tokens and long-lived bidirectional streams, and
+whatever sits in front of them - a tunnel, a reverse proxy, or nothing - is configured
+differently for each.
 
 ## Property namespace
 

@@ -148,7 +148,7 @@ export function AuditEntryList({
             header: 'Detail',
             cell: (entry) => (
               <span className="text-xs text-ink-600 dark:text-ink-400">
-                {entry.detail ?? '—'}
+                {entry.detail ?? '-'}
                 {entry.remoteAddress ? (
                   <span className="block font-mono">{entry.remoteAddress}</span>
                 ) : null}

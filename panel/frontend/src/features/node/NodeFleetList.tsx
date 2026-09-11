@@ -101,7 +101,7 @@ export function NodeFleetList({
           header: 'Tags',
           cell: (node) =>
             node.tags.length === 0 ? (
-              <span className="text-ink-400">—</span>
+              <span className="text-ink-400">-</span>
             ) : (
               <span className="flex flex-wrap gap-1">
                 {node.tags.map((tag) => (
@@ -115,7 +115,7 @@ export function NodeFleetList({
           header: 'Agent',
           cell: (node) => (
             <span className="font-mono text-xs">
-              {node.agentVersion ?? '—'}
+              {node.agentVersion ?? '-'}
               {node.needsUpgrade ? (
                 <span className="ml-1 font-sans text-degraded">update</span>
               ) : null}
