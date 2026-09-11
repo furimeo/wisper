@@ -1,0 +1,22 @@
+# Undo an upgrade that did not come back.
+#
+# Started by systemd, never by hand: sasayaki.service names it in OnFailure=, so it runs
+# exactly when the daemon has failed to stay up through five restarts. What it does is put
+# back the binary the upgrade replaced and start the service again (design section 7.5).
+#
+# Written by `sasayaki install`, from sasayaki/internal/bootstrap/unit.go. The copy
+# in the repository under deploy/ is the same text and a test keeps it that way.
+
+[Unit]
+Description=Roll sasayaki back to the binary it was upgraded from
+# Nothing to go back to means nothing to do. After a rollback the previous binary has been
+# moved into place, so this condition stops a second failure - for some unrelated reason -
+# from doing anything at all.
+ConditionPathExists=/usr/local/bin/sasayaki.previous
+
+[Service]
+Type=oneshot
+# The previous binary runs this, not the installed one: the installed one is the reason
+# this unit was started. It refuses to act unless an upgrade is actually in flight, so an
+# unrelated crash months later does not silently downgrade the node.
+ExecStart=/usr/local/bin/sasayaki.previous upgrade --rollback --target /usr/local/bin/sasayaki --config /etc/wisper/node.json

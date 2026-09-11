@@ -1,0 +1,87 @@
+# sasayaki - the wisper node daemon.
+#
+# Written by `sasayaki install`. Edits survive a re-install only if you move them
+# into a drop-in: `systemctl edit sasayaki.service` writes one, and re-running the
+# installer rewrites this file.
+#
+# The copy in the repository under deploy/ is this same text. Both come from
+# sasayaki/internal/bootstrap/unit.go, and a test fails if they drift apart.
+
+[Unit]
+Description=sasayaki - the wisper node daemon
+Documentation=https://github.com/furimeo/wisper
+After=network-online.target docker.service
+# docker.service is wanted and deliberately not required. An engine that dies must leave
+# the node reporting degraded and still serving customer traffic through the embedded
+# edge; taking the daemon down with it would stop answering ACME too, and the panel would
+# lose a node that is otherwise healthy.
+Wants=network-online.target docker.service
+
+# Five failures inside two minutes is a daemon that is not going to come up on its own -
+# with RestartSec=2 below, that is ten seconds of trying. At that point systemd stops
+# restarting it and starts the unit named here, which puts back the binary this one
+# replaced. Without a start limit, Restart=always would hide a broken upgrade behind an
+# infinite restart loop.
+StartLimitIntervalSec=120
+StartLimitBurst=5
+OnFailure=sasayaki-rollback.service
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=/usr/local/bin/sasayaki run --config /etc/wisper/node.json --state-dir /var/lib/wisper
+
+# Crash-only: the truth is in SQLite and on disk, so being killed is the same as being
+# stopped and there is nothing to tidy up on the way out.
+Restart=always
+RestartSec=2
+KillMode=mixed
+TimeoutStopSec=30
+
+# The reconcile loop calls sd_notify(WATCHDOG=1) on every pass. The loop runs every
+# fifteen seconds, so a minute of silence is four missed passes: the daemon is wedged
+# rather than busy, and being restarted is better than being trusted.
+WatchdogSec=60
+
+# --- Hardening (design section 7.4) ------------------------------------------
+#
+# The daemon runs as root because it binds :80 and :443 and talks to the Docker socket.
+# Everything below narrows what that root can reach.
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+# The only two places it may write. Customer data, SQLite, sites, volumes and certificates
+# are all under the state directory; the credential and the node key are in the other.
+ReadWritePaths=/var/lib/wisper /etc/wisper
+# AF_UNIX reaches the Docker socket, AF_INET/AF_INET6 serve customers and dial the panel.
+# AF_NETLINK is not in design section 7.4's list and is here anyway: Go asks the kernel for
+# this machine's addresses over a netlink route socket, and without it the node enrols
+# advertising no address at all.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+# Binding :80 and :443 is the only privileged thing the daemon does itself. Everything
+# that needs more - creating containers, mounting volumes, remapping users - is done by
+# the Docker engine, which is its own service with its own privileges.
+#
+# If a future package needs the daemon to do one of those directly, add the capability
+# here and say why in the commit: XFS project quotas need CAP_SYS_ADMIN, and changing the
+# owner of a file the daemon did not create needs CAP_CHOWN.
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectClock=yes
+# Caddy holds a socket per connection and the engine holds one per container. The default
+# of 1024 is reached by a node with a hundred busy sites on it.
+LimitNOFILE=1048576
+# A container being killed for using too much memory is the container's problem. The
+# daemon that reported it must survive to say so.
+OOMPolicy=continue
+
+[Install]
+WantedBy=multi-user.target
