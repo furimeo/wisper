@@ -46,12 +46,11 @@ export function ConfirmHost() {
       size="sm"
       footer={
         <>
-          <Button variant="secondary" block onClick={() => request.settle(false)}>
+          <Button variant="secondary" onClick={() => request.settle(false)}>
             {request.cancelLabel ?? 'Cancel'}
           </Button>
           <Button
             variant={request.tone === 'danger' ? 'danger' : 'primary'}
-            block
             disabled={!matches}
             onClick={() => request.settle(true)}
           >
