@@ -1,0 +1,165 @@
+// Observability: the samples a node pushes so the panel can draw a graph, and the log
+// chunks it pushes so a customer can watch their application start.
+//
+// Both live here because both are the node telling the panel what is happening rather
+// than what it has been asked to do, and both are lossy by design - a metric that is
+// dropped under load is a gap in a chart, while a metric that blocks the reconcile loop
+// is an outage.
+//
+// Counters, not rates, and integers, not floats. The node sends the cumulative CPU
+// nanoseconds and the length of the interval; the panel divides. Sampling twice into the
+// same rollup bucket then adds up exactly, which a pre-computed percentage does not.
+syntax = "proto3";
+
+package wisper.v1;
+
+option java_package = "lhqm.furimeo.wisper.proto.v1";
+option java_multiple_files = true;
+option java_outer_classname = "StatsProto";
+option go_package = "github.com/furimeo/wisper/sasayaki/internal/wisperpb;wisperpb";
+
+import "google/protobuf/timestamp.proto";
+
+// One measurement, of either the machine or one workload on it.
+//
+// A single stream carries both so there is one place where sampling stops when the
+// panel is unreachable, and one place where it is throttled when the panel says slow
+// down.
+message StatSample {
+  string node_id = 1;
+  // When the node took the reading, not when the panel received it. A sample that
+  // arrives after a reconnect is still worth storing at the time it describes.
+  google.protobuf.Timestamp taken_at = 2;
+  // How long this sample covers. The denominator for every counter below; without it a
+  // gap in the stream turns into a spike in the chart.
+  int64 interval_nanos = 3;
+  oneof subject {
+    NodeSample node = 4;
+    WorkloadSample workload = 5;
+  }
+}
+
+// The machine as a whole. Placement reads the latest of these to decide whether a node
+// has room, so the fields are the ones headroom is computed from (design section 7.6).
+message NodeSample {
+  // Cumulative CPU nanoseconds burned by everything on the machine.
+  int64 cpu_nanos = 1;
+  // What the machine has to burn: cores * interval_nanos. The pair gives a utilisation
+  // the panel can compute without knowing the core count from somewhere else.
+  int64 cpu_capacity_nanos = 2;
+  int64 memory_used_bytes = 3;
+  int64 memory_total_bytes = 4;
+  // Excludes reclaimable cache. "Used" including cache makes every healthy Linux box
+  // look like it is about to die.
+  int64 memory_available_bytes = 5;
+  int64 disk_used_bytes = 6;
+  int64 disk_total_bytes = 7;
+  // Cumulative, from the node's primary interface.
+  int64 network_rx_bytes = 8;
+  int64 network_tx_bytes = 9;
+  // The one genuinely fractional quantity here, and one that is never summed across
+  // samples, so it is the one float in this file.
+  double load_average_1m = 10;
+  int32 running_containers = 11;
+}
+
+// One workload's resource use, read from the container's cgroup.
+message WorkloadSample {
+  string workload_id = 1;
+  // Cumulative CPU nanoseconds. Divided by interval_nanos this is cores used; divided
+  // by the limit it is the number the customer sees.
+  int64 cpu_nanos = 2;
+  // The ceiling in effect, echoed so a chart can draw the limit line without joining
+  // against the spec - and so a limit that changed mid-window is visible.
+  int64 cpu_limit_nano_cpus = 3;
+  int64 memory_used_bytes = 4;
+  int64 memory_limit_bytes = 5;
+  // Peak since the container started. The number that explains an OOM kill after the
+  // fact, which the current reading never does.
+  int64 memory_peak_bytes = 6;
+  int64 network_rx_bytes = 7;
+  int64 network_tx_bytes = 8;
+  int64 block_read_bytes = 9;
+  int64 block_write_bytes = 10;
+  int32 pids = 11;
+  // Bytes on this workload's volumes, measured against the quota. Sampled rather than
+  // computed on demand because walking a customer's tree is expensive and a quota bar
+  // is on every page.
+  int64 disk_used_bytes = 12;
+  int64 disk_quota_bytes = 13;
+}
+
+// Where a log line came from. One log path for four sources, because a second one would
+// need its own backpressure, its own retention and its own bug.
+enum LogSource {
+  LOG_SOURCE_UNSPECIFIED = 0;
+  // A workload's container output.
+  LOG_SOURCE_CONTAINER = 1;
+  // A build: git clone, install, compile, publish (design section 5.5).
+  LOG_SOURCE_BUILD = 2;
+  // One run of a cron entry.
+  LOG_SOURCE_CRON = 3;
+  // The daemon itself, when an operator asks for it from the admin screens.
+  LOG_SOURCE_SYSTEM = 4;
+}
+
+// The panel asking a node to start sending logs, pushed down the control stream.
+//
+// A command rather than an RPC the panel calls, because the panel cannot call a node.
+// The node answers by pushing LogChunks carrying this stream_id up the LogStream call it
+// already has open.
+message LogRequest {
+  // The panel's handle for this subscription. Every chunk carries it back, so one
+  // LogStream call can serve a customer watching a deployment and an operator tailing a
+  // container at the same time.
+  string stream_id = 1;
+  LogSource source = 2;
+  // Workload id, build id or cron run id, depending on the source. Ignored for
+  // LOG_SOURCE_SYSTEM.
+  string subject_id = 3;
+  // History to send before following. A customer who opens a log page wants the last
+  // screen immediately, not to wait for the next line.
+  int32 tail_lines = 4;
+  // Keep sending until told to stop. False is a one-shot fetch for a build that has
+  // already finished.
+  bool follow = 5;
+  // Only lines after this. Set when the browser reconnects, so the customer does not
+  // get the last hundred lines twice.
+  google.protobuf.Timestamp since = 6;
+}
+
+// Stop one subscription. Sent when the last browser watching it goes away, because a
+// node tailing a chatty container nobody is reading is bandwidth spent on nothing.
+message StopLogStream {
+  string stream_id = 1;
+  string reason = 2;
+}
+
+enum LogStreamKind {
+  LOG_STREAM_KIND_UNSPECIFIED = 0;
+  LOG_STREAM_KIND_STDOUT = 1;
+  LOG_STREAM_KIND_STDERR = 2;
+}
+
+// A run of log output.
+//
+// Chunks, not lines: a container writes a partial line and then thinks for ten seconds,
+// and buffering until a newline arrives makes a build look hung. The panel reassembles
+// lines for storage; the browser renders whatever has arrived.
+message LogChunk {
+  string stream_id = 1;
+  LogSource source = 2;
+  string subject_id = 3;
+  LogStreamKind kind = 4;
+  // Bytes rather than a string, for the same reason terminal data is: a log line can be
+  // invalid UTF-8, and a chunk boundary can fall inside a multi-byte character.
+  bytes data = 5;
+  // The node's timestamp for the first byte in this chunk.
+  google.protobuf.Timestamp at = 6;
+  // The node dropped output rather than block the container writing it. A customer told
+  // that lines are missing can act; a customer shown a gap cannot (design section 7.6).
+  int64 dropped_bytes = 7;
+  // The source ended: the container exited, the build finished, the cron run returned.
+  // The subscription is over and the panel can release it without a stop command.
+  bool end = 8;
+}

@@ -1,0 +1,176 @@
+// Builds: turning a git repository or an uploaded archive into something the node can
+// serve.
+//
+// v1 builds on the node that will run the result (design section 11.4). There is no
+// builder pool and no registry, so nothing has to be shipped anywhere afterwards - a
+// static site's output lands in a release directory next to the ones before it, and an
+// app's image lands in the local Docker daemon.
+//
+// Publishing is not here. A finished build produces a release id, and the release goes
+// live when the next NodeSpec names it in the workload. Rollback is the same move with
+// an older id. One mechanism, so "what is live" has exactly one answer (design
+// section 5.5).
+syntax = "proto3";
+
+package wisper.v1;
+
+option java_package = "lhqm.furimeo.wisper.proto.v1";
+option java_multiple_files = true;
+option java_outer_classname = "BuildProto";
+option go_package = "github.com/furimeo/wisper/sasayaki/internal/wisperpb;wisperpb";
+
+import "google/protobuf/timestamp.proto";
+import "wisper/v1/workload.proto";
+
+// Where the source comes from.
+message BuildSource {
+  oneof source {
+    GitSource git = 1;
+    ArchiveSource archive = 2;
+  }
+}
+
+message GitSource {
+  // HTTPS only. An SSH remote would need a key on the node, and the node deliberately
+  // holds no credential it was not handed for one job.
+  string repository_url = 1;
+  // Branch or tag, for the log line and for a clone that has no commit yet.
+  string ref = 2;
+  // The exact commit to build, resolved by the panel from the webhook. Pinning it here
+  // means the build is of what triggered it, not of whatever the branch moved to while
+  // the job sat in the queue.
+  string commit = 3;
+  // Shallow by default. A depth of 1 turns a large repository's clone from minutes into
+  // seconds, and a build does not need history.
+  int32 depth = 4;
+  bool submodules = 5;
+  // A deploy token for a private repository, held encrypted by the panel and sent for
+  // this one build. Used as the HTTP basic password; the node never writes it to disk.
+  string access_token = 6;
+  // Build from a directory inside the repository, for a monorepo. Empty is the root.
+  string subdirectory = 7;
+}
+
+// A zip the customer uploaded through the panel, for the project that is not in git
+// (design section 5.5).
+//
+// The archive reaches the node the same way any other file does: the panel pushes it
+// into the node's upload-staging FileRoot with a resumable chunked upload, then sends
+// this. There is no HTTP fetch, because a node can reach the panel's gRPC endpoint and
+// is not guaranteed to be able to reach anything else of the panel's.
+message ArchiveSource {
+  // The completed upload session in the staging root.
+  string upload_session_id = 1;
+  // Hex SHA-256 of the archive, re-checked before it is unpacked.
+  string sha256 = 2;
+  // Build from a directory inside the archive. Empty is the root.
+  string subdirectory = 3;
+}
+
+// The build recipe. Presets are resolved by the panel into a concrete image and
+// concrete commands, so two nodes cannot disagree about what "the Node preset" means
+// and a customer can see and override every step.
+enum BuildPreset {
+  BUILD_PRESET_UNSPECIFIED = 0;
+  // No build step: the repository already contains the site.
+  BUILD_PRESET_STATIC = 1;
+  BUILD_PRESET_NODE = 2;
+  BUILD_PRESET_HUGO = 3;
+  BUILD_PRESET_ASTRO = 4;
+  // Build an image from the repository's own Dockerfile.
+  BUILD_PRESET_DOCKERFILE = 5;
+}
+
+message BuildPlan {
+  BuildPreset preset = 1;
+  // The image the build runs inside, resolved by the panel. Ephemeral, discarded
+  // afterwards, and never the image that ends up running the customer's app.
+  string builder_image = 2;
+  // argv, run in the checkout. Never shell strings: a branch name with a backtick in it
+  // must not become a command (AGENTS.md section 5).
+  repeated string install_command = 3;
+  repeated string build_command = 4;
+  // What to publish, relative to the checkout: "dist", "public", "_site". Ignored when
+  // the output is an image.
+  string output_directory = 5;
+  // BUILD_PRESET_DOCKERFILE only.
+  string dockerfile_path = 6;
+  string build_context = 7;
+}
+
+enum BuildOutputKind {
+  BUILD_OUTPUT_KIND_UNSPECIFIED = 0;
+  // Files into releases/<release_id>/, ready for the symlink to point at.
+  BUILD_OUTPUT_KIND_STATIC_RELEASE = 1;
+  // An image in the local Docker daemon, tagged with the release id.
+  BUILD_OUTPUT_KIND_CONTAINER_IMAGE = 2;
+}
+
+// Run a build, pushed down the control stream.
+message StartBuild {
+  // The panel's deployment id. Also the release id: one deployment produces one
+  // release, and two names for the same thing is one join nobody needs.
+  string build_id = 1;
+  string workload_id = 2;
+  BuildSource source = 3;
+  BuildPlan plan = 4;
+  BuildOutputKind output = 5;
+  // Variables for the build itself - API keys a static generator needs, NODE_ENV. Not
+  // the workload's runtime environment: a build-time secret that leaks into a public
+  // bundle is the customer's problem to avoid, and mixing the two makes it impossible.
+  // Docker build args come from this list too.
+  repeated EnvVar build_env = 6;
+  // The build container gets a ceiling like any other. A webpack build with no memory
+  // limit takes the node down with it, and it is the neighbours who notice.
+  ResourceLimits limits = 7;
+  // Killed and reported as failed after this. A hung build holds a slot forever.
+  int64 timeout_seconds = 8;
+  // The LogRequest stream_id build output is pushed under, so the customer's browser is
+  // already watching before the first line appears.
+  string log_stream_id = 9;
+  // Reuse the previous workspace: node_modules, the package manager's cache, the
+  // generator's cache. Off for the build a customer starts after one that failed
+  // strangely, which is what "clear cache and deploy" means.
+  bool use_cache = 10;
+}
+
+enum BuildStage {
+  BUILD_STAGE_UNSPECIFIED = 0;
+  BUILD_STAGE_FETCH = 1;
+  BUILD_STAGE_INSTALL = 2;
+  BUILD_STAGE_BUILD = 3;
+  // Moving the output into releases/ or tagging the image.
+  BUILD_STAGE_PUBLISH = 4;
+}
+
+// The result, returned as the outcome of the command that asked for it. Progress is not
+// here: it goes up the log stream, where the customer is already looking.
+message BuildCompleted {
+  string build_id = 1;
+  bool success = 2;
+  // The directory under releases/ that now exists, ready to be named by a NodeSpec.
+  // Empty when the build failed, which is what stops a broken build from being
+  // published.
+  string release_id = 3;
+  // BUILD_OUTPUT_KIND_CONTAINER_IMAGE: the local tag and its digest. The digest goes
+  // into the workload's spec so the running container is provably the built one.
+  string image_ref = 4;
+  string image_digest = 5;
+  // What was actually built, which for a branch build is not knowable in advance. Shown
+  // next to the deployment and used to skip a rebuild of the same commit.
+  string commit = 6;
+  // Commit subject line, so a deployment list reads like a history instead of a column
+  // of hashes.
+  string commit_message = 7;
+  int64 artifact_bytes = 8;
+  google.protobuf.Timestamp started_at = 9;
+  google.protobuf.Timestamp finished_at = 10;
+  // Where it stopped, and the last thing the process said. The full output is in the
+  // log stream; this is what fits in a notification.
+  BuildStage failed_stage = 11;
+  int32 exit_code = 12;
+  string detail = 13;
+  // Releases the node deleted afterwards to honour RetentionPolicy.keep_releases, so
+  // the panel can drop the rows for releases that can no longer be rolled back to.
+  repeated string pruned_releases = 14;
+}

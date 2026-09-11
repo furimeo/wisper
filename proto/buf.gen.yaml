@@ -1,0 +1,23 @@
+# Go generation. Run from this directory:
+#
+#   buf generate
+#
+# The Java side needs nothing here - panel/build.gradle points the protobuf plugin at
+# ../proto and downloads its own protoc, so `./gradlew build` regenerates it.
+#
+# The .pb.go files are committed (docs/contracts/codegen.md): `go build ./...` has to
+# work on a machine that has never heard of buf, or the single static binary stops
+# being one file to copy.
+version: v2
+plugins:
+  # `module=` strips the module prefix from the path protoc-gen-go derives from
+  # go_package, so `github.com/furimeo/wisper/sasayaki/internal/wisperpb` lands in
+  # ../sasayaki/internal/wisperpb rather than in a directory named after the full URL.
+  - local: protoc-gen-go
+    out: ../sasayaki
+    opt:
+      - module=github.com/furimeo/wisper/sasayaki
+  - local: protoc-gen-go-grpc
+    out: ../sasayaki
+    opt:
+      - module=github.com/furimeo/wisper/sasayaki

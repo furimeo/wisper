@@ -1,0 +1,119 @@
+// The web terminal: one framed, bidirectional stream between the browser's xterm.js,
+// the panel and a PTY inside a customer's container.
+//
+// This file exists as its own contract because of exactly one bug. The predecessor
+// pumped a PTY through a WebSocket with io.Copy and no framing, so a resize was
+// indistinguishable from keystrokes, a chunk boundary could split an escape sequence,
+// and the exit code was lost - the terminal simply stopped. Every frame here therefore
+// says what it is, and nothing on this stream is ever a bare byte slice with an implied
+// meaning (design section 3, section 11.5).
+//
+// There is no SSH and no SFTP anywhere in wisper. This is the only shell a customer
+// gets, and most of them are holding a phone while they use it.
+syntax = "proto3";
+
+package wisper.v1;
+
+option java_package = "lhqm.furimeo.wisper.proto.v1";
+option java_multiple_files = true;
+option java_outer_classname = "TerminalProto";
+option go_package = "github.com/furimeo/wisper/sasayaki/internal/wisperpb;wisperpb";
+
+import "google/protobuf/timestamp.proto";
+
+// The panel telling a node to open a PTY, pushed down the control stream.
+//
+// It is a command rather than a request on the terminal stream itself because the node
+// is the only side that can open a connection: the panel decides a terminal should
+// exist, and the node dials back with the stream that carries it.
+message StartTerminal {
+  // Minted by the panel when the customer opens the page. It ties the browser's SSE or
+  // WebSocket connection, the gRPC stream and the audit record together, and every
+  // frame carries it so a stray frame from an abandoned session is dropped rather than
+  // typed into somebody else's shell.
+  string session_id = 1;
+  string workload_id = 2;
+  // argv for the process to run. Empty means the image's shell; the panel resolves that
+  // rather than the node guessing, so the customer sees the same shell twice running.
+  repeated string command = 3;
+  string working_dir = 4;
+  // uid[:gid]. A terminal that is root inside the container when the workload is not
+  // lets a customer create files their own application cannot read.
+  string user = 5;
+  // Extra variables for this session only - TERM, COLUMNS, LANG. The workload's own
+  // environment is already there; this is what the terminal adds on top.
+  map<string, string> env = 6;
+  // The browser's size at open time, so the first prompt is not drawn at 80x24 and then
+  // immediately redrawn.
+  uint32 initial_cols = 7;
+  uint32 initial_rows = 8;
+  // The PTY is killed after this long with no input. A forgotten tab is otherwise a
+  // shell running as the customer's application, for weeks.
+  int64 idle_timeout_seconds = 9;
+  // Hard ceiling on the whole session regardless of activity, so a wedged `top` cannot
+  // hold a slot forever.
+  int64 max_duration_seconds = 10;
+}
+
+// One frame in either direction on the Terminal stream.
+//
+// One stream carries one session. Multiplexing several would share one HTTP/2 flow
+// control window between them, so a customer running `yes` in one tab would stall the
+// other - and gRPC already gives a stream per call for free.
+message TerminalFrame {
+  // Present on every frame, including the ones where the stream identity is already
+  // implied. It costs a few bytes and it turns a routing mistake into a dropped frame
+  // instead of input delivered to the wrong container.
+  string session_id = 1;
+
+  oneof payload {
+    // Node to panel, first frame only. The terminal stream is opened by the node in
+    // response to StartTerminal, so the panel has to be told which session just arrived
+    // before it can join it to the waiting browser.
+    TerminalAttached attached = 2;
+    // Both directions. Keystrokes going down, PTY output coming up.
+    //
+    // Bytes, never a string: a PTY emits whatever the program writes, which is
+    // routinely an escape sequence split across a read boundary and occasionally not
+    // valid UTF-8 at all. Decoding is the browser's job, once, at the end.
+    bytes data = 3;
+    // Panel to node. The browser rotated, the on-screen keyboard opened, the window
+    // changed. Without this frame type, curses applications draw over themselves and a
+    // phone user sees a broken screen (design section 11.5).
+    TerminalResize resize = 4;
+    // Node to panel, last frame. The shell exited and this says why, so the UI can show
+    // "exited 130" instead of a terminal that just stopped responding.
+    TerminalExit exit = 5;
+  }
+}
+
+// The node's acknowledgement that the PTY is open and bytes are about to flow.
+message TerminalAttached {
+  string workload_id = 1;
+  // The container the PTY lives in, so an operator can correlate a session in the audit
+  // log with what Docker saw.
+  string container_id = 2;
+  // Echoed back after being clamped: a browser can ask for a size the PTY will not
+  // accept, and the client needs to know what it actually got.
+  uint32 cols = 3;
+  uint32 rows = 4;
+  google.protobuf.Timestamp attached_at = 5;
+}
+
+// A window size change. Sent whenever the browser's terminal element resizes, which on
+// a phone is every time the keyboard opens.
+message TerminalResize {
+  uint32 cols = 1;
+  uint32 rows = 2;
+}
+
+// Why the session ended.
+message TerminalExit {
+  // The process's exit status, or 128+signal when it was killed - the shell convention,
+  // so 130 reads as Ctrl-C to anybody who has used one.
+  int32 code = 1;
+  // Set when the session was ended by the platform rather than by the process: the idle
+  // timeout fired, the workload was stopped, the container went away.
+  string reason = 2;
+  google.protobuf.Timestamp ended_at = 3;
+}

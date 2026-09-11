@@ -1,0 +1,196 @@
+// Snapshots and restores.
+//
+// Backups are commands rather than part of the NodeSpec, which is the opposite of how
+// cron works, and the difference is deliberate: cron is the customer's schedule and has
+// to keep firing while the panel is down, while a backup is the platform's and needs
+// the things only the panel has - the retention policy across every node, the
+// destination credentials, and the restore-point record that makes the result findable.
+// db-scheduler enqueues the job, the panel hands it to a node, the node does the work
+// (design section 8.3).
+//
+// A backup that has never been restored is not a backup, so `verify` is a field here
+// and restoring is a first-class command rather than a runbook.
+syntax = "proto3";
+
+package wisper.v1;
+
+option java_package = "lhqm.furimeo.wisper.proto.v1";
+option java_multiple_files = true;
+option java_outer_classname = "BackupProto";
+option go_package = "github.com/furimeo/wisper/sasayaki/internal/wisperpb;wisperpb";
+
+import "google/protobuf/timestamp.proto";
+import "wisper/v1/database.proto";
+
+// What is being copied. The two need completely different techniques - a filesystem
+// snapshot with a brief write pause against a logical dump - and nothing about either
+// generalises to the other, so the kind is explicit rather than inferred from the id.
+enum BackupTargetKind {
+  BACKUP_TARGET_KIND_UNSPECIFIED = 0;
+  BACKUP_TARGET_KIND_VOLUME = 1;
+  BACKUP_TARGET_KIND_DATABASE = 2;
+}
+
+enum DestinationKind {
+  DESTINATION_KIND_UNSPECIFIED = 0;
+  // Any S3-compatible object store. The normal case: offsite, and not on the node whose
+  // disk is the thing most likely to fail.
+  DESTINATION_KIND_S3 = 1;
+  // A directory on the node itself. Fast to make and fast to restore, and worth nothing
+  // when the machine is gone - offered for the customer who wants a quick rollback
+  // point before a risky deployment.
+  DESTINATION_KIND_LOCAL = 2;
+}
+
+// Where the archive goes.
+message BackupDestination {
+  DestinationKind kind = 1;
+  S3Destination s3 = 2;
+  // DESTINATION_KIND_LOCAL: a path relative to the node's backup directory, never an
+  // absolute path, for the same reason no other path in this contract is absolute.
+  string local_prefix = 3;
+}
+
+message S3Destination {
+  // Full URL including scheme. Explicit rather than derived from a region so MinIO,
+  // Backblaze and Wasabi all work without a special case each.
+  string endpoint = 1;
+  string region = 2;
+  string bucket = 3;
+  // Key prefix. The node appends its own object name; the panel keeps the resulting key
+  // in the restore point.
+  string prefix = 4;
+  // Held encrypted by the panel and sent over the control stream when a backup runs,
+  // because the node is the side with the bytes and the bandwidth. It is never written
+  // to the node's SQLite state.
+  string access_key_id = 5;
+  string secret_access_key = 6;
+  // Bucket in the path rather than the hostname. Required by most self-hosted stores
+  // and refused by some hosted ones, so it cannot be guessed.
+  bool path_style = 7;
+  // Server-side encryption algorithm to request, "AES256" or empty for none.
+  string server_side_encryption = 8;
+}
+
+// How many copies to keep. Applied by the node at the end of a successful backup rather
+// than by a separate prune command, because a prune that is scheduled separately is a
+// prune somebody forgets to schedule - and because deletion has to happen where the
+// destination credentials are.
+message RetentionRule {
+  // Keep at least this many of the most recent, whatever the age rules say. Stops a
+  // dormant project's only backup from ageing out.
+  int32 keep_last = 1;
+  int32 keep_daily = 2;
+  int32 keep_weekly = 3;
+  int32 keep_monthly = 4;
+  // Hard ceiling on the space this subject's backups occupy at the destination. The
+  // oldest go first. Zero means no ceiling.
+  int64 max_total_bytes = 5;
+}
+
+// Take a backup now.
+message RunBackup {
+  // The panel's id for this run. The restore point is recorded against it, and a
+  // repeated command with the same id is the same backup, not a second one.
+  string backup_id = 1;
+  BackupTargetKind kind = 2;
+  // Volume id or database grant id, depending on the kind.
+  string subject_id = 3;
+  // The workload that owns the volume. Needed to pause writes for the moment the
+  // snapshot is taken; a copy of a running application's data directory is not a
+  // backup, it is a directory that happens to have been open.
+  string workload_id = 4;
+  // Set for BACKUP_TARGET_KIND_DATABASE: which engine to dump with, and the grant to
+  // dump. The dump tool and the connection both depend on it.
+  DatabaseEngine engine = 5;
+  string database_name = 6;
+  BackupDestination destination = 7;
+  RetentionRule retention = 8;
+  // Read the archive back from the destination and check its checksum before reporting
+  // success. Costs the download; buys knowing the backup exists somewhere other than in
+  // a log line that says it was uploaded.
+  bool verify = 9;
+  // Give up after this long. A backup that runs into the next scheduled one is how a
+  // node ends up doing nothing but backups.
+  int64 timeout_seconds = 10;
+}
+
+enum BackupStage {
+  BACKUP_STAGE_UNSPECIFIED = 0;
+  BACKUP_STAGE_QUIESCE = 1;
+  BACKUP_STAGE_SNAPSHOT = 2;
+  BACKUP_STAGE_UPLOAD = 3;
+  BACKUP_STAGE_VERIFY = 4;
+  BACKUP_STAGE_PRUNE = 5;
+}
+
+// The result, returned as the outcome of the command that asked for it.
+message BackupCompleted {
+  string backup_id = 1;
+  bool success = 2;
+  // The handle a restore is asked for by. Minted by the node because the node is what
+  // knows the final object name, and stored by the panel as the restore point.
+  string restore_point_id = 3;
+  // Where it landed: the S3 key or the local relative path. Enough to find it by hand
+  // when the panel's row is the thing that was lost.
+  string location = 4;
+  int64 size_bytes = 5;
+  string sha256 = 6;
+  // How long the application was paused, as distinct from how long the whole backup
+  // took. This is the number a customer is actually affected by, so it is measured
+  // rather than assumed to be small.
+  int64 quiesce_millis = 7;
+  google.protobuf.Timestamp started_at = 8;
+  google.protobuf.Timestamp finished_at = 9;
+  // True only when `verify` was asked for and passed, so "verified" never means "not
+  // checked".
+  bool verified = 10;
+  // How many old backups the retention rule removed in the same pass.
+  int32 pruned = 11;
+  // Which stage failed, and why. A failure at UPLOAD is the customer's object store; a
+  // failure at QUIESCE is their application.
+  BackupStage failed_stage = 12;
+  string detail = 13;
+}
+
+// Put a restore point back. One button in the panel (design section 8.3), one command
+// here, so there is no sequence of steps for an operator to get wrong at the worst
+// possible moment.
+message RestoreBackup {
+  // The panel's id for this restore attempt, distinct from the backup's.
+  string restore_id = 1;
+  string restore_point_id = 2;
+  // From the restore point, so a restore works even when the destination's layout has
+  // been reorganised since.
+  string location = 3;
+  BackupTargetKind kind = 4;
+  string subject_id = 5;
+  string workload_id = 6;
+  DatabaseEngine engine = 7;
+  string database_name = 8;
+  // Where to read from. Sent again rather than remembered because credentials rotate,
+  // and a restore is exactly when a stale one is least welcome.
+  BackupDestination source = 9;
+  // Stop the workload before overwriting its volume, and start it again afterwards.
+  // Restoring underneath a running process gives it a filesystem that changed while it
+  // was not looking.
+  bool stop_workload = 10;
+  // Restore alongside instead of over the top: the volume is restored to a sibling
+  // directory and the database to a name with a suffix, so a customer can look before
+  // committing. This is what makes testing a restore safe enough that people do it.
+  bool dry_run = 11;
+  int64 timeout_seconds = 12;
+}
+
+message RestoreCompleted {
+  string restore_id = 1;
+  bool success = 2;
+  int64 bytes_restored = 3;
+  // Where the data actually went. Differs from the target for a dry run, and the
+  // customer has to be told where to look.
+  string restored_to = 4;
+  bool workload_restarted = 5;
+  google.protobuf.Timestamp started_at = 6;
+  google.protobuf.Timestamp finished_at = 7;
+  string detail = 8;
+}

@@ -1,0 +1,449 @@
+// The NodeSpec: everything a node must be running, and the status it reports back.
+//
+// This is the whole of "desired state, not imperative RPC" (design section 5.1). The
+// panel never says "start container X"; it says "at generation 47 this node holds these
+// workloads, routes, engines, grants and cron entries", writes that to the node, and
+// the reconcile loop closes the gap every fifteen seconds whether or not anything
+// happened. A daemon that lost its memory reads the last spec off its own disk and
+// converges again.
+//
+// Over 300 lines, and split further only at a cost: the spec is one document that is
+// written, hashed, stored and diffed as a unit, and separating the shape of a workload
+// from the shape of the spec that contains it would put two halves of one edit in two
+// files. The statuses live here for the same reason - a status is the observed form of
+// exactly one of the things declared above it.
+syntax = "proto3";
+
+package wisper.v1;
+
+option java_package = "lhqm.furimeo.wisper.proto.v1";
+option java_multiple_files = true;
+option java_outer_classname = "WorkloadProto";
+option go_package = "github.com/furimeo/wisper/sasayaki/internal/wisperpb;wisperpb";
+
+import "google/protobuf/timestamp.proto";
+import "wisper/v1/database.proto";
+
+// The full desired state of one node. Always sent whole, never as a delta: a stream
+// through a tunnel drops, and a delta applied to an unknown base is how a node ends up
+// in a state nobody can name (design section 5.2).
+message NodeSpec {
+  // Strictly increasing per node, never reused. The node refuses anything below its
+  // applied generation, because a retried frame arriving late must not roll a machine
+  // backwards; an equal generation is accepted and reconciled again, because the disk
+  // may have drifted since it was applied.
+  uint64 generation = 1;
+  // When the panel built this spec. Compared against the node's clock in the status it
+  // sends back: clock skew breaks ACME and TLS in ways that are very hard to read
+  // backwards from the symptom (design section 7.2).
+  google.protobuf.Timestamp issued_at = 2;
+  // Anything running on this node that is not in this list is removed. That is the
+  // garbage-collection half of reconciliation, and the reason omission is deletion.
+  repeated Workload workloads = 3;
+  repeated Route routes = 4;
+  // The shared database engines this node hosts, at most one per engine.
+  repeated DatabaseEngineSpec engines = 5;
+  // Customer databases carved out of those engines. Here rather than created once by a
+  // command so a node that lost its disk rebuilds the accounts instead of leaving
+  // applications unable to log in.
+  repeated DatabaseGrant databases = 6;
+  repeated CronEntry cron = 7;
+  // The directories the web file manager is allowed to touch. There is no SSH and no
+  // SFTP, so this list is the entire surface a customer has on the node's filesystem
+  // (design section 8.2).
+  repeated FileRoot file_roots = 8;
+  RetentionPolicy retention = 9;
+  // How often to reconcile, in seconds, event or no event. Sent with the spec rather
+  // than compiled into the daemon so the interval can be tuned without an upgrade.
+  int64 reconcile_interval_seconds = 10;
+}
+
+// app runs a container; site is a directory of files served by the embedded Caddy with
+// no process at all, which is what makes an idle static site cost nothing (design
+// section 5.5).
+enum WorkloadKind {
+  WORKLOAD_KIND_UNSPECIFIED = 0;
+  WORKLOAD_KIND_APP = 1;
+  WORKLOAD_KIND_SITE = 2;
+}
+
+// Whether the workload should be up. Removing a workload is done by leaving it out of
+// the spec; stopping one keeps its container, volumes and logs, which is what a
+// customer expects from a pause button.
+enum DesiredState {
+  DESIRED_STATE_UNSPECIFIED = 0;
+  DESIRED_STATE_RUNNING = 1;
+  DESIRED_STATE_STOPPED = 2;
+}
+
+// gVisor by default. runc exists per workload because io_uring and some older binaries
+// do not work under runsc, and a platform with no escape hatch turns that into "your
+// app is broken" (design section 11.6). The panel shows which one is really in use.
+enum ContainerRuntime {
+  CONTAINER_RUNTIME_UNSPECIFIED = 0;
+  CONTAINER_RUNTIME_RUNSC = 1;
+  CONTAINER_RUNTIME_RUNC = 2;
+}
+
+// One deployable unit a customer owns.
+message Workload {
+  // Stable for the life of the service. Container names, volume directories and log
+  // streams are all derived from it, so it never changes once a workload exists.
+  string id = 1;
+  WorkloadKind kind = 2;
+  // What the customer called it. Used for the container name and in log lines, because
+  // an operator reading `docker ps` should not have to resolve ids by hand.
+  string name = 3;
+  // APP only. Ignored for a site, which has no image.
+  string image = 4;
+  // The digest the panel resolved for `image`, when it resolved one. Pinning here means
+  // two nodes told to run the same tag run the same bytes, and a restart does not
+  // silently pick up a moved tag.
+  string image_digest = 5;
+  // Docker's ENTRYPOINT and CMD, as argument vectors. Never a shell string: the panel
+  // builds argv and the node passes argv, so a service name with a semicolon in it
+  // cannot become a second command (AGENTS.md section 5).
+  repeated string entrypoint = 6;
+  repeated string command = 7;
+  string working_dir = 8;
+  // A repeated list rather than a map because the node hashes the spec to detect drift
+  // and protobuf map ordering is not deterministic, and because a value that must not
+  // be logged has to be marked as such.
+  repeated EnvVar env = 9;
+  ResourceLimits limits = 10;
+  repeated Mount mounts = 11;
+  repeated PortBinding ports = 12;
+  RestartPolicy restart = 13;
+  ContainerRuntime runtime = 14;
+  DesiredState desired_state = 15;
+  HealthCheck health_check = 16;
+  // The Docker network this workload joins, one per tenant. Two customers on the same
+  // node must not be able to reach each other's containers by address.
+  string tenant_network = 17;
+  // Set wherever the workload tolerates it. Writable paths then have to be mounts,
+  // which is also where quotas and backups can see them.
+  bool read_only_rootfs = 18;
+  // uid[:gid] inside the container. Combined with user-namespace remapping on the
+  // daemon, root in the container is nobody on the host.
+  string user = 19;
+  // How long SIGTERM gets before SIGKILL. A database-backed app that is killed at two
+  // seconds loses whatever it had in flight.
+  int64 stop_grace_seconds = 20;
+  // SITE only: which directory under releases/ the `current` symlink must point at.
+  // Publishing and rolling back are both just a new generation naming a different
+  // release, so there is no publish command and no rollback command to disagree with
+  // the spec (design section 5.5).
+  string release_id = 21;
+  SiteOptions site = 22;
+}
+
+// One environment variable.
+message EnvVar {
+  string name = 1;
+  string value = 2;
+  // The node must not put this value in a log line, an error message or any status it
+  // sends back. Marking it on the wire means neither side has to guess from the name.
+  bool secret = 3;
+}
+
+// Hard ceilings, applied through cgroups v2 by way of the Docker Engine API.
+message ResourceLimits {
+  // Docker's NanoCPUs. 1000000000 is one full core, 500000000 is half of one.
+  //
+  // This is NOT CPUShares multiplied by a thousand. The predecessor conflated the two
+  // and every container got a relative scheduling weight where a hard ceiling was
+  // intended, so a single busy workload could take the whole machine while the panel
+  // showed it politely limited (design section 9).
+  int64 nano_cpus = 1;
+  int64 memory_bytes = 2;
+  // Docker's memory+swap total, so it is always >= memory_bytes. Equal to memory_bytes
+  // disables swap; -1 is unlimited. Swapping a container is worse than killing it -
+  // the machine grinds instead of one workload failing - so the default is equal.
+  int64 memory_swap_bytes = 3;
+  // A fork bomb inside gVisor is still a fork bomb for the node's process table.
+  int64 pids_limit = 4;
+  // XFS project quota on this workload's volumes, in bytes. Enforced by the filesystem,
+  // not by polling, which is why the storage layout had to be decided before any code
+  // was written (design section 11.1).
+  int64 disk_bytes = 5;
+  // RLIMIT_NOFILE. Node and Go servers open a lot of sockets; the default is low enough
+  // that the failure looks like a networking bug.
+  int64 nofile_limit = 6;
+}
+
+enum MountKind {
+  MOUNT_KIND_UNSPECIFIED = 0;
+  // A persistent directory under the node's state root, quota-managed and backed up.
+  MOUNT_KIND_VOLUME = 1;
+  // The site's current release, read-only. Lets an app container serve or post-process
+  // the files a build produced without a second copy of them.
+  MOUNT_KIND_SITE_RELEASE = 2;
+  // RAM-backed scratch. Cheap way to give a read-only rootfs somewhere to write.
+  MOUNT_KIND_TMPFS = 3;
+}
+
+message Mount {
+  // Identifies the directory to the node, which resolves it under its own state root.
+  // The panel never sends a filesystem path: a path from the network that reaches a
+  // filesystem call is the bug class this whole platform has to avoid.
+  string volume_id = 1;
+  MountKind kind = 2;
+  // Absolute path inside the container.
+  string target = 3;
+  bool read_only = 4;
+  // Per-volume ceiling, separate from ResourceLimits.disk_bytes so one workload can
+  // have a large data volume and a small log volume.
+  int64 quota_bytes = 5;
+  // MOUNT_KIND_TMPFS only. Unbounded tmpfs is memory exhaustion with extra steps.
+  int64 tmpfs_bytes = 6;
+}
+
+enum PortProtocol {
+  PORT_PROTOCOL_UNSPECIFIED = 0;
+  PORT_PROTOCOL_TCP = 1;
+  PORT_PROTOCOL_UDP = 2;
+}
+
+// Publishing a port on the host is the exception, not the rule: HTTP traffic arrives
+// through the embedded Caddy, which reaches containers over the tenant network. This
+// exists for the workload that genuinely needs a raw port, such as a game server.
+message PortBinding {
+  uint32 container_port = 1;
+  // 0 means "do not publish". Routes still work: the edge does not need a host port.
+  uint32 host_port = 2;
+  PortProtocol protocol = 3;
+  // Bind address on the host. "127.0.0.1" keeps a published port off the public
+  // interface, which is what a database or an admin port wants.
+  string host_ip = 4;
+}
+
+enum RestartPolicyMode {
+  RESTART_POLICY_MODE_UNSPECIFIED = 0;
+  RESTART_POLICY_MODE_NEVER = 1;
+  RESTART_POLICY_MODE_ON_FAILURE = 2;
+  RESTART_POLICY_MODE_ALWAYS = 3;
+  // Survives a daemon restart but not an explicit stop, which is what a customer who
+  // pressed "stop" means.
+  RESTART_POLICY_MODE_UNLESS_STOPPED = 4;
+}
+
+message RestartPolicy {
+  RestartPolicyMode mode = 1;
+  // ON_FAILURE only. Beyond this the workload is reported as crash-looping instead of
+  // being restarted forever, so the customer is told rather than left wondering.
+  int32 max_retries = 2;
+}
+
+// Docker's own health check, configured by the panel rather than baked into an image
+// the customer may not control. An unhealthy container is reported, not killed: the
+// panel decides, because a failing check during a slow migration is not a reason to
+// restart a database-backed app in a loop.
+message HealthCheck {
+  // argv run inside the container. Empty disables the check.
+  repeated string test = 1;
+  int64 interval_seconds = 2;
+  int64 timeout_seconds = 3;
+  int32 retries = 4;
+  // Grace period after start during which failures do not count. Without it, anything
+  // that takes ten seconds to boot is permanently unhealthy.
+  int64 start_period_seconds = 5;
+}
+
+// How a static site is served. These are Caddy file_server settings, in the spec
+// because they are per-site decisions the customer makes, not defaults the node picks.
+message SiteOptions {
+  // Serve index_file for any path that does not exist, instead of a 404. Every
+  // client-side-routed site needs this and no server-rendered one does.
+  bool spa_fallback = 1;
+  // Defaults to index.html when empty.
+  string index_file = 2;
+  // Served with a 404 status when there is no spa_fallback.
+  string not_found_file = 3;
+  // Off unless the customer asks: an accidental directory listing is a data leak.
+  bool directory_listing = 4;
+}
+
+// On-demand issuance is the normal case: the certificate is fetched the first time a
+// visitor arrives for a domain the in-process route table already knows, so it works
+// while the panel is down (design section 5.4).
+enum TlsMode {
+  TLS_MODE_UNSPECIFIED = 0;
+  TLS_MODE_ON_DEMAND = 1;
+  // Plain HTTP. For a domain whose DNS still points somewhere else, so the customer can
+  // verify the site before cutting over and before ACME starts failing at them.
+  TLS_MODE_DISABLED = 2;
+}
+
+// One hostname pointing at one workload. In v1 a domain belongs to exactly one node, so
+// no certificate ever has to be shared between machines (design section 5.4).
+message Route {
+  string domain = 1;
+  string workload_id = 2;
+  // The container port to proxy to. Ignored when the workload is a site: there is no
+  // process, and the edge serves the release directory directly.
+  uint32 port = 3;
+  TlsMode tls_mode = 4;
+  // Empty means the whole host. Lets one domain serve an API from one workload and a
+  // site from another, which is otherwise a reason to buy a second domain.
+  string path_prefix = 5;
+  // Redirect plain HTTP to HTTPS. Off for TLS_MODE_DISABLED, and off for the domain
+  // that is still being validated.
+  bool force_https = 6;
+}
+
+// A scheduled command inside a workload's container.
+//
+// Cron lives in the spec, unlike backups, because it is the customer's schedule and it
+// has to keep firing while the panel is unreachable. Backups are the platform's and are
+// coordinated centrally, where the retention policy and the destination credentials are.
+message CronEntry {
+  string id = 1;
+  // The container the command runs in. It must be a workload in the same spec.
+  string workload_id = 2;
+  // Five-field cron.
+  string schedule = 3;
+  // IANA zone name. Empty is UTC. A customer who asked for "3am" means their 3am, and
+  // a daily job that moves twice a year is a support ticket nobody enjoys.
+  string timezone = 4;
+  // argv. Never a shell string, for the same reason as Workload.command.
+  repeated string command = 5;
+  // Killed after this long and reported as failed. A cron job with no timeout is how a
+  // node ends up with two hundred copies of the same stuck script.
+  int64 timeout_seconds = 6;
+  // False means a run that starts while the previous one is still going is skipped.
+  // Overlap is opt-in because the common case - a backup script, an importer - corrupts
+  // itself when two copies run at once.
+  bool allow_overlap = 7;
+}
+
+enum FileRootKind {
+  FILE_ROOT_KIND_UNSPECIFIED = 0;
+  // A workload volume: what the customer thinks of as their disk.
+  FILE_ROOT_KIND_VOLUME = 1;
+  // The site's releases tree, so a customer can look at what a build actually produced.
+  FILE_ROOT_KIND_SITE = 2;
+  // Where the panel pushes archives before it asks for a build. Not shown to customers;
+  // it exists because a node can reach the panel's gRPC endpoint and nothing else, so
+  // an uploaded zip travels the same resumable path as any other upload.
+  FILE_ROOT_KIND_UPLOAD_STAGING = 3;
+}
+
+// A directory the file manager may operate in.
+//
+// Every file operation names a root by id and a path relative to it. The panel never
+// learns, and never sends, an absolute path on the node: the node resolves the root
+// itself and rejects anything that escapes it. Path traversal is the largest attack
+// surface in v1 and this is the shape that makes it checkable in one place.
+message FileRoot {
+  string id = 1;
+  FileRootKind kind = 2;
+  string workload_id = 3;
+  // Which mount of that workload this exposes. Empty for a site or staging root.
+  string volume_id = 4;
+  // What the file manager shows in its breadcrumb.
+  string label = 5;
+  // False for the releases of a static site: a customer editing a built artifact in
+  // place would have it silently reverted by the next deployment.
+  bool writable = 6;
+  int64 quota_bytes = 7;
+}
+
+// What the node keeps and what it sweeps. On the node rather than the panel because the
+// node is the only side that knows how much disk is actually left.
+message RetentionPolicy {
+  // Static site releases kept for instant rollback. Rollback is pointing the symlink at
+  // an older one, so this number is literally how far back a customer can go.
+  int32 keep_releases = 1;
+  // Build workspaces (checkout, node_modules, cache) kept after a build finishes. Zero
+  // deletes them immediately; a few make the next build much faster.
+  int32 keep_build_workspaces = 2;
+  // Docker json-file log rotation. Unrotated container logs are the classic way a node
+  // fills its disk overnight.
+  int64 container_log_max_bytes = 3;
+  int32 container_log_max_files = 4;
+  // Half-finished chunked uploads are swept after this. A phone that lost signal
+  // mid-upload leaves parts behind and nobody comes back for them.
+  int64 orphan_upload_ttl_seconds = 5;
+}
+
+// Where a workload actually is. Phases the node can observe, not a mirror of Docker's
+// own states, because "pulling" is what a customer is waiting on and Docker calls that
+// "created".
+enum WorkloadPhase {
+  WORKLOAD_PHASE_UNSPECIFIED = 0;
+  WORKLOAD_PHASE_PENDING = 1;
+  WORKLOAD_PHASE_PULLING = 2;
+  WORKLOAD_PHASE_STARTING = 3;
+  WORKLOAD_PHASE_RUNNING = 4;
+  WORKLOAD_PHASE_UNHEALTHY = 5;
+  WORKLOAD_PHASE_STOPPED = 6;
+  WORKLOAD_PHASE_FAILED = 7;
+  WORKLOAD_PHASE_CRASH_LOOPING = 8;
+  // Docker did not answer. The container is probably fine and must not be touched:
+  // mistaking "cannot see it" for "does not exist" is the fastest way to delete a
+  // customer's data (AGENTS.md section 4.5).
+  WORKLOAD_PHASE_UNKNOWN = 9;
+}
+
+// The observed half of a Workload. The panel owns intent, the node owns fact; nothing
+// here is ever written back into the spec.
+message WorkloadStatus {
+  string workload_id = 1;
+  WorkloadPhase phase = 2;
+  string container_id = 3;
+  // What is really running, which is how a moved tag becomes visible instead of being a
+  // mystery restart.
+  string image_digest = 4;
+  int32 restart_count = 5;
+  // Of the last exit. Meaningless while running, and the phase says which it is.
+  int32 exit_code = 6;
+  // Human-readable reason for the current phase: the pull error, the OOM kill, the
+  // health check output.
+  string message = 7;
+  google.protobuf.Timestamp started_at = 8;
+  google.protobuf.Timestamp last_transition_at = 9;
+  // The runtime in effect, not the one requested. A node without runsc falls back to
+  // runc and the panel has to say so out loud rather than imply isolation it does not
+  // have (design section 7.2).
+  ContainerRuntime runtime = 10;
+  // SITE only: which release the symlink currently resolves to. The panel compares it
+  // with the spec to show a deployment as live.
+  string release_id = 11;
+}
+
+enum CertificateState {
+  CERTIFICATE_STATE_UNSPECIFIED = 0;
+  CERTIFICATE_STATE_NONE = 1;
+  CERTIFICATE_STATE_ISSUING = 2;
+  CERTIFICATE_STATE_VALID = 3;
+  CERTIFICATE_STATE_FAILED = 4;
+}
+
+// Whether a route is actually serving. The customer pointed DNS at this node and wants
+// to know why nothing happens; this is the answer.
+message RouteStatus {
+  string domain = 1;
+  // The edge has the route loaded and a backend to send it to.
+  bool serving = 2;
+  CertificateState certificate = 3;
+  // So the panel can warn before a renewal that has been failing quietly runs out.
+  google.protobuf.Timestamp certificate_not_after = 4;
+  // The ACME failure, verbatim. "DNS does not point here yet" and "rate limited" need
+  // completely different actions from the customer.
+  string last_error = 5;
+}
+
+// The observed half of a CronEntry.
+message CronStatus {
+  string cron_id = 1;
+  google.protobuf.Timestamp last_run_at = 2;
+  google.protobuf.Timestamp next_run_at = 3;
+  int32 last_exit_code = 4;
+  // True while a run is in flight, so the panel does not show "never ran" for a job
+  // that is running right now.
+  bool running = 5;
+  // Set when the last run was skipped because the previous one had not finished and
+  // allow_overlap is false. Otherwise the schedule looks broken.
+  bool last_run_skipped = 6;
+  string last_error = 7;
+}

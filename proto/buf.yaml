@@ -1,0 +1,22 @@
+# The module root is this directory, so an import reads `wisper/v1/node.proto` on both
+# sides: buf resolves it from here and the Gradle protobuf plugin resolves it from
+# `srcDir '../proto'`. One spelling, two toolchains.
+version: v2
+modules:
+  - path: .
+lint:
+  use:
+    - STANDARD
+  except:
+    # These three demand that every RPC's messages be named after the call - Connect
+    # would need ConnectRequest and ConnectResponse. The messages here are named after
+    # what they carry, because NodeMessage and PanelMessage travel on more than one
+    # stream and CommandResult is read by code that never sees the call it came from.
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+    - RPC_REQUEST_RESPONSE_UNIQUE
+breaking:
+  use:
+    # Within a protocol version the ordinary rules apply: add fields, never renumber,
+    # never reuse a tag. Bumping internal/version.Protocol is what a real break costs.
+    - FILE

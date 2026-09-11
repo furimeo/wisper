@@ -1,0 +1,499 @@
+// NodeService: how a node joins a panel and how the two talk for the rest of its life.
+//
+// One thing decides the shape of everything here. The panel has no public IP - it sits
+// behind a tunnel - so it can never dial a node. The node is always the gRPC client and
+// the panel is always the server, and every "the panel tells the node to..." below is a
+// message travelling down the response side of a stream the node opened (design
+// section 5.2). The second thing is that such a stream drops, routinely: nothing here
+// carries a delta, so reconnecting means resending the whole spec and it does not
+// matter how long the node was gone.
+//
+// Authentication is in gRPC metadata, and this is the only place it is written down:
+//
+//   wisper-node-id       the node id from EnrollResponse
+//   wisper-node-token    the long-lived credential from EnrollResponse
+//   wisper-protocol      the protocol version in decimal, so the panel can refuse an
+//                        incompatible node before it has parsed a frame
+//
+// Enroll is the one RPC carrying none of them: there is no credential yet, and it
+// authenticates with the single-use bootstrap token in its body.
+//
+// Over 300 lines and not split further because it is one conversation - handshake,
+// commands, acknowledgements and status all reference each other. The parts with their
+// own vocabulary (the spec, terminals, files, stats, backups, databases, builds) are
+// already their own files, and this one only references them.
+syntax = "proto3";
+
+package wisper.v1;
+
+option java_package = "lhqm.furimeo.wisper.proto.v1";
+option java_multiple_files = true;
+option java_outer_classname = "NodeProto";
+option go_package = "github.com/furimeo/wisper/sasayaki/internal/wisperpb;wisperpb";
+
+import "google/protobuf/timestamp.proto";
+import "wisper/v1/backup.proto";
+import "wisper/v1/build.proto";
+import "wisper/v1/database.proto";
+import "wisper/v1/files.proto";
+import "wisper/v1/stats.proto";
+import "wisper/v1/terminal.proto";
+import "wisper/v1/workload.proto";
+
+service NodeService {
+  // Join a panel with a single-use bootstrap token and walk away with a permanent
+  // credential. Unauthenticated by necessity; the token in the request is the proof.
+  rpc Enroll(EnrollRequest) returns (EnrollResponse);
+
+  // The control channel, open for the life of the daemon: negotiates the protocol
+  // version in its first frame, then carries heartbeats up and commands down. It is the
+  // only stream that must exist - everything else is opened in response to something
+  // that arrives on it.
+  rpc Connect(stream NodeMessage) returns (stream PanelMessage);
+
+  // The result of a reconcile pass. Unary rather than a frame on Connect because it is
+  // a discrete, retryable unit: if the panel is restarting, the node retries this with
+  // backoff instead of tearing down the control stream and the commands queued on it.
+  rpc ReportStatus(StatusBatch) returns (Ack);
+
+  // Metrics, pushed continuously. Its own stream so a burst of samples cannot delay a
+  // heartbeat, and so the panel can throttle it with Ack.pause_seconds alone.
+  rpc PushStats(stream StatSample) returns (Ack);
+
+  // One interactive session, opened by the node after a StartTerminal command.
+  // Bidirectional and framed - see terminal.proto for why that is not negotiable.
+  rpc Terminal(stream TerminalFrame) returns (stream TerminalFrame);
+
+  // Log output for every active subscription. Subscriptions start and stop with
+  // LogRequest and StopLogStream on the control channel, so this call stays open for
+  // the life of the daemon like PushStats does.
+  rpc LogStream(stream LogChunk) returns (Ack);
+
+  // File operations: the node opens the stream, the panel drives it. FileRequest goes
+  // down, FileEvent comes back up - reversed-looking for the same reason as everything
+  // else here, that only the node can dial.
+  rpc FileOp(stream FileEvent) returns (stream FileRequest);
+}
+
+// --- Enrolment (design section 7.3) ----------------------------------------
+
+message EnrollRequest {
+  // Single-use, fifteen-minute TTL, tied to the node record an administrator created.
+  // In the body rather than the metadata so the interceptor's rule stays simple: Enroll
+  // is the one unauthenticated method, everything else needs a credential.
+  string bootstrap_token = 1;
+  // Raw Ed25519 public key, 32 bytes. The identity that outlives any credential, and
+  // what makes the signature below provable rather than decorative.
+  bytes public_key = 2;
+  // Proof the sender holds the matching private key: Ed25519 over the ASCII bytes of
+  // "wisper-enroll-v1\n" + bootstrap_token + "\n" + machine_fingerprint. Without it,
+  // whoever intercepts a token can enrol with a key they invented.
+  bytes signature = 3;
+  // Hex SHA-256 over machine-id and hardware serials. Cloning a running node produces
+  // two machines with one credential; the panel sees one fingerprint arriving from two
+  // addresses, suspends both and tells an administrator rather than quietly splitting
+  // the workload between them (design section 7.3).
+  string machine_fingerprint = 4;
+  // The full preflight result. Stored, shown on the node's page, and used for
+  // placement: a node without runsc is usable but less isolated, and that must be
+  // visible rather than assumed (design section 7.2).
+  DoctorReport doctor = 5;
+  // What is enrolling. A node whose protocol the panel does not speak is rejected here,
+  // before it holds a credential, rather than at every Connect afterwards.
+  string agent_version = 6;
+  uint32 protocol_version = 7;
+  // What the machine calls itself, and the addresses customers' DNS will point at. The
+  // node knows them; the panel would be guessing from the tunnel.
+  string hostname = 8;
+  repeated string advertise_addresses = 9;
+}
+
+message EnrollResponse {
+  // Opaque to the node, which stores it in /etc/wisper/node.json and returns it in
+  // metadata from then on. A string, so the panel can change what it puts in it.
+  string node_id = 1;
+  // The long-lived credential. Written 0600, root-owned, never logged.
+  string credential = 2;
+  // Hex SHA-256 of the panel's TLS leaf certificate, pinned on first use so a hijacked
+  // tunnel or a stolen DNS record cannot become a machine-in-the-middle (section 7.1).
+  // The node compares it with the certificate it actually saw in this handshake; if
+  // they differ, something else terminated the TLS and the credential stays unwritten.
+  string panel_certificate_sha256 = 3;
+  // What an administrator named this node: used in log lines, and as the confirmation
+  // phrase `uninstall --purge` demands.
+  string node_name = 4;
+  // What the panel will speak. Equal to the request's, or the call is rejected.
+  uint32 protocol_version = 5;
+  int64 reconcile_interval_seconds = 6;
+  int64 heartbeat_interval_seconds = 7;
+}
+
+// Whether failing a check stops an installation. Missing runsc is advisory - the node
+// runs on runc and the panel says so out loud. Missing cgroups v2 is required, because
+// without it no limit in the spec can be enforced.
+enum DoctorSeverity {
+  DOCTOR_SEVERITY_UNSPECIFIED = 0;
+  DOCTOR_SEVERITY_REQUIRED = 1;
+  DOCTOR_SEVERITY_ADVISORY = 2;
+}
+
+enum DoctorOutcome {
+  DOCTOR_OUTCOME_UNSPECIFIED = 0;
+  DOCTOR_OUTCOME_PASS = 1;
+  DOCTOR_OUTCOME_WARN = 2;
+  DOCTOR_OUTCOME_FAIL = 3;
+}
+
+// One preflight check. `sasayaki doctor` changes nothing on disk and the installer runs
+// it before writing anything, so "doctor failed, nothing was installed" is literally
+// true (design section 7.2).
+message DoctorCheck {
+  // Stable identifier - "docker.socket", "kernel.cgroups2", "clock.synchronised" - so
+  // the panel can compare two reports even after the wording of `title` changes.
+  string id = 1;
+  string title = 2;
+  DoctorSeverity severity = 3;
+  DoctorOutcome outcome = 4;
+  // What was found: the version that was too old, the port that was busy and what held
+  // it.
+  string detail = 5;
+  // What to type to fix it. A check that says "no" without saying "then do this" is a
+  // support ticket rather than a check.
+  string remedy = 6;
+}
+
+message DoctorReport {
+  repeated DoctorCheck checks = 1;
+  MachineFacts machine = 2;
+  google.protobuf.Timestamp taken_at = 3;
+  // Computed by the node so the installer and the panel cannot disagree about what a
+  // pass is. False means an install must not proceed.
+  bool required_checks_passed = 4;
+  // A report is only comparable against the checks that existed when it was taken.
+  string agent_version = 5;
+}
+
+// What the machine is. Gathered at doctor time and again on every reconnect: RAM gets
+// added and disks get resized, and stale capacity is a placement that fails on arrival.
+message MachineFacts {
+  string hostname = 1;
+  // "debian 13", "ubuntu 24.04".
+  string operating_system = 2;
+  string kernel_version = 3;
+  // GOARCH, so it matches the binary names the panel serves.
+  string architecture = 4;
+  int32 cpu_cores = 5;
+  int64 memory_bytes = 6;
+  int64 disk_total_bytes = 7;
+  int64 disk_free_bytes = 8;
+  // Filesystem under /var/lib/wisper. Only XFS has project quotas, so on anything else
+  // the panel must show disk limits as advisory instead of pretending they are enforced.
+  string state_filesystem = 9;
+  bool project_quota_supported = 10;
+  bool cgroups_v2 = 11;
+  string docker_version = 12;
+  string docker_api_version = 13;
+  // Without runsc every workload here runs under runc however the spec asks, and the
+  // panel marks the node as less isolated.
+  bool runsc_available = 14;
+  string runsc_version = 15;
+  // Caddy needs both, and ACME HTTP-01 cannot work without 80.
+  bool port_80_free = 16;
+  bool port_443_free = 17;
+  // Measured against the panel's clock during enrolment. Skew breaks TLS and ACME with
+  // symptoms that point everywhere except at the clock.
+  bool clock_synchronised = 18;
+  int64 clock_offset_millis = 19;
+  repeated string advertise_addresses = 20;
+}
+
+// --- The control channel ----------------------------------------------------
+
+// Node to panel. NodeHello must be the first frame; anything else on an unnegotiated
+// stream is refused.
+message NodeMessage {
+  oneof payload {
+    NodeHello hello = 1;
+    Heartbeat heartbeat = 2;
+    SpecApplied spec_applied = 3;
+    CommandResult command_result = 4;
+    NodeEvent event = 5;
+  }
+}
+
+// Panel to node.
+message PanelMessage {
+  // Correlates a command with the CommandResult answering it. Empty for hello, the one
+  // frame that is not a command.
+  string command_id = 1;
+  oneof payload {
+    PanelHello hello = 2;
+    // The whole desired state. Always complete, never a delta (design section 5.1).
+    ApplySpec apply_spec = 3;
+    StartTerminal start_terminal = 4;
+    StartBuild start_build = 5;
+    RunBackup run_backup = 6;
+    RestoreBackup restore_backup = 7;
+    ProvisionDatabase provision_database = 8;
+    RotateDatabasePassword rotate_database_password = 9;
+    DropDatabase drop_database = 10;
+    UpgradeNode upgrade = 11;
+    DrainNode drain = 12;
+    ReconcileNow reconcile_now = 13;
+    // Start and stop pushing logs for one subscription (see stats.proto).
+    LogRequest start_log_stream = 14;
+    StopLogStream stop_log_stream = 15;
+  }
+}
+
+// First frame from the node: everything the panel needs to decide whether to keep the
+// stream at all.
+message NodeHello {
+  // internal/version.Protocol. The panel refuses the stream with FAILED_PRECONDITION
+  // when it cannot speak this and shows "node needs upgrading" - two versions quietly
+  // misunderstanding each other is what this handshake exists to prevent (section 7.5).
+  uint32 protocol_version = 1;
+  string agent_version = 2;
+  string agent_commit = 3;
+  // What the node has actually applied, sent first thing so the panel knows immediately
+  // whether it is behind instead of waiting for a status batch.
+  uint64 applied_generation = 4;
+  // Refreshed on every reconnect, not just at enrolment.
+  MachineFacts machine = 5;
+  // Re-run on start: it is cheap, and it is how the panel learns that runsc was removed
+  // or the disk was replaced with a smaller one.
+  DoctorReport doctor = 6;
+  // True when the daemon just started, as opposed to reconnecting after a dropped
+  // stream. A restart and a flaky tunnel deserve different log lines.
+  bool fresh_start = 7;
+}
+
+// First frame from the panel, and the acceptance of the handshake.
+message PanelHello {
+  // The version the panel will speak; it equals the node's. A mismatch ends the stream
+  // rather than negotiating down, because a partly-understood control channel is worse
+  // than none.
+  uint32 protocol_version = 1;
+  string node_id = 2;
+  string panel_version = 3;
+  int64 reconcile_interval_seconds = 4;
+  int64 heartbeat_interval_seconds = 5;
+  // The generation the spec that follows will carry. A node already at it can say so
+  // and skip a redundant apply, which matters on a flapping tunnel.
+  uint64 current_generation = 6;
+}
+
+enum NodeHealth {
+  NODE_HEALTH_UNSPECIFIED = 0;
+  NODE_HEALTH_HEALTHY = 1;
+  // Something is wrong and nothing has been destroyed because of it: Docker is not
+  // answering, the disk is nearly full, an engine container is down. Everything keeps
+  // running and the node keeps retrying (AGENTS.md section 4.5).
+  NODE_HEALTH_DEGRADED = 2;
+  // Draining: still serving, not accepting anything new.
+  NODE_HEALTH_DRAINING = 3;
+}
+
+// Sent on a fixed interval. Liveness, drift and capacity in one small frame, because
+// "is this node alive" has to be cheap enough to ask constantly.
+message Heartbeat {
+  // The drift signal: the panel compares it with the generation it last published and
+  // resends the spec when they differ (design section 11.2).
+  uint64 applied_generation = 1;
+  NodeHealth health = 2;
+  // Why, when it is not healthy. "docker unreachable since 12:04" is what an operator
+  // needs; "degraded" alone is not.
+  string health_detail = 3;
+  Capacity capacity = 4;
+  uint32 running_workloads = 5;
+  // The node's clock, compared with arrival time - so skew is noticed here rather than
+  // as an inexplicable certificate failure a week later.
+  google.protobuf.Timestamp sent_at = 6;
+}
+
+// What the node has and what is spoken for. Both, because placement needs what has been
+// promised and not just what is used: an idle workload still holds its limits, and
+// packing against live usage is how a node dies at the first spike (sections 7.6, 7.8).
+message Capacity {
+  // Cores * 1000000000, the same nano-CPU unit as ResourceLimits.nano_cpus, so
+  // placement never converts between units.
+  int64 nano_cpus_total = 1;
+  // Sum of the limits of everything placed here.
+  int64 nano_cpus_allocated = 2;
+  // Measured over the last interval.
+  int64 nano_cpus_used = 3;
+  int64 memory_bytes_total = 4;
+  int64 memory_bytes_allocated = 5;
+  int64 memory_bytes_used = 6;
+  int64 disk_bytes_total = 7;
+  int64 disk_bytes_allocated = 8;
+  int64 disk_bytes_used = 9;
+  double load_average_1m = 10;
+  // The node has decided it is too full for more, before the panel works it out from
+  // the numbers above. A node protecting itself beats a scheduler being clever with
+  // figures that are a minute old.
+  bool accepting_workloads = 11;
+}
+
+// --- Commands and their results ---------------------------------------------
+
+message ApplySpec {
+  NodeSpec spec = 1;
+  // Why the panel is sending this: "deployment 412", "reconnect", "node resumed". It
+  // goes in the daemon's log, where a routine resend and a real change otherwise look
+  // identical.
+  string reason = 2;
+}
+
+// The node's immediate answer to ApplySpec: received, understood, stored. Deliberately
+// thin - what happened to each workload arrives in the next StatusBatch, because
+// convergence takes longer than an acknowledgement should.
+message SpecApplied {
+  uint64 generation = 1;
+  bool accepted = 2;
+  // Why not, when it was not: a generation below the applied one, or a spec asking for
+  // something this node cannot do. The panel shows this instead of waiting for a
+  // convergence that will never come.
+  string rejected_reason = 3;
+  google.protobuf.Timestamp received_at = 4;
+}
+
+// Replace the running binary (design section 7.5). Safe because sasayaki is only a
+// control plane: customers' containers are children of Docker, not of the daemon, so
+// restarting it touches no workload.
+message UpgradeNode {
+  string target_version = 1;
+  // Where to fetch it and the hash it must have, verified before anything is replaced.
+  // An upgrade that installs an unverified binary is a remote code execution feature.
+  string download_url = 2;
+  string sha256 = 3;
+}
+
+message UpgradeResult {
+  string previous_version = 1;
+  string new_version = 2;
+  // The new binary did not come back and the old one was put back. Reported rather than
+  // inferred from a version that failed to change, so the panel can say plainly that
+  // the upgrade failed and the node is fine (design section 7.5).
+  bool rolled_back = 3;
+  string detail = 4;
+}
+
+// Stop accepting work and move what can be moved (design section 7.7).
+message DrainNode {
+  // Stop the workloads with no volume so the panel can place them elsewhere. False is a
+  // survey: report what would happen and change nothing.
+  bool evacuate_stateless = 1;
+  string reason = 2;
+}
+
+message DrainReport {
+  // Stopped here, ready for the panel to place elsewhere.
+  repeated string evacuated_workloads = 1;
+  // Has a volume, so moving it means moving data. Listed for an administrator to decide
+  // about and never moved automatically: a silent migration is a silent data loss.
+  repeated string pinned_workloads = 2;
+  // Nothing evacuable is left.
+  bool complete = 3;
+}
+
+// Reconcile now instead of at the next tick. Purely an optimisation - the fifteen-second
+// loop would get there anyway, which is what makes this command safe to lose.
+message ReconcileNow {
+  string reason = 1;
+}
+
+// What came of one command. The panel matches it by command_id and finishes whatever
+// was waiting on it.
+message CommandResult {
+  string command_id = 1;
+  bool ok = 2;
+  // The failure, or a note on success. It is shown in the UI, so it is written for a
+  // person.
+  string detail = 3;
+  google.protobuf.Timestamp finished_at = 4;
+  // Typed outcomes for the commands that produce more than a yes; absent for the ones
+  // that do not, such as ApplySpec and the log subscriptions.
+  oneof outcome {
+    DatabaseProvisioned database = 5;
+    BackupCompleted backup = 6;
+    RestoreCompleted restore = 7;
+    BuildCompleted build = 8;
+    DrainReport drain = 9;
+    UpgradeResult upgrade = 10;
+  }
+}
+
+// --- Status and events ------------------------------------------------------
+
+// Everything the node observed in one reconcile pass. The node owns fact; none of this
+// is ever written back into a spec (AGENTS.md section 4.2).
+message StatusBatch {
+  string node_id = 1;
+  // Drift detection: equal to the published generation means converged, lower means the
+  // node has not caught up, higher means two panels are driving one node.
+  uint64 applied_generation = 2;
+  google.protobuf.Timestamp observed_at = 3;
+  repeated WorkloadStatus workloads = 4;
+  repeated RouteStatus routes = 5;
+  repeated DatabaseStatus databases = 6;
+  repeated CronStatus cron = 7;
+  NodeHealth health = 8;
+  string health_detail = 9;
+  // Docker did not answer, so these are last-known rather than observed. The panel must
+  // not conclude that anything missing has gone away: "cannot see it" is not "does not
+  // exist", and confusing the two deletes a customer's container (AGENTS.md 4.5).
+  bool partial = 10;
+}
+
+enum NodeEventKind {
+  NODE_EVENT_KIND_UNSPECIFIED = 0;
+  NODE_EVENT_KIND_DOCKER_UNREACHABLE = 1;
+  NODE_EVENT_KIND_DOCKER_RECOVERED = 2;
+  // Past the disk headroom mark: the node goes read-mostly and refuses new deployments
+  // before it fills up rather than after (design section 7.6).
+  NODE_EVENT_KIND_DISK_CRITICAL = 3;
+  NODE_EVENT_KIND_WORKLOAD_CRASH_LOOPING = 4;
+  NODE_EVENT_KIND_WORKLOAD_OOM_KILLED = 5;
+  NODE_EVENT_KIND_CERTIFICATE_ISSUED = 6;
+  NODE_EVENT_KIND_CERTIFICATE_FAILED = 7;
+  NODE_EVENT_KIND_UPGRADE_ROLLED_BACK = 8;
+  NODE_EVENT_KIND_CLOCK_SKEW = 9;
+  // The daemon started. The panel resends the spec and records it, so a node restarting
+  // in a loop is visible instead of merely slow.
+  NODE_EVENT_KIND_DAEMON_STARTED = 10;
+}
+
+enum EventSeverity {
+  EVENT_SEVERITY_UNSPECIFIED = 0;
+  EVENT_SEVERITY_INFO = 1;
+  EVENT_SEVERITY_WARNING = 2;
+  EVENT_SEVERITY_CRITICAL = 3;
+}
+
+// Something happened that nobody asked about. Heartbeats carry the steady state; this
+// carries the transitions between them - a certificate issued, an upgrade rolled back,
+// a container the kernel killed are all invisible in either neighbouring heartbeat.
+message NodeEvent {
+  NodeEventKind kind = 1;
+  EventSeverity severity = 2;
+  // Workload id, domain, or empty, depending on the kind.
+  string subject_id = 3;
+  string detail = 4;
+  google.protobuf.Timestamp at = 5;
+}
+
+// The answer to a status batch, a stats sample and a log chunk. It carries a throttle
+// rather than being empty: a node with two hundred chatty containers can outrun a panel
+// that is also serving people, and the alternative to telling it to slow down is
+// dropping its connection.
+message Ack {
+  google.protobuf.Timestamp received_at = 1;
+  // How many messages this acknowledges, for the streaming calls.
+  uint64 accepted = 2;
+  // Stop sending on this stream for this long. Zero means carry on.
+  int64 pause_seconds = 3;
+  // The panel wants a full status batch now: it restarted, or it has no record of this
+  // node's current state.
+  bool request_status = 4;
+}
