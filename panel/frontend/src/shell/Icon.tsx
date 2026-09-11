@@ -45,7 +45,13 @@ const PATHS = {
     'M4.5 10.8V6a1.5 1.5 0 0 1 1.5-1.5h4.8a1.5 1.5 0 0 1 1.1.4l7 7a1.5 1.5 0 0 1 0 2.2l-4.8 4.8a1.5 1.5 0 0 1-2.2 0l-7-7a1.5 1.5 0 0 1-.4-1.1ZM8.5 9h.01',
   account: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20.5c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6',
   shield: 'M12 3.5 5 6v5.5c0 4.2 2.9 7.6 7 9 4.1-1.4 7-4.8 7-9V6l-7-2.5Z',
-  key: 'M15.5 4.5a4 4 0 1 0 1.2 7.8l.3-.1-8.5 8.5H5.5v-3.3l1.7-1.7M9.4 15.1l1.8 1.8M17 8.2h.01',
+  // The bow is two half-arcs rather than one. A single arc whose chord is within a
+  // rounding error of the diameter is very nearly degenerate: the renderer closes it as
+  // best it can and leaves a visible notch where the ends almost meet, which reads as a
+  // broken glyph at 20px. Two halves always close.
+  key:
+    'M8 12a4 4 0 1 0 0 8 4 4 0 1 0 0-8M10.8 13.2 20.5 3.5' +
+    'M18 6l2 2M15.5 8.5l2 2',
   signOut: 'M15 8.5V6a1.5 1.5 0 0 0-1.5-1.5h-7A1.5 1.5 0 0 0 5 6v12a1.5 1.5 0 0 0 1.5 1.5h7A1.5 1.5 0 0 0 15 18v-2.5M10.5 12h9M16.5 8.5 20 12l-3.5 3.5',
   sun:
     'M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2' +

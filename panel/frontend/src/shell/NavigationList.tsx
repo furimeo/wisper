@@ -72,7 +72,7 @@ function Section({
               >
                 <Icon
                   name={item.icon}
-                  className={cx('size-5', active ? '' : 'text-ink-500 dark:text-ink-400')}
+                  className={active ? undefined : 'text-ink-500 dark:text-ink-400'}
                 />
                 <span className="truncate">{item.label}</span>
               </Link>
