@@ -92,7 +92,7 @@ gives you a single-use token and the exact command, with the checksum to verify 
 ```bash
 curl -fsSL https://your-panel/install.sh -o install.sh
 sha256sum -c <<< "<the hash the panel shows>  install.sh"
-sudo ./install.sh --token-file token.txt
+sudo sh ./install.sh --token-file token.txt
 ```
 
 The installer runs `sasayaki doctor` before it writes anything, and refuses to install onto

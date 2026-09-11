@@ -209,6 +209,27 @@ func entryPath(root, name string) (string, error) {
 	if filepath.IsAbs(converted) || filepath.VolumeName(converted) != "" {
 		return "", fmt.Errorf("backup: the archive entry %q is an absolute path", name)
 	}
+	/*
+	 * A backslash anywhere in the name, refused outright.
+	 *
+	 * tar and zip both use "/" and nothing else, so a name carrying "\" was written by
+	 * something that believed it was a separator. On the node it is not: this daemon only
+	 * runs on Linux, so `..\escaped.txt` is one ordinary filename and lands inside the
+	 * volume rather than above it - which is why the segment loop below, splitting on "/",
+	 * never sees it.
+	 *
+	 * That makes it harmless here and dangerous everywhere else. The name is handed on: to
+	 * the file manager, to a customer's script, to whatever reads the volume next, and the
+	 * first reader that treats "\" as a separator gets the traversal the archive was
+	 * written to perform. Refusing costs nothing - no legitimate archive contains one - and
+	 * it keeps this check answering the same way on every platform, rather than passing on
+	 * a developer's Windows machine and failing in CI.
+	 */
+	if strings.ContainsRune(cleaned, '\\') {
+		return "", fmt.Errorf(
+			"backup: the archive entry %q contains a backslash, which is a path separator "+
+				"to whoever reads it next", name)
+	}
 	for _, segment := range strings.Split(cleaned, "/") {
 		if segment == ".." {
 			return "", fmt.Errorf("backup: the archive entry %q climbs out of the volume", name)
