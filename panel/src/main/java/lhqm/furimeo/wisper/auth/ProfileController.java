@@ -1,7 +1,9 @@
 package lhqm.furimeo.wisper.auth;
 
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.context.MessageSource;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,10 +29,15 @@ public class ProfileController {
 
     private final AccountRepository accounts;
     private final UpdateDisplayName updateDisplayName;
+    private final ChooseLanguage chooseLanguage;
+    private final MessageSource messages;
 
-    public ProfileController(AccountRepository accounts, UpdateDisplayName updateDisplayName) {
+    public ProfileController(AccountRepository accounts, UpdateDisplayName updateDisplayName,
+                             ChooseLanguage chooseLanguage, MessageSource messages) {
         this.accounts = accounts;
         this.updateDisplayName = updateDisplayName;
+        this.chooseLanguage = chooseLanguage;
+        this.messages = messages;
     }
 
     /** The settings section's landing page. */
@@ -44,6 +51,9 @@ public class ProfileController {
         Account account = accounts.findById(principal.id())
                 .orElseThrow(() -> NotFoundException.of("account", principal.id()));
         model.addAttribute("profile", AccountProfile.of(account));
+        model.addAttribute("locales", List.of(SupportedLocale.values()).stream()
+                .map(locale -> Map.of("tag", locale.tag(), "name", locale.nativeName()))
+                .toList());
         return "auth/Profile";
     }
 
@@ -57,6 +67,29 @@ public class ProfileController {
             InertiaFlash.success(flash, "Saved.");
         } catch (CredentialRejected rejected) {
             InertiaFlash.errors(flash, Map.of(rejected.field(), rejected.getMessage()));
+        }
+        return "redirect:/settings/profile";
+    }
+
+    /**
+     * Changes the language the panel is read in.
+     *
+     * <p>Its own endpoint rather than a field on the rename form. The two are unrelated -
+     * one is who you are, the other is how the screen is drawn - and folding them together
+     * would mean a failed rename silently discarding a language change made in the same
+     * submission.
+     */
+    @PostMapping("/settings/language")
+    public String language(@AuthenticationPrincipal SignedInAccount principal,
+                           @RequestParam(name = "locale", required = false) String locale,
+                           HttpServletRequest request, RedirectAttributes flash) {
+        try {
+            SupportedLocale chosen = chooseLanguage.run(principal.id(), locale,
+                    AuditActor.account(principal.id(), principal.email(), request));
+            InertiaFlash.success(flash, messages.getMessage("auth.locale.changed",
+                    new Object[] {chosen.nativeName()}, chosen.toLocale()));
+        } catch (IllegalArgumentException rejected) {
+            InertiaFlash.errors(flash, Map.of("locale", rejected.getMessage()));
         }
         return "redirect:/settings/profile";
     }

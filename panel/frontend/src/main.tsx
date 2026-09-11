@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client'
 import {StrictMode} from 'react'
 
 import './styles.css'
+import {installCatalog, loadCatalog} from './i18n'
 import {resolvePage} from './inertia/resolvePage'
 import {DetachedNotice} from './inertia/DetachedNotice'
 import {AppLayout} from './shell/AppLayout'
@@ -58,7 +59,26 @@ if (!document.querySelector('script[data-page="app"]')) {
     </StrictMode>,
   )
 } else {
-  void createInertiaApp({
+  void startPanel()
+}
+
+/**
+ * Loads the language before the first render, then starts Inertia.
+ *
+ * <p>Awaited rather than fetched alongside, and this is the whole reason `main` is async.
+ * A catalogue that arrives after the first paint means every screen renders once in raw
+ * keys and then again in words, which is worse than a few milliseconds of nothing: the
+ * flash is visible, it looks broken, and it happens on every cold load.
+ *
+ * <p>The tag comes from the page the server already wrote, so there is no request for it
+ * and no guess from `navigator.language` that could disagree with what the server used
+ * for the flash message on the same page.
+ */
+async function startPanel(): Promise<void> {
+  const locale = localeOfInitialPage()
+  installCatalog(locale, await loadCatalog(locale))
+
+  await createInertiaApp({
     progress: {color: 'oklch(0.66 0.145 232)'},
 
     /*
@@ -97,4 +117,25 @@ if (!document.querySelector('script[data-page="app"]')) {
       )
     },
   })
+}
+
+/**
+ * The language tag off the page the server rendered.
+ *
+ * <p>Read straight out of the JSON script tag rather than through Inertia, because it is
+ * needed before Inertia exists. A page without it - which should not happen, since
+ * `LocaleProps` is a shared prop on every render - falls back to English rather than
+ * throwing: a missing language is not a reason to show nothing at all.
+ */
+function localeOfInitialPage(): string {
+  const script = document.querySelector('script[data-page="app"]')
+  if (!script?.textContent) {
+    return 'en'
+  }
+  try {
+    const page = JSON.parse(script.textContent) as {props?: {locale?: unknown}}
+    return typeof page.props?.locale === 'string' ? page.props.locale : 'en'
+  } catch {
+    return 'en'
+  }
 }

@@ -27,6 +27,7 @@ public record AccountProfile(
         PlatformRole platformRole,
         AccountStatus status,
         boolean twoFactorEnabled,
+        String locale,
         Instant lastLoginAt,
         String lastLoginAddress,
         Instant passwordChangedAt,
@@ -36,6 +37,7 @@ public record AccountProfile(
     public static AccountProfile of(Account account) {
         return new AccountProfile(account.id(), account.email(), account.displayName(),
                 account.platformRole(), account.status(), account.hasSecondFactor(),
+                account.locale(),
                 account.lastLoginAt(), account.lastLoginAddress(), account.passwordChangedAt(),
                 account.lockedUntil(), account.createdAt());
     }

@@ -14,6 +14,7 @@ import {
 
 import type {AccountProfile} from './authTypes'
 import {ChangePasswordForm} from './ChangePasswordForm'
+import {LanguageForm} from './LanguageForm'
 import {SettingsTabs} from './SettingsTabs'
 
 /**
@@ -87,6 +88,8 @@ export default function ProfilePage() {
           </Button>
         </form>
       </Card>
+
+      <LanguageForm />
 
       <ChangePasswordForm />
 

@@ -39,6 +39,7 @@ public record Account(
         Instant passwordChangedAt,
         PlatformRole platformRole,
         AccountStatus status,
+        String locale,
         String totpSecret,
         Instant totpConfirmedAt,
         Instant lastLoginAt,
@@ -50,6 +51,17 @@ public record Account(
         @Version Long version) {
 
     /**
+     * What a new account reads the panel in until it says otherwise.
+     *
+     * <p>English rather than the browser's first choice, because an account is created by
+     * an operator or by a script and the {@code Accept-Language} on that request belongs
+     * to whoever pressed the button, not to the person who will use the account. The
+     * browser preference is honoured for the session instead, which is the request that
+     * genuinely comes from them.
+     */
+    public static final String DEFAULT_LOCALE = "en";
+
+    /**
      * A brand new account, ready to insert.
      *
      * <p>A null {@code version} is what tells Spring Data JDBC this is an insert despite
@@ -58,7 +70,7 @@ public record Account(
     public static Account create(String email, String displayName, String passwordHash,
                                  PlatformRole platformRole, Instant now) {
         return new Account(UUID.randomUUID(), normaliseEmail(email), displayName.strip(),
-                passwordHash, now, platformRole, AccountStatus.ACTIVE,
+                passwordHash, now, platformRole, AccountStatus.ACTIVE, DEFAULT_LOCALE,
                 null, null, null, null, 0, null, null, null, null);
     }
 
@@ -86,7 +98,7 @@ public record Account(
     /** One more wrong password, with the lock not yet reached. */
     public Account withFailedSignIn(int count) {
         return new Account(id, email, displayName, passwordHash, passwordChangedAt, platformRole,
-                status, totpSecret, totpConfirmedAt, lastLoginAt, lastLoginAddress,
+                status, locale, totpSecret, totpConfirmedAt, lastLoginAt, lastLoginAddress,
                 count, lockedUntil, createdAt, updatedAt, version);
     }
 
@@ -99,21 +111,21 @@ public record Account(
      */
     public Account lockedUntil(Instant until) {
         return new Account(id, email, displayName, passwordHash, passwordChangedAt, platformRole,
-                status, totpSecret, totpConfirmedAt, lastLoginAt, lastLoginAddress,
+                status, locale, totpSecret, totpConfirmedAt, lastLoginAt, lastLoginAddress,
                 0, until, createdAt, updatedAt, version);
     }
 
     /** A successful sign-in: remember where from, forget the failures, lift any lock. */
     public Account signedInAt(Instant when, String address) {
         return new Account(id, email, displayName, passwordHash, passwordChangedAt, platformRole,
-                status, totpSecret, totpConfirmedAt, when, address,
+                status, locale, totpSecret, totpConfirmedAt, when, address,
                 0, null, createdAt, updatedAt, version);
     }
 
     /** A new BCrypt hash, with the moment it happened - sessions older than it are void. */
     public Account withPassword(String newHash, Instant changedAt) {
         return new Account(id, email, displayName, newHash, changedAt, platformRole,
-                status, totpSecret, totpConfirmedAt, lastLoginAt, lastLoginAddress,
+                status, locale, totpSecret, totpConfirmedAt, lastLoginAt, lastLoginAddress,
                 failedLoginCount, lockedUntil, createdAt, updatedAt, version);
     }
 
@@ -126,7 +138,7 @@ public record Account(
      */
     public Account withTotp(String encryptedSecret, Instant confirmedAt) {
         return new Account(id, email, displayName, passwordHash, passwordChangedAt, platformRole,
-                status, encryptedSecret, encryptedSecret == null ? null : confirmedAt,
+                status, locale, encryptedSecret, encryptedSecret == null ? null : confirmedAt,
                 lastLoginAt, lastLoginAddress, failedLoginCount, lockedUntil,
                 createdAt, updatedAt, version);
     }
@@ -134,15 +146,32 @@ public record Account(
     /** Suspended or reactivated by an operator. */
     public Account withStatus(AccountStatus newStatus) {
         return new Account(id, email, displayName, passwordHash, passwordChangedAt, platformRole,
-                newStatus, totpSecret, totpConfirmedAt, lastLoginAt, lastLoginAddress,
+                newStatus, locale, totpSecret, totpConfirmedAt, lastLoginAt, lastLoginAddress,
                 failedLoginCount, newStatus == AccountStatus.ACTIVE ? null : lockedUntil,
                 createdAt, updatedAt, version);
+    }
+
+    /**
+     * The language this person reads the panel in.
+     *
+     * <p>Refused rather than coerced when it is not one the panel has: the column's CHECK
+     * would reject it a moment later anyway, and a message naming the field beats a
+     * constraint violation naming the constraint.
+     */
+    public Account withLocale(String newLocale) {
+        if (!SupportedLocale.isSupported(newLocale)) {
+            throw new IllegalArgumentException("wisper is not translated into " + newLocale);
+        }
+        return new Account(id, email, displayName, passwordHash, passwordChangedAt, platformRole,
+                status, newLocale, totpSecret, totpConfirmedAt, lastLoginAt, lastLoginAddress,
+                failedLoginCount, lockedUntil, createdAt, updatedAt, version);
     }
 
     /** The name shown in the header and written into audit entries. */
     public Account withDisplayName(String newDisplayName) {
         return new Account(id, email, newDisplayName.strip(),
-                passwordHash, passwordChangedAt, platformRole, status, totpSecret, totpConfirmedAt,
+                passwordHash, passwordChangedAt, platformRole, status, locale, totpSecret,
+                totpConfirmedAt,
                 lastLoginAt, lastLoginAddress, failedLoginCount, lockedUntil,
                 createdAt, updatedAt, version);
     }
