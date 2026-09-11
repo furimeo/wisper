@@ -127,6 +127,15 @@
   }
 
   /*
+   * A menu anchored under its button. It grows from the corner it is pinned to rather
+   * than travelling across the screen, because the eye is already on the button that was
+   * pressed and anything that arrives from elsewhere pulls it away.
+   */
+  [data-panel='popover'] {
+    animation: wisper-pop-in 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /*
    * Motion here is orientation, not decoration - which way a panel came from, that a
    * notice is new. Somebody who has asked for less of it gets the same information from
    * the panel simply being there.
@@ -171,6 +180,41 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /*
+   * The sidebar's list of destinations. It sits a few pixels from the page's own
+   * scrollbar, so a second full-width one beside it looks like a fault rather than like a
+   * second region: this one is narrow, has no track, and only colours in on hover.
+   */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .scrollbar-thin:hover {
+    scrollbar-color: var(--color-ink-300) transparent;
+  }
+
+  .dark .scrollbar-thin:hover {
+    scrollbar-color: var(--color-ink-700) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background-color: transparent;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background-color: var(--color-ink-300);
+  }
+
+  .dark .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background-color: var(--color-ink-700);
+  }
 }
 
 @keyframes wisper-fade-in {
@@ -202,5 +246,12 @@
 @keyframes wisper-slide-from-right {
   from {
     transform: translate3d(100%, 0, 0);
+  }
+}
+
+@keyframes wisper-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translate3d(0, -0.25rem, 0);
   }
 }
