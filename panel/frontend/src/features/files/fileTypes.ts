@@ -129,23 +129,20 @@ export interface TerminalView {
   rows: number
 }
 
-/** What a keystroke, a resize or a close answers with. */
-export interface TerminalAck {
-  sessionId: string
-  finished: boolean
-  /** Meaningless until `finished`. */
-  exitCode: number
-  exitReason: string
-}
-
-/** The `ready` frame on the terminal's event stream, written by `LiveTerminals.attach`. */
+/**
+ * The size frame the panel sends as soon as a socket attaches.
+ *
+ * Not a page prop and not JSON: it is decoded from a binary frame by `terminalFrames.ts`.
+ * It is here because it is the shape of a thing the `files` package sends, which is what
+ * this file is for.
+ */
 export interface TerminalReady {
   columns: number
   rows: number
   containerId: string
 }
 
-/** The `exit` frame: the shell is over and the stream is about to close. */
+/** The end frame: the shell is over, and this is what it exited with. */
 export interface TerminalExit {
   code: number
   reason: string

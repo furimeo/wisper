@@ -2,8 +2,7 @@ import {ByteSize, Icon, RelativeTime, SwipeRow, cx} from '@/shell'
 import type {SwipeAction} from '@/shell'
 
 import {FileGlyph} from './FileGlyph'
-import {swipeActionsFor} from './fileActions'
-import type {FileActionContext, FileActionKind} from './fileActions'
+import type {FileActionKind, FileActionState} from './fileActions'
 import type {FileEntryView} from './fileTypes'
 
 /**
@@ -13,39 +12,46 @@ import type {FileEntryView} from './fileTypes'
  * The four-column table a desktop file manager uses does not survive 375px - either it
  * scrolls sideways, hiding the modified date behind the name, or every cell becomes two
  * words. So on a phone the same information is a headline, a subtitle and a right-hand
- * value, and the actions live behind a swipe and an always-present overflow button.
+ * value, with the actions behind a swipe and an always-present overflow button.
  *
- * The row is one 44px-plus target and it is a button, not a link: tapping a folder is an
- * Inertia visit and tapping a file opens the editor, and only the caller knows which. The
- * checkbox is its own target beside it, so entering multi-select never happens by
- * accident on the way into a folder.
+ * A tap opens; the checkbox beside it selects. That is the opposite of the desktop table,
+ * where a click selects and a double click opens, and the difference is deliberate: there
+ * is no double tap to spend here, and a phone user walking into a folder should not have
+ * to aim at a chevron. Entering multi-select is therefore always an explicit tap on a
+ * 44px checkbox, which is also why it never happens on the way into a folder.
  */
 export function FileRow({
   entry,
-  context,
   selected,
   selecting,
+  focused,
   swipeOpen,
   onSwipeOpenChange,
   onToggleSelected,
+  onOpen,
   onAction,
   onOverflow,
+  swipeActions,
 }: {
   entry: FileEntryView
-  context: FileActionContext
   selected: boolean
   /** True once anything is selected: the checkboxes stay visible while it is. */
   selecting: boolean
+  /** The keyboard is on this row. Rare on a phone, and real on a tablet with a keyboard. */
+  focused: boolean
   swipeOpen: boolean
   onSwipeOpenChange: (open: boolean) => void
   onToggleSelected: () => void
-  onAction: (kind: FileActionKind, entry: FileEntryView) => void
+  onOpen: () => void
+  onAction: (kind: FileActionKind) => void
   onOverflow: () => void
+  /** At most two, already filtered to what this entry allows. */
+  swipeActions: FileActionState[]
 }) {
-  const swipe: SwipeAction[] = swipeActionsFor(entry, context).map((action) => ({
+  const swipe: SwipeAction[] = swipeActions.map((action) => ({
     label: action.label,
     tone: action.tone,
-    onSelect: () => onAction(action.kind, entry),
+    onSelect: () => onAction(action.kind),
   }))
 
   return (
@@ -54,6 +60,7 @@ export function FileRow({
         className={cx(
           'flex items-stretch',
           selected ? 'bg-accent-500/10' : '',
+          focused ? 'outline -outline-offset-2 outline-accent-500' : '',
         )}
       >
         <label
@@ -74,9 +81,12 @@ export function FileRow({
 
         <button
           type="button"
-          onClick={() =>
-            onAction(entry.directory ? 'open' : 'edit', entry)
-          }
+          onClick={onOpen}
+          onContextMenu={(event) => {
+            // A tablet with a mouse, and a long-press on Android, both arrive here.
+            event.preventDefault()
+            onOverflow()
+          }}
           className="flex min-w-0 flex-1 items-center gap-3 px-2 py-3 text-left"
         >
           <FileGlyph entry={entry} />
