@@ -1,0 +1,36 @@
+# Overlays application.yml for the test task, which sets spring.profiles.active=test.
+#
+# Tests run against a real PostgreSQL 17 - the same engine production uses - because
+# the panel depends on SKIP LOCKED and LISTEN/NOTIFY, and an in-memory database that
+# fakes neither would only prove the tests pass.
+#
+# One-time setup on a developer machine:
+#     createdb -U postgres wisper_test
+#     psql -U postgres -c "CREATE USER wisper PASSWORD 'wisper'" || true
+#     psql -U postgres -c "GRANT ALL ON DATABASE wisper_test TO wisper"
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wisper_test
+    username: ${WISPER_TEST_DB_USER:wisper}
+    password: ${WISPER_TEST_DB_PASSWORD:wisper}
+    hikari:
+      maximum-pool-size: 4
+
+db-scheduler:
+  # A scheduler polling in the background makes assertions racy. Tests that exercise a
+  # job drive it directly instead of waiting for a poll.
+  enabled: false
+
+wisper:
+  storage:
+    root: build/test-storage
+  grpc:
+    # Tests use grpc-inprocess. Binding a real port would make two test classes running
+    # in parallel fight over 9090.
+    port: 0
+
+logging:
+  level:
+    root: WARN
+    lhqm.furimeo.wisper: INFO
