@@ -39,7 +39,14 @@ import (
 
 // howLong is the ceiling on anything a test waits for. Generous, because it is only
 // ever reached when something is broken.
-const howLong = 5 * time.Second
+//
+// Thirty seconds rather than five. Five was generous on a developer's machine and not on a
+// two-core CI runner running this package's tests alongside each other: a cancellation
+// round trip through gRPC and three goroutines came in at 5.01s and failed a test that was
+// working perfectly. Waiting longer costs nothing when everything passes, and a genuine
+// hang still fails - it just takes twenty-five seconds longer to say so. A flaky test is
+// worse than a slow one, because it teaches people to re-run CI instead of reading it.
+const howLong = 30 * time.Second
 
 type panelStub struct {
 	wisperpb.UnimplementedNodeServiceServer
