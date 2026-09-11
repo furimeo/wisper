@@ -21,7 +21,7 @@ import org.springframework.security.core.Authentication;
 class SignedInAccountTest {
 
     private final SignedInAccount account = new SignedInAccount(UUID.randomUUID(),
-            "operator@example.com", "Operator", PlatformRole.ADMIN);
+            "operator@example.com", "Operator", PlatformRole.ADMIN, "en");
 
     @Test
     void springSecurityReportsTheEmailAsTheName() {
@@ -44,7 +44,7 @@ class SignedInAccountTest {
     @Test
     void aCustomerCarriesOnlyTheSignedInAuthority() {
         SignedInAccount customer = new SignedInAccount(UUID.randomUUID(), "someone@example.com",
-                "Someone", PlatformRole.CUSTOMER);
+                "Someone", PlatformRole.CUSTOMER, "vi");
 
         assertThat(customer.authorities()).extracting(Object::toString)
                 .containsExactly("ROLE_USER");
