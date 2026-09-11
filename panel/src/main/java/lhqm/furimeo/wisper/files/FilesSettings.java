@@ -45,8 +45,9 @@ import org.springframework.util.unit.DataSize;
  *                             customer's application, for weeks
  * @param terminalMaxDuration  hard ceiling on a session regardless of activity, so a
  *                             wedged {@code top} cannot hold a slot forever
- * @param terminalKeepAlive    how often an idle terminal stream sends a comment frame, so
- *                             a tunnel does not close a shell somebody is reading
+ * @param terminalKeepAlive    how often an idle terminal socket is pinged, so a tunnel
+ *                             does not close a shell somebody is reading rather than
+ *                             typing into
  */
 @ConfigurationProperties("wisper.files")
 public record FilesSettings(

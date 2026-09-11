@@ -514,7 +514,10 @@ interface ChunkReceipt {
 }
 
 interface TerminalView {sessionId: string; containerId: string; columns: number; rows: number}
-interface TerminalAck {sessionId: string; finished: boolean; exitCode: number; exitReason: string}
+
+// Decoded from the socket's binary frames, not from JSON. See §7, Terminal.
+interface TerminalReady {columns: number; rows: number; containerId: string}
+interface TerminalExit {code: number; reason: string}
 ```
 
 ### stats
@@ -994,26 +997,49 @@ from a constant in the client.
 
 ### Terminal
 
+The one WebSocket in the panel. Everything else realtime is SSE and stays SSE; a terminal
+is the only stream that is not one-way, and carrying its input over HTTP meant a request
+per keystroke - each through the whole security filter chain, each re-reading the
+signed-in account. A socket is authorised once, at the handshake.
+
 | Method | Path | Answers |
 |---|---|---|
 | `POST` | `/services/{id}/terminal` | `TerminalView` - mints the session id |
-| `GET` | `/services/{id}/terminal/{sessionId}/stream` | SSE |
-| `POST` | `/services/{id}/terminal/{sessionId}/input` | `TerminalAck` |
-| `POST` | `/services/{id}/terminal/{sessionId}/resize` | `TerminalAck` |
-| `POST` | `/services/{id}/terminal/{sessionId}/close` | `TerminalAck` |
+| `GET` | `/services/{id}/terminal/socket?session={sessionId}` | `101`, or `403`/`404`/`400` |
 
-SSE events on the stream:
+Opening stays a `POST`: it starts a process inside a customer's container and writes the
+`terminal.open` audit entry, so it belongs behind the CSRF token, which a handshake - a
+`GET` - cannot carry. The socket attaches to the session that post minted and never opens
+one.
 
-| Event | Data |
-|---|---|
-| `ready` | `{"columns": 120, "rows": 34}` |
-| `out` | base64 of the PTY's bytes |
-| `exit` | `{"code": 0, "reason": "..."}` |
-| *(comment)* | `: alive`, the keepalive |
+The handshake is where every check happens, and a refusal is an HTTP status on the upgrade
+rather than an accepted socket that closes: `404` when the service is not the caller's or
+the session is not theirs, `403` for a `VIEWER`, `400` for a request that names no session.
+Same-origin only, which is what stands in for CSRF here.
 
-Input is base64 too, in both directions, because a PTY emits arbitrary bytes and a JSON
-string cannot carry an invalid UTF-8 sequence. Decode once at each end; never `atob` a
-fragment.
+Frames are binary in both directions, one tag byte and then the payload. Three tags, the
+same three as `terminal.proto`:
+
+| Tag | Browser sends | Panel sends |
+|---|---|---|
+| `0x00` bytes | keystrokes | PTY output |
+| `0x01` size | `u16` cols, `u16` rows | `u16` cols, `u16` rows, UTF-8 container id |
+| `0x02` end | *(nothing)* - end my shell | `i32` exit code, UTF-8 reason |
+
+Binary, so there is no base64 and no place left to treat a PTY's bytes as a string - which
+is the bug that broke the predecessor (design §11.5). The size frame is sent by the panel
+as soon as a socket attaches, including after a reconnect, because xterm has to be told the
+size the PTY settled on after clamping.
+
+A frame carries at most 64 kB of input; a longer paste is split by the client and refused
+by the panel. The panel pings on `wisper.files.terminal-keep-alive`, because a tunnel closes
+a connection that has been quiet.
+
+Closing the socket ends the shell. That makes a closed tab free - the browser drops the
+connection and the panel releases the session - so there is no unload handler to forget. A
+client that reconnects with the same session id within a second or two may still find the
+shell, because the panel has not always noticed the old connection died; that is what makes
+a phone moving from wi-fi to mobile data survive.
 
 ### Logs and metrics
 

@@ -217,13 +217,9 @@ export default function TerminalPage() {
 
       {shell.reconnecting ? (
         <p className="rounded-lg bg-degraded/15 px-3 py-2 text-sm text-ink-800 dark:text-ink-100">
-          The connection to the output dropped. The shell is still open on the node and the
-          panel is holding what it printed - this reconnects by itself.{' '}
-          <button
-            type="button"
-            onClick={shell.retryStream}
-            className="underline underline-offset-2"
-          >
+          The connection to the shell dropped and is being re-established. Anything typed in
+          the meantime is held and sent when it comes back.{' '}
+          <button type="button" onClick={shell.reconnect} className="underline underline-offset-2">
             Reconnect now
           </button>
         </p>

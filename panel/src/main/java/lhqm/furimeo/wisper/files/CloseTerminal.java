@@ -9,9 +9,9 @@ import lhqm.furimeo.wisper.audit.AuditTrail;
  * Ends a shell.
  *
  * <p>Closing the session ends the stream to the node, which kills the PTY. That is what the
- * browser going away has to trigger, so it is called from the page's unload handler, from the
- * SSE error path and by the reaper when the shell exits on its own - and it is idempotent,
- * because all three can happen at once.
+ * browser going away has to trigger, so it is called when the customer ends the session, when
+ * their socket closes - a tab closed, a phone that left the network - and by the reaper when
+ * the shell exits on its own. It is idempotent, because all three can happen at once.
  *
  * <p>Audited as {@code terminal.close} with the same session id the open used, which is what
  * turns two entries into one session in the trail: who had a shell, in which container, for

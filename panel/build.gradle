@@ -44,6 +44,18 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+	/*
+	 * The web terminal, and nothing else. Every other stream in the panel is one-way and
+	 * stays SSE; a PTY is not, and carrying its input over HTTP meant one POST per
+	 * keystroke - each running the whole security filter chain and a lookup of the
+	 * signed-in account, so ten people typing was fifty database round trips a second to
+	 * move fifty bytes. A WebSocket authorises once, at the handshake.
+	 *
+	 * Servlet-based: this is spring-websocket over tomcat-embed-websocket. It does not
+	 * bring WebFlux, and the doctrine's ban on WebFlux is untouched by it.
+	 */
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 	runtimeOnly 'org.postgresql:postgresql'
 
 	// Jobs live in the same PostgreSQL as the data they act on, so enqueueing a job

@@ -13,9 +13,9 @@ import lhqm.furimeo.wisper.proto.v1.StartTerminal;
 /**
  * Opens a shell inside a customer's container.
  *
- * <p>The session id is minted here, before the browser connects, so the {@code EventSource},
- * the gRPC stream and the audit entry all carry the same name and any one of them can be
- * found from the others.
+ * <p>The session id is minted here, before the browser connects, so the socket, the gRPC
+ * stream and the audit entry all carry the same name and any one of them can be found from
+ * the others.
  *
  * <h2>The shell is chosen by the panel</h2>
  *

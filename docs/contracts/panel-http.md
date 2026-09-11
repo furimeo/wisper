@@ -125,3 +125,15 @@ Realtime is Server-Sent Events: `SseEmitter` from an ordinary MVC controller, on
 virtual thread. Deployment logs, container logs and metrics all use it. Set the response
 `Cache-Control: no-store` and send a comment line as a keepalive - a tunnel will close an
 idle stream.
+
+The terminal is the single exception, and it is not a precedent. Those three streams are
+one-way; a shell is not, and its input over HTTP was one `POST` per keystroke - each one
+through the whole filter chain and a lookup of the account. `/services/{id}/terminal/socket`
+is a WebSocket, authorised once by a `HandshakeInterceptor` and never again (pages.md §7).
+Adding a second one needs the same argument: that the traffic is two-way and frequent
+enough that per-request authentication is the cost. Wanting push is not that argument -
+SSE already pushes.
+
+`web.WebSocketConfig` carries `@EnableWebSocket` and nothing else. A package that owns a
+path registers its own `WebSocketConfigurer`, the way `HttpSecurityContribution` works, so
+the shared file never learns what the handler is for.
