@@ -160,12 +160,24 @@
     min-width: 2.75rem;
   }
 
+  /*
+   * The device's safe area, ADDED to the padding the element already wanted.
+   *
+   * The obvious version - `padding-bottom: env(safe-area-inset-bottom)` - is a trap, and
+   * it shipped: written beside a `py-3`, it does not add to it, it replaces it on that
+   * side. On a notched phone the inset is large enough to hide the damage; on every
+   * desktop and most Android the inset is 0, so the padding becomes 0 and the content sits
+   * flush against the edge. That is what made the top bar look cropped.
+   *
+   * The base is a variable so a call site can state the padding it wants once, in one
+   * place, instead of writing `py-3` and then hoping the override is on the right side.
+   */
   .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: calc(var(--safe-bottom-base, 0px) + env(safe-area-inset-bottom));
   }
 
   .pt-safe {
-    padding-top: env(safe-area-inset-top);
+    padding-top: calc(var(--safe-top-base, 0px) + env(safe-area-inset-top));
   }
 
   /*

@@ -66,7 +66,7 @@ export function Drawer({
           widthClassName,
         )}
       >
-        <header className="flex items-center gap-2 border-b border-ink-200 px-4 py-3 pt-safe dark:border-ink-800">
+        <header className="flex items-center gap-2 border-b border-ink-200 px-4 py-3 [--safe-top-base:0.75rem] pt-safe dark:border-ink-800">
           <h2 className="min-w-0 flex-1 truncate text-base font-semibold text-ink-900 dark:text-ink-100">
             {title}
           </h2>
@@ -85,7 +85,7 @@ export function Drawer({
         </div>
 
         {footer ? (
-          <footer className="border-t border-ink-200 px-4 py-3 pb-safe dark:border-ink-800">
+          <footer className="border-t border-ink-200 px-4 py-3 [--safe-bottom-base:0.75rem] pb-safe dark:border-ink-800">
             {footer}
           </footer>
         ) : null}

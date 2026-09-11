@@ -98,7 +98,14 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="-mr-2 -mt-1 flex touch-target items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"
+            /*
+             * -mt-2.5 is (44 - 24) / 2. The header is items-start so a title with a
+             * description underneath keeps the button beside the title rather than
+             * floating to the middle of the pair - but a 44px touch target top-aligned
+             * against a 24px line sits 10px low, which is plainly visible on a one-line
+             * title. Pulling it up by half the difference centres it on that line.
+             */
+            className="-mr-2 -mt-2.5 flex touch-target items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"
           >
             <Icon name="close" />
           </button>
@@ -107,7 +114,7 @@ export function Modal({
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
 
         {footer ? (
-          <footer className="flex flex-col-reverse gap-2 border-t border-ink-200 px-4 py-3 pb-safe sm:flex-row sm:justify-end dark:border-ink-800">
+          <footer className="flex flex-col-reverse gap-2 border-t border-ink-200 px-4 py-3 [--safe-bottom-base:0.75rem] pb-safe sm:flex-row sm:justify-end dark:border-ink-800">
             {footer}
           </footer>
         ) : null}
