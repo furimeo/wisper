@@ -1,0 +1,21 @@
+<!doctype html>
+<!--
+  Vite's build entry. In production the panel does not serve this file: InertiaPage.java
+  writes the shell, because the page object has to be injected server-side and the asset
+  URLs come from the build manifest. What this file gives us is a conventional Vite
+  build - the manifest is keyed by "index.html", which is the name the Java side looks
+  up - and something coherent to show if a developer opens the dev server directly.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <title>wisper</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

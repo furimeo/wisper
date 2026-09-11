@@ -1,0 +1,206 @@
+@import 'tailwindcss';
+
+/*
+ * Dark mode is a class on <html>, not a media query. InertiaPage.java sets it from
+ * localStorage before the first paint, so a customer on a dark theme never sees a white
+ * flash - and the panel can offer an explicit light/dark/system choice, which a pure
+ * media query cannot.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /*
+   * One accent, one neutral ramp, and the three status colours the platform actually
+   * reports: running, degraded, failed. A hosting panel is mostly text and state - the
+   * palette exists to make state legible at a glance on a phone in daylight, not to
+   * decorate.
+   */
+  --color-ink-50: oklch(0.985 0.002 250);
+  --color-ink-100: oklch(0.967 0.003 250);
+  --color-ink-200: oklch(0.922 0.005 250);
+  --color-ink-300: oklch(0.86 0.008 250);
+  --color-ink-400: oklch(0.7 0.012 250);
+  --color-ink-500: oklch(0.56 0.014 250);
+  --color-ink-600: oklch(0.44 0.014 250);
+  --color-ink-700: oklch(0.35 0.014 250);
+  --color-ink-800: oklch(0.26 0.013 250);
+  --color-ink-900: oklch(0.19 0.012 250);
+  --color-ink-950: oklch(0.14 0.011 250);
+
+  --color-accent-400: oklch(0.74 0.13 232);
+  --color-accent-500: oklch(0.66 0.145 232);
+  --color-accent-600: oklch(0.57 0.145 232);
+
+  --color-running: oklch(0.72 0.16 152);
+  --color-degraded: oklch(0.79 0.15 78);
+  --color-failed: oklch(0.63 0.2 25);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* The extra key bar above the on-screen keyboard, and the bottom navigation. Both
+     need a known height so the terminal and the file list can size around them. */
+  --spacing-keybar: 2.75rem;
+  --spacing-bottomnav: 3.5rem;
+}
+
+@layer base {
+  html {
+    /* Landscape on iOS otherwise inflates text and breaks every fixed layout. */
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply bg-ink-50 text-ink-900 font-sans antialiased;
+    @apply dark:bg-ink-950 dark:text-ink-100;
+    /* No rubber-band bounce dragging the whole app around under a fixed key bar. */
+    overscroll-behavior-y: none;
+    /* Room for the home indicator; the bottom bar sits on top of this. */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /*
+   * Mobile-first, and this is the rule that makes it usable rather than merely narrow:
+   * iOS zooms the whole page when a focused input's text is under 16px, and it does not
+   * zoom back out. Every control in the panel is at least that size on a phone.
+   */
+  input,
+  textarea,
+  select,
+  button {
+    font-size: max(1rem, 16px);
+  }
+
+  /* Removes the 300ms tap delay and the grey flash on touch. */
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Keyboard focus stays obvious; mouse focus does not draw a ring on every click. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent-500;
+  }
+
+  ::selection {
+    @apply bg-accent-500/25;
+  }
+}
+
+@layer base {
+  /*
+   * Every overlay in the panel is a native <dialog> opened with showModal(): the top
+   * layer gives it a focus trap, Escape and focus restoration, none of which is worth
+   * reimplementing in React. What the UA does not style acceptably is the backdrop, and
+   * the `backdrop:` variant is not worth depending on for one rule.
+   */
+  dialog::backdrop {
+    background-color: oklch(0.14 0.011 250 / 0.55);
+    animation: wisper-fade-in 140ms ease-out;
+  }
+
+  /* The overlay itself is a transparent full-viewport box; only the panel moves. */
+  dialog[open] > [data-panel='left'] {
+    animation: wisper-slide-from-left 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  dialog[open] > [data-panel='right'] {
+    animation: wisper-slide-from-right 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* A bottom sheet on a phone, a card that settles in place on a wide screen. */
+  dialog[open] > [data-panel='sheet'] {
+    animation: wisper-slide-up 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (min-width: 48rem) {
+    dialog[open] > [data-panel='sheet'] {
+      animation: wisper-settle 140ms ease-out;
+    }
+  }
+
+  [data-panel='toast'] {
+    animation: wisper-slide-up 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /*
+   * Motion here is orientation, not decoration - which way a panel came from, that a
+   * notice is new. Somebody who has asked for less of it gets the same information from
+   * the panel simply being there.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after,
+    dialog::backdrop {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Buttons and rows a thumb can actually hit. Apple's floor is 44px; so is ours. */
+  .touch-target {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /*
+   * For the one thing in the panel that is allowed to scroll sideways: the strip of tabs
+   * across the top of a detail screen. A visible scrollbar under it on a desktop reads
+   * as a rendering fault, and on a phone there is no scrollbar to hide.
+   */
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes wisper-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes wisper-slide-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1.5rem, 0);
+  }
+}
+
+@keyframes wisper-settle {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes wisper-slide-from-left {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+@keyframes wisper-slide-from-right {
+  from {
+    transform: translate3d(100%, 0, 0);
+  }
+}
