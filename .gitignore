@@ -96,3 +96,7 @@ $RECYCLE.BIN/
 *.log
 *.orig
 *.rej
+
+# Gradle writes an argfile beside the build when a javac command line grows past the
+# platform limit, and leaves it there. It is a build artifact, not a source file.
+javac.*.args
