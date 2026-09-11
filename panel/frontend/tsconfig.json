@@ -23,8 +23,10 @@
     "forceConsistentCasingInFileNames": true,
 
     "types": ["vite/client", "node"],
-    "baseUrl": ".",
-    "paths": {"@/*": ["src/*"]}
+    // Relative, and no baseUrl: paths resolve against this file's own directory, which is
+    // the only form TypeScript 7 accepts. It has meant the same thing since 4.4, so this
+    // is not a version-gated spelling - the old one was just the older habit.
+    "paths": {"@/*": ["./src/*"]}
   },
   "include": ["src", "vite.config.ts"]
 }
