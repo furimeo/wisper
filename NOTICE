@@ -1,0 +1,19 @@
+wisper
+Copyright 2026 Lê Hùng Quang Minh and the wisper contributors
+
+This product includes software developed as part of the wisper project:
+https://github.com/furimeo/wisper
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+---
+
+wisper ships with a "Powered by wisper" notice in the panel's footer, linking to the
+repository above.
+
+That notice is not a licence condition - Apache 2.0 asks you to carry this NOTICE file
+with the software, and nothing more. It is there because somebody looking at a hosting
+panel should be able to find out what it is built on, and because it is how a project
+like this is found at all. Keeping it is appreciated rather than required, and if you
+would rather it said something else, the component that renders it is
+`panel/frontend/src/shell/PoweredBy.tsx`.

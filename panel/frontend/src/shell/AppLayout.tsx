@@ -5,6 +5,7 @@ import {router} from '@inertiajs/react'
 import {BottomTabBar} from './BottomTabBar'
 import {ConfirmHost} from './ConfirmHost'
 import {NavigationDrawer} from './NavigationDrawer'
+import {PoweredBy} from './PoweredBy'
 import {Sidebar} from './Sidebar'
 import {Toaster} from './Toaster'
 import {TopBar} from './TopBar'
@@ -55,6 +56,13 @@ export function AppLayout({children}: {children: ReactNode}) {
         >
           {children}
         </main>
+
+        {/*
+         * Inside the content column and after the page, so it sits at the end of what the
+         * reader was reading rather than pinned over it. Required by the licence - see
+         * PoweredBy.
+         */}
+        <PoweredBy />
       </div>
 
       <BottomTabBar onOpenMenu={() => setNavOpen(true)} />

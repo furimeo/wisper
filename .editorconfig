@@ -1,0 +1,30 @@
+# One answer per file type, so a diff is the change and not the editor.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+[*.go]
+# gofmt decides, and it uses tabs. Nothing here overrides it.
+indent_style = tab
+
+[*.{ts,tsx,js,jsx,json,css,yml,yaml}]
+indent_size = 2
+
+[*.md]
+# Trailing spaces are a line break in Markdown, so stripping them changes the text.
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+
+[*.properties]
+# Message catalogues. Not 100 columns: a sentence wrapped mid-way is a sentence a
+# translator has to reassemble before they can translate it.
+max_line_length = off
