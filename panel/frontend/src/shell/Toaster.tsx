@@ -76,23 +76,32 @@ function ToastCard({toast: entry}: {toast: Toast}) {
         tone.panel,
       )}
     >
+      {/*
+       * All three line up on the message's FIRST line, not on the top of the box and not
+       * on the centre of the whole toast. The row is `items-start` so a three-line message
+       * keeps its mark at the top where the sentence begins - but the mark, the text and
+       * the dismiss button are three different heights (24, 20 and 36px), and simply
+       * top-aligning them left a one-line toast with its text riding above its own icon.
+       * Giving the text a 24px line box makes it exactly as tall as the mark, and pulling
+       * the taller button up by half the difference centres it on the same line.
+       */}
       <span
         aria-hidden="true"
         className={cx(
-          'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full',
+          'flex size-6 shrink-0 items-center justify-center rounded-full',
           MARKS[entry.tone],
         )}
       >
         <Icon name={tone.icon} className="size-4" />
       </span>
-      <p className="min-w-0 flex-1 text-sm break-words text-ink-800 dark:text-ink-100">
+      <p className="min-w-0 flex-1 text-sm leading-6 break-words text-ink-800 dark:text-ink-100">
         {entry.message}
       </p>
       <button
         type="button"
         onClick={() => dismissToast(entry.id)}
         aria-label="Dismiss"
-        className="-my-1 -mr-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"
+        className="-mt-1.5 -mr-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"
       >
         <Icon name="close" className="size-4" />
       </button>
