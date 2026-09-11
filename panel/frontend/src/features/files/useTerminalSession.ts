@@ -104,7 +104,7 @@ export function useTerminalSession(
 
   const base = `/services/${serviceId}/terminal`
 
-  const write = useCallback((frame: Uint8Array) => {
+  const write = useCallback((frame: Uint8Array<ArrayBuffer>) => {
     const live = socket.current
     if (live === null || live.readyState !== WebSocket.OPEN) {
       return false

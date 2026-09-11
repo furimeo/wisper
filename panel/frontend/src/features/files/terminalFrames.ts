@@ -38,8 +38,19 @@ export type TerminalMessage =
   | {kind: 'ready'; ready: TerminalReady}
   | {kind: 'exit'; exit: TerminalExit}
 
+/*
+ * The three builders below return `Uint8Array<ArrayBuffer>` rather than a bare
+ * `Uint8Array`, and the parameter matters as much as the pleasantry of writing it.
+ *
+ * A bare `Uint8Array` is `Uint8Array<ArrayBufferLike>`, which includes a view onto a
+ * `SharedArrayBuffer` - and `WebSocket.send` does not take one of those. Each of these
+ * allocates its own buffer, so the narrower type is simply the truth about what comes
+ * back, and stating it here is what lets the send sites pass it straight through instead
+ * of casting at every one of them.
+ */
+
 /** Keystrokes, a paste, or a key from the phone's extra bar. */
-export function keystrokeFrame(data: Uint8Array): Uint8Array {
+export function keystrokeFrame(data: Uint8Array): Uint8Array<ArrayBuffer> {
   const frame = new Uint8Array(1 + data.length)
   frame[0] = BYTES
   frame.set(data, 1)
@@ -53,7 +64,7 @@ export function keystrokeFrame(data: Uint8Array): Uint8Array {
  * never told about a resize draws over itself, and the customer sees a broken screen
  * rather than a wrong one.
  */
-export function resizeFrame(columns: number, rows: number): Uint8Array {
+export function resizeFrame(columns: number, rows: number): Uint8Array<ArrayBuffer> {
   const frame = new Uint8Array(5)
   const view = new DataView(frame.buffer)
   frame[0] = SIZE
@@ -63,7 +74,7 @@ export function resizeFrame(columns: number, rows: number): Uint8Array {
 }
 
 /** The customer is finished with this shell. Ends the PTY, not just the connection. */
-export function exitFrame(): Uint8Array {
+export function exitFrame(): Uint8Array<ArrayBuffer> {
   return Uint8Array.of(END)
 }
 
