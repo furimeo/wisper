@@ -1,0 +1,23 @@
+# A checkout happens on Windows and the result runs on Linux. Anything a Linux kernel
+# executes must keep LF endings, or the shebang line ends in \r and the only error is
+# "bad interpreter: /bin/sh^M" - which names neither the file nor the cause.
+* text=auto eol=lf
+
+/panel/gradlew    text eol=lf
+/deploy/*.sh      text eol=lf
+*.sh              text eol=lf
+
+# Windows tooling that genuinely wants CRLF.
+*.bat             text eol=crlf
+*.cmd             text eol=crlf
+
+*.jar             binary
+*.png             binary
+*.ico             binary
+*.woff            binary
+*.woff2           binary
+
+# Generated. Collapsed in diffs, and not the place to review a change.
+/panel/frontend/package-lock.json  linguist-generated=true -diff
+/sasayaki/go.sum                   linguist-generated=true -diff
+*.pb.go                            linguist-generated=true -diff

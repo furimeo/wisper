@@ -1,0 +1,98 @@
+# Paths are anchored with a leading slash wherever the name is also a legitimate
+# source directory. `build/` unanchored would swallow sasayaki/internal/build/,
+# which is a real package, and the loss is silent.
+
+# ---------------------------------------------------------------------------
+# Gradle / Java (panel)
+# ---------------------------------------------------------------------------
+/panel/.gradle/
+/panel/build/
+/panel/bin/
+/panel/out/
+*.class
+*.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+*.war
+*.hprof
+hs_err_pid*
+replay_pid*
+
+# ---------------------------------------------------------------------------
+# Go (sasayaki)
+# ---------------------------------------------------------------------------
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+/sasayaki/dist/
+/sasayaki/bin/
+# Local node state written by `make run-dev`. The real daemon keeps this under
+# /var/lib/wisper; only development leaves one in the working tree.
+sasayaki.db
+sasayaki.db-shm
+sasayaki.db-wal
+/sasayaki/var/
+
+# ---------------------------------------------------------------------------
+# Node (panel/frontend)
+# ---------------------------------------------------------------------------
+node_modules/
+.npm/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+# Vite writes build/frontend-dev/hot while a dev server is alive; build.gradle
+# reads it to decide whether to skip the bundle build. Machine state, not source.
+/panel/build/frontend-dev/
+.vite/
+
+# ---------------------------------------------------------------------------
+# Secrets and local configuration
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+!**/testdata/**
+/panel/src/main/resources/application-local.yml
+/etc-wisper/
+
+# ---------------------------------------------------------------------------
+# IDEs
+# ---------------------------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.code-workspace
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+nbproject/private/
+.nb-gradle/
+
+# ---------------------------------------------------------------------------
+# OS
+# ---------------------------------------------------------------------------
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---------------------------------------------------------------------------
+# Scratch
+# ---------------------------------------------------------------------------
+/tmp/
+*.log
+*.orig
+*.rej
