@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/furimeo/wisper/security/advisories/new
+    about: >-
+      Never in a public issue. This is a platform that runs other people's code; report it
+      privately and we will work with you.
+  - name: Question or idea
+    url: https://github.com/furimeo/wisper/discussions
+    about: For anything that is not yet a bug or a concrete proposal.

@@ -1,0 +1,42 @@
+version: 2
+
+# Weekly, grouped, and on one day. A dependency bot that opens fourteen pull requests every
+# morning is a bot whose pull requests nobody reads, which is worse than not having one:
+# the security update arrives in the same pile as the patch bumps and is skimmed with them.
+updates:
+  - package-ecosystem: gradle
+    directory: /panel
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      spring:
+        patterns: ['org.springframework*']
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /panel/frontend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: gomod
+    directory: /sasayaki
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

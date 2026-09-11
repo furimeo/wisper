@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A second push to the same branch makes the first run pointless. Cancel it rather than
+# paying for two, but never cancel a run on main - that one is the record of what shipped.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  panel:
+    name: Panel (Java + React)
+    runs-on: ubuntu-latest
+
+    # The integration tests talk to a real PostgreSQL rather than a mock or an in-memory
+    # stand-in. The schema is the panel's own migrations and half of what is being tested
+    # is whether they apply; H2 would answer a different question.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: wisper
+          POSTGRES_PASSWORD: wisper
+          POSTGRES_DB: wisper_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wisper"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # The Gradle build compiles the React client into the jar, so Node is a build-time
+      # dependency here and nowhere else.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: panel/frontend/package-lock.json
+
+      - name: Build and test
+        working-directory: panel
+        run: ./gradlew build --no-daemon
+
+      - name: Type-check the client
+        working-directory: panel/frontend
+        run: npx tsc --noEmit
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: panel-test-results
+          path: panel/build/reports/tests/test
+          if-no-files-found: ignore
+
+  sasayaki:
+    name: Node daemon (Go)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          cache-dependency-path: sasayaki/go.sum
+
+      # Formatting is not a matter of taste in a shared tree; gofmt decides and this is
+      # where it is enforced, before a diff is half whitespace.
+      - name: gofmt
+        working-directory: sasayaki
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "These files are not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: go vet
+        working-directory: sasayaki
+        run: go vet ./...
+
+      # The daemon only ever runs on Linux; building for it here means a linux-only file
+      # that stopped compiling cannot reach main behind a green tick from another platform.
+      - name: Build
+        working-directory: sasayaki
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        run: go build ./...
+
+      - name: Test
+        working-directory: sasayaki
+        run: go test ./...
+
+  contracts:
+    name: Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          cache-dependency-path: sasayaki/go.sum
+
+      - name: Install buf
+        run: go install github.com/bufbuild/buf/cmd/buf@latest
+
+      - name: Lint the protobuf contract
+        working-directory: proto
+        run: buf lint
+
+      # The Go stubs are committed so a build needs no protoc. That only stays honest if
+      # regenerating them produces no diff - otherwise the contract and the code that
+      # implements it can drift without anything failing.
+      - name: Generated stubs are current
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          cd proto && buf generate
+          cd ..
+          if ! git diff --exit-code -- sasayaki/internal/wisperpb; then
+            echo "The committed Go stubs differ from the .proto files. Run 'buf generate' in proto/."
+            exit 1
+          fi

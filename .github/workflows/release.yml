@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build, for a rehearsal that publishes nothing'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build artefacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: panel/frontend/package-lock.json
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          cache-dependency-path: sasayaki/go.sum
+
+      - name: Version
+        id: version
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build the panel
+        working-directory: panel
+        run: ./gradlew bootJar --no-daemon
+
+      # Two architectures because a node is somebody else's machine and half the cheap
+      # ones are arm64 now. Static, with the symbol table stripped: the binary is
+      # downloaded by every node on every upgrade.
+      - name: Build the daemon
+        working-directory: sasayaki
+        env:
+          CGO_ENABLED: '0'
+        run: |
+          version="${{ steps.version.outputs.value }}"
+          commit="${GITHUB_SHA}"
+          built="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          ldflags="-s -w \
+            -X github.com/furimeo/wisper/sasayaki/internal/version.Number=${version} \
+            -X github.com/furimeo/wisper/sasayaki/internal/version.Commit=${commit} \
+            -X github.com/furimeo/wisper/sasayaki/internal/version.BuiltAt=${built}"
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            GOOS=linux GOARCH="${arch}" go build -trimpath -ldflags "${ldflags}" \
+              -o "dist/sasayaki-linux-${arch}" ./cmd/sasayaki
+          done
+
+      # The installer verifies this before it places anything, and the panel shows the same
+      # hash on screen for an operator to compare by eye. Publishing it beside the binary
+      # is what makes that check mean something.
+      - name: Collect and checksum
+        run: |
+          mkdir -p release
+          cp panel/build/libs/wisper-*.jar release/
+          cp sasayaki/dist/sasayaki-linux-* release/
+          cp deploy/install.sh release/
+          cd release
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: release/
+
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true
