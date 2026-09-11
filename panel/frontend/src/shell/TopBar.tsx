@@ -17,7 +17,10 @@ export function TopBar({onOpenMenu}: {onOpenMenu: () => void}) {
   return (
     <header
       className={cx(
-        'sticky top-0 z-30 flex items-center gap-2 border-b border-ink-200 px-3 py-2 pt-safe',
+        // py-1.5 and no avatar: the bar is a breadcrumb and a name, and every pixel it
+        // takes is one the page below does not get. A 44px circular target in here was
+        // taller than the bar's own padding allowed, so it was clipped at the top.
+        'sticky top-0 z-30 flex items-center gap-2 border-b border-ink-200 px-3 py-1.5 pt-safe',
         'bg-white/90 backdrop-blur-sm',
         'dark:border-ink-800 dark:bg-ink-950/90',
       )}
