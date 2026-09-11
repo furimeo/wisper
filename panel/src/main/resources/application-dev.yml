@@ -17,12 +17,24 @@ db-scheduler:
   threads: 4
 
 wisper:
+  crypto:
+    keys:
+      # A fixed key so a developer's database survives a restart without anyone having to
+      # export an environment variable first. It is in a committed file, which means it is
+      # public, which means it protects nothing - that is the trade for a laptop and it is
+      # never the trade for a node with a customer on it. Production reads
+      # WISPER_CRYPTO_KEY_1 from the environment and refuses to start without it.
+      1: d2lzcGVyLWRldi1rZXktbm90LWEtc2VjcmV0LTAwMDE=
+
   storage:
     root: ./var/dev
   node:
     # Nothing is behind a flaky tunnel on a laptop, and waiting a minute to notice a
-    # node you just killed is tedious.
+    # node you just killed is tedious. Both values move together: the interval has to stay
+    # comfortably inside the timeout or one dropped beat marks a healthy node lost, and
+    # NodeSettings refuses to start when it does not.
     heartbeat-timeout: 20s
+    heartbeat-interval: 5s
 
 logging:
   level:
