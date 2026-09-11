@@ -32,7 +32,7 @@ jobs:
           cache: npm
           cache-dependency-path: panel/frontend/package-lock.json
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: '1.27'
           cache-dependency-path: sasayaki/go.sum
