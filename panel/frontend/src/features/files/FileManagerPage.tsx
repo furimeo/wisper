@@ -1,5 +1,5 @@
 import {Head, router, usePage} from '@inertiajs/react'
-import {Suspense, lazy, useCallback, useEffect, useMemo, useState} from 'react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 
 import {
   Card,
@@ -14,23 +14,18 @@ import {
 import {ServiceTabs} from '@/features/service/ServiceTabs'
 import type {ServiceLocation} from '@/features/service/serviceTypes'
 
-import {ArchiveDialog} from './ArchiveDialog'
-import {DirectorySizeDialog} from './DirectorySizeDialog'
-import {ExtractDialog} from './ExtractDialog'
 import {FileActionMenu} from './FileActionMenu'
 import type {MenuAnchor} from './FileActionMenu'
 import {FileList} from './FileList'
+import {FileOverlays} from './FileOverlays'
 import {FilePathBar} from './FilePathBar'
+import {FileSelectionBar} from './FileSelectionBar'
 import {FileToolbar} from './FileToolbar'
-import {MoveDialog} from './MoveDialog'
-import {NewFolderDialog} from './NewFolderDialog'
-import {PermissionsDialog} from './PermissionsDialog'
-import {RenameDialog} from './RenameDialog'
-import {UploadDialog} from './UploadDialog'
 import {UploadDropOverlay} from './UploadDropOverlay'
 import {deletePaths} from './deletePaths'
 import {actionStates} from './fileActions'
 import type {FileActionKind} from './fileActions'
+import type {Overlay} from './fileOverlay'
 import {isEditable} from './fileKinds'
 import {FileRequestFailed, browseHref, downloadHref, listDirectory} from './fileRequests'
 import {useFileSelection} from './fileSelection'
@@ -39,28 +34,6 @@ import type {SortKey} from './fileSorting'
 import type {DirectoryPage, FileEntryView, FileRootRef} from './fileTypes'
 import {useChunkedUpload} from './useChunkedUpload'
 import {useFileShortcuts} from './useFileShortcuts'
-
-/*
- * CodeMirror is about a third of a megabyte and nobody opening a folder listing has asked
- * for it yet. Splitting it here is what `vite.config.ts` means by "the terminal and the
- * editor are split out by the dynamic imports in their features".
- */
-const FileEditor = lazy(() =>
-  import('./FileEditor').then((module) => ({default: module.FileEditor})),
-)
-
-/** Which overlay is up. One value, because two of them on screen at once is never right. */
-type Overlay =
-  | {kind: 'none'}
-  | {kind: 'newFolder'}
-  | {kind: 'upload'}
-  | {kind: 'rename'; entry: FileEntryView}
-  | {kind: 'move'; entries: FileEntryView[]}
-  | {kind: 'chmod'; entry: FileEntryView}
-  | {kind: 'compress'; paths: string[]}
-  | {kind: 'extract'; entry: FileEntryView}
-  | {kind: 'measure'; path: string}
-  | {kind: 'edit'; entry: FileEntryView}
 
 type FileManagerProps = {
   service: ServiceLocation
@@ -81,9 +54,14 @@ type FileManagerProps = {
  *
  * There is no SSH, no SFTP and no WebDAV in wisper, so this screen is not a convenience
  * next to a shell; it is the only way in (design §8.2). It is therefore shaped like a file
- * manager and not like a form with a list attached: a path bar, a toolbar whose controls
- * are always in the same place, a list that sorts and multi-selects, a right-click menu, a
- * keyboard that can drive all of it, and an editor that fills the window.
+ * manager and not like a form with a list attached: a path bar, two create actions, a list
+ * that sorts and multi-selects, a right-click menu, a keyboard that can drive all of it,
+ * and an editor that fills the window.
+ *
+ * The chrome is deliberately thin. An earlier pass put all thirteen operations on a
+ * permanent toolbar and greyed out the ones that did not apply, which read as a control
+ * panel with a list underneath. Actions that need a target now live where the target is:
+ * `FileActionMenu` on a row, `FileSelectionBar` once several are picked.
  *
  * Four things are worth knowing before changing it.
  *
@@ -100,13 +78,14 @@ type FileManagerProps = {
  * another folder while a 400 MB file goes up does not cancel it - and neither does closing
  * the upload dialog, which is why that dialog can be a dialog at all.
  *
- * **The selection speaks in list indices.** Everything below the toolbar shares one sorted
+ * **The selection speaks in list indices.** Everything below the path bar shares one sorted
  * array, so a shift-click range, the keyboard cursor and the right-click menu all mean the
  * same rows. Sorting is applied here rather than at the node, which is honest only because
  * `FileList` says so when a directory has more pages.
  *
  * Over three hundred lines, deliberately (AGENTS.md §3.2). What is left after the list, the
- * rows, the toolbar, the menu, the selection, the sorting, the shortcuts, the upload engine,
+ * rows, the toolbar, the selection bar, the menu, the selection, the sorting, the shortcuts,
+ * the upload engine,
  * the editor and each dialog were moved out is this screen's own state and the switch that
  * routes an action to the right overlay - and splitting *that* means a dozen pieces of
  * state and their setters crossing a component boundary, which is more code in two files
@@ -336,6 +315,9 @@ export default function FileManagerPage() {
       <PageHeader
         title="Files"
         description={`${root.label}, on the machine holding ${service.name}. There is no SFTP: this is the way in.`}
+        actions={
+          <FileToolbar states={states} onAction={(kind) => act(kind)} refreshing={refreshing} />
+        }
       />
 
       <FilePathBar
@@ -349,13 +331,11 @@ export default function FileManagerPage() {
         onEditingChange={setEditingPath}
       />
 
-      <FileToolbar
+      <FileSelectionBar
         states={states}
+        count={selection.count}
         onAction={(kind) => act(kind)}
-        onOpenSheet={() => setMenu({anchor: null})}
-        selectedCount={selection.count}
-        onClearSelection={clear}
-        refreshing={refreshing}
+        onClear={clear}
       />
 
       {uploads.busy && overlay.kind !== 'upload' ? (
@@ -451,83 +431,17 @@ export default function FileManagerPage() {
         destination={path}
       />
 
-      <UploadDialog
-        open={overlay.kind === 'upload'}
-        onClose={() => setOverlay({kind: 'none'})}
-        uploads={uploads}
-        destination={path}
-        canWrite={canWrite && unavailable === null}
-        refusalReason={uploadRefusal}
-      />
-
-      <NewFolderDialog
-        open={overlay.kind === 'newFolder'}
+      <FileOverlays
+        overlay={overlay}
         onClose={() => setOverlay({kind: 'none'})}
         serviceId={serviceId}
         rootId={root.id}
         path={path}
+        canWrite={canWrite}
+        uploads={uploads}
+        uploadRefusal={uploadRefusal}
+        unavailable={unavailable !== null}
       />
-      <RenameDialog
-        entry={overlay.kind === 'rename' ? overlay.entry : null}
-        onClose={() => setOverlay({kind: 'none'})}
-        serviceId={serviceId}
-        rootId={root.id}
-      />
-      <MoveDialog
-        entries={overlay.kind === 'move' ? overlay.entries : []}
-        onClose={() => setOverlay({kind: 'none'})}
-        serviceId={serviceId}
-        rootId={root.id}
-        directory={path}
-      />
-      <PermissionsDialog
-        entry={overlay.kind === 'chmod' ? overlay.entry : null}
-        onClose={() => setOverlay({kind: 'none'})}
-        serviceId={serviceId}
-        rootId={root.id}
-      />
-      <ExtractDialog
-        archive={overlay.kind === 'extract' ? overlay.entry : null}
-        onClose={() => setOverlay({kind: 'none'})}
-        serviceId={serviceId}
-        rootId={root.id}
-        directory={path}
-      />
-      <ArchiveDialog
-        open={overlay.kind === 'compress'}
-        onClose={() => setOverlay({kind: 'none'})}
-        serviceId={serviceId}
-        rootId={root.id}
-        directory={path}
-        paths={overlay.kind === 'compress' ? overlay.paths : []}
-      />
-      <DirectorySizeDialog
-        serviceId={serviceId}
-        rootId={root.id}
-        path={overlay.kind === 'measure' ? overlay.path : null}
-        onClose={() => setOverlay({kind: 'none'})}
-      />
-
-      {overlay.kind === 'edit' ? (
-        <Suspense
-          fallback={
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/40">
-              <span className="flex items-center gap-2 rounded-lg bg-white px-4 py-3 text-sm shadow-lg dark:bg-ink-900">
-                <Spinner />
-                Opening the editor
-              </span>
-            </div>
-          }
-        >
-          <FileEditor
-            entry={overlay.entry}
-            onClose={() => setOverlay({kind: 'none'})}
-            serviceId={serviceId}
-            rootId={root.id}
-            canWrite={canWrite}
-          />
-        </Suspense>
-      ) : null}
     </div>
   )
 }
