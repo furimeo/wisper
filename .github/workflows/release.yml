@@ -43,6 +43,8 @@ jobs:
 
       - name: Build the panel
         working-directory: panel
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
         run: ./gradlew bootJar --no-daemon
 
       # Two architectures because a node is somebody else's machine and half the cheap
