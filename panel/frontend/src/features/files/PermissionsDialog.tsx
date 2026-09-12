@@ -89,7 +89,7 @@ export function PermissionsDialog({
           maxLength={4}
           suffix={
             <span className="font-mono text-xs">
-              {parsed === null ? '—' : permissionText(parsed)}
+              {parsed === null ? '-' : permissionText(parsed)}
             </span>
           }
           hint="Only owner, group and other read/write/execute are applied. setuid, setgid and the sticky bit are dropped."
