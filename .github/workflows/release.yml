@@ -59,7 +59,7 @@ jobs:
           ldflags="-s -w \
             -X github.com/furimeo/wisper/sasayaki/internal/version.Number=${version} \
             -X github.com/furimeo/wisper/sasayaki/internal/version.Commit=${commit} \
-            -X github.com/furimeo/wisper/sasayaki/internal/version.BuiltAt=${built}"
+            -X github.com/furimeo/wisper/sasayaki/internal/version.BuildDate=${built}"
           mkdir -p dist
           for arch in amd64 arm64; do
             GOOS=linux GOARCH="${arch}" go build -trimpath -ldflags "${ldflags}" \

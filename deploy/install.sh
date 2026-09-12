@@ -87,9 +87,11 @@ esac
 if [ -z "$BINARY" ]; then
   for candidate in \
     "$SCRIPT_DIR/sasayaki" \
+    "$SCRIPT_DIR/sasayaki-linux-$ARCH" \
     "$SCRIPT_DIR/dist/sasayaki-linux-$ARCH" \
     "$SCRIPT_DIR/../sasayaki/dist/sasayaki-linux-$ARCH" \
-    "./sasayaki"
+    "./sasayaki" \
+    "./sasayaki-linux-$ARCH"
   do
     if [ -f "$candidate" ]; then BINARY="$candidate"; break; fi
   done
@@ -103,8 +105,16 @@ fi
 # A checksum beside the binary is what `make build-linux` writes and what an operator
 # downloading a release by hand ends up with. Using it automatically means the offline
 # path verifies by default rather than only when somebody remembers to ask.
-if [ -z "$EXPECTED_SHA" ] && [ -f "$BINARY.sha256" ]; then
-  EXPECTED_SHA=$(cut -d' ' -f1 < "$BINARY.sha256")
+if [ -z "$EXPECTED_SHA" ]; then
+  if [ -f "$BINARY.sha256" ]; then
+    EXPECTED_SHA=$(cut -d' ' -f1 < "$BINARY.sha256")
+  elif [ -f "$SCRIPT_DIR/SHA256SUMS" ]; then
+    BIN_NAME=$(basename "$BINARY")
+    EXPECTED_SHA=$(grep "  $BIN_NAME\$" "$SCRIPT_DIR/SHA256SUMS" | cut -d' ' -f1 || true)
+  elif [ -f "./SHA256SUMS" ]; then
+    BIN_NAME=$(basename "$BINARY")
+    EXPECTED_SHA=$(grep "  $BIN_NAME\$" "./SHA256SUMS" | cut -d' ' -f1 || true)
+  fi
 fi
 
 if [ -n "$EXPECTED_SHA" ]; then
