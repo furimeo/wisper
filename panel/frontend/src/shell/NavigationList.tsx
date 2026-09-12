@@ -10,6 +10,7 @@ import {
 import {Icon} from './Icon'
 import {cx} from './cx'
 import {useShellProps} from './shellProps'
+import {t} from '@/i18n'
 
 /**
  * The sections of the navigation, rendered the same way in the sidebar and in the phone
@@ -27,9 +28,9 @@ export function NavigationList({onNavigate}: {onNavigate?: () => void}) {
   return (
     <nav aria-label="Main" className="flex flex-col gap-5">
       <Section items={WORKSPACE} url={url} onNavigate={onNavigate} />
-      <Section title="Account" items={ACCOUNT_SETTINGS} url={url} onNavigate={onNavigate} />
+      <Section title={t('shell.nav.sectionAccount')} items={ACCOUNT_SETTINGS} url={url} onNavigate={onNavigate} />
       {account?.platformAdmin ? (
-        <Section title="Platform" items={PLATFORM} url={url} onNavigate={onNavigate} />
+        <Section title={t('shell.nav.sectionPlatform')} items={PLATFORM} url={url} onNavigate={onNavigate} />
       ) : null}
     </nav>
   )
@@ -74,7 +75,7 @@ function Section({
                   name={item.icon}
                   className={active ? undefined : 'text-ink-500 dark:text-ink-400'}
                 />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{item.labelKey ? t(item.labelKey) : item.label}</span>
               </Link>
             </li>
           )

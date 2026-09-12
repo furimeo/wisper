@@ -10,6 +10,7 @@ import {ThemeToggle} from './ThemeToggle'
 import {cx} from './cx'
 import {useIsWide} from './useMediaQuery'
 import {useShellProps} from './shellProps'
+import {t} from '@/i18n'
 
 /**
  * Who is signed in, their settings, the theme, and the way out.
@@ -43,7 +44,7 @@ export function AccountMenu({className}: {className?: string}) {
       onClick={() => setOpen((was) => !was)}
       aria-haspopup={wide ? 'menu' : 'dialog'}
       aria-expanded={wide ? open : undefined}
-      aria-label={`Account: ${account.displayName}`}
+      aria-label={t('shell.account.label', {name: account.displayName})}
       className={cx(
         'flex min-w-0 shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium',
         'text-ink-700 hover:bg-ink-100 dark:text-ink-200 dark:hover:bg-ink-800',
@@ -59,7 +60,7 @@ export function AccountMenu({className}: {className?: string}) {
     return (
       <>
         {trigger}
-        <Drawer open={open} onClose={() => setOpen(false)} side="right" title="Account">
+        <Drawer open={open} onClose={() => setOpen(false)} side="right" title={t('shell.account.title')}>
           <Contents account={account} onNavigate={() => setOpen(false)} />
         </Drawer>
       </>
@@ -105,7 +106,7 @@ function Contents({
         <p className="truncate text-sm text-ink-500 dark:text-ink-400">{account.email}</p>
         {account.platformAdmin ? (
           <p className="mt-1 text-xs font-medium text-accent-600 dark:text-accent-400">
-            Platform operator
+            {t('shell.account.platformOperator')}
           </p>
         ) : null}
       </div>
@@ -122,7 +123,7 @@ function Contents({
               )}
             >
               <Icon name={entry.icon} className="size-4 text-ink-500" />
-              {entry.label}
+              {entry.labelKey ? t(entry.labelKey) : entry.label}
             </Link>
           </li>
         ))}
@@ -135,7 +136,7 @@ function Contents({
         )}
       >
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-ink-400">
-          Theme
+          {t('shell.account.theme')}
         </p>
         <ThemeToggle />
       </div>
@@ -154,7 +155,7 @@ function Contents({
           )}
         >
           <Icon name="signOut" className="size-4" />
-          Sign out
+          {t('shell.account.signOut')}
         </button>
       </div>
     </>

@@ -3,6 +3,7 @@ import {Link, usePage} from '@inertiajs/react'
 import {PHONE_TABS, isDestinationActive} from './NavigationDestinations'
 import {Icon} from './Icon'
 import {cx} from './cx'
+import {t} from '@/i18n'
 
 /**
  * The phone's navigation.
@@ -42,7 +43,7 @@ export function BottomTabBar({onOpenMenu}: {onOpenMenu: () => void}) {
                 )}
               >
                 <Icon name={tab.icon} />
-                {tab.label}
+                {tab.labelKey ? t(tab.labelKey) : tab.label}
               </Link>
             </li>
           )
@@ -55,7 +56,7 @@ export function BottomTabBar({onOpenMenu}: {onOpenMenu: () => void}) {
             className="flex h-bottomnav w-full flex-col items-center justify-center gap-0.5 text-[0.6875rem] font-medium text-ink-500 dark:text-ink-400"
           >
             <Icon name="menu" />
-            Menu
+            {t('shell.nav.menu')}
           </button>
         </li>
       </ul>

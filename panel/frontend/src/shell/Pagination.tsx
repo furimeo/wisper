@@ -3,6 +3,7 @@ import {Link} from '@inertiajs/react'
 import {Button} from './Button'
 import {Icon} from './Icon'
 import {cx} from './cx'
+import {t} from '@/i18n'
 
 /**
  * Previous and next over an offset window.
@@ -54,7 +55,7 @@ export function Pagination({
       )}
     >
       <p className="text-sm text-ink-600 tabular-nums dark:text-ink-400">
-        {total === 0 ? `No ${unit}` : `${first}–${last} of ${total} ${unit}`}
+        {total === 0 ? t('shell.pagination.empty', {unit}) : t('shell.pagination.summary', {from: first, to: last, total, unit})}
       </p>
 
       <div className="flex items-center gap-2">
@@ -90,7 +91,7 @@ function Step({
   hrefFor?: (offset: number) => string
   onNavigate?: (offset: number) => void
 }) {
-  const label = direction === 'previous' ? 'Previous' : 'Next'
+  const label = direction === 'previous' ? t('shell.pagination.previous') : t('shell.pagination.next')
   const icon = <Icon name={direction === 'previous' ? 'chevronLeft' : 'chevronRight'} />
   const body =
     direction === 'previous' ? (

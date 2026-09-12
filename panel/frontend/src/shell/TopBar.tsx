@@ -2,6 +2,7 @@ import {AccountMenu} from './AccountMenu'
 import {Breadcrumbs} from './Breadcrumbs'
 import {Icon} from './Icon'
 import {cx} from './cx'
+import {t} from '@/i18n'
 
 /**
  * The header: where you are, and who you are.
@@ -30,7 +31,7 @@ export function TopBar({onOpenMenu}: {onOpenMenu: () => void}) {
         type="button"
         onClick={onOpenMenu}
         aria-haspopup="dialog"
-        aria-label="Open navigation"
+        aria-label={t('shell.nav.open')}
         className="flex touch-target shrink-0 items-center justify-center rounded-lg text-ink-700 hover:bg-ink-100 md:hidden dark:text-ink-300 dark:hover:bg-ink-800"
       >
         <Icon name="menu" />

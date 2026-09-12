@@ -8,6 +8,7 @@ import {
   registerConfirmHost,
   subscribeToConfirmations,
 } from './confirmStore'
+import {t} from '@/i18n'
 
 /**
  * Renders whatever `askConfirmation` is waiting on.
@@ -47,14 +48,14 @@ export function ConfirmHost() {
       footer={
         <>
           <Button variant="secondary" onClick={() => request.settle(false)}>
-            {request.cancelLabel ?? 'Cancel'}
+            {request.cancelLabel ?? t('shell.action.cancel')}
           </Button>
           <Button
             variant={request.tone === 'danger' ? 'danger' : 'primary'}
             disabled={!matches}
             onClick={() => request.settle(true)}
           >
-            {request.confirmLabel ?? 'Confirm'}
+            {request.confirmLabel ?? t('shell.confirm.confirm')}
           </Button>
         </>
       }
@@ -69,7 +70,7 @@ export function ConfirmHost() {
         <Input
           fieldClassName="mt-4"
           className="font-mono"
-          label={request.requireTextLabel ?? `Type ${request.requireText} to confirm`}
+          label={request.requireTextLabel ?? t('shell.confirm.typeToConfirm', {phrase: request.requireText!})}
           value={typed}
           autoComplete="off"
           autoCapitalize="none"

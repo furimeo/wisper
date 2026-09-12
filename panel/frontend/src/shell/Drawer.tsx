@@ -3,6 +3,7 @@ import type {ReactNode} from 'react'
 import {cx} from './cx'
 import {Icon} from './Icon'
 import {useDialog} from './useDialog'
+import {t} from '@/i18n'
 
 /**
  * A panel that slides in from the edge and holds a list.
@@ -73,7 +74,7 @@ export function Drawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('shell.action.close')}
             className="-mr-2 flex touch-target items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"
           >
             <Icon name="close" />

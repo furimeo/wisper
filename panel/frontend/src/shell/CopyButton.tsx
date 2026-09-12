@@ -1,6 +1,7 @@
 import {Icon} from './Icon'
 import {cx} from './cx'
 import {useClipboard} from './useClipboard'
+import {t} from '@/i18n'
 
 /**
  * Copies a string, and says whether it worked.
@@ -33,13 +34,13 @@ export function CopyButton({
 }: CopyButtonProps) {
   const {copy, state} = useClipboard()
 
-  const text = state === 'copied' ? 'Copied' : state === 'failed' ? 'Press ⌘/Ctrl+C' : label
+  const text = state === 'copied' ? t('shell.action.copied') : state === 'failed' ? 'Press ⌘/Ctrl+C' : label
 
   return (
     <button
       type="button"
       onClick={() => void copy(value)}
-      aria-label={describedAs ?? (label ? undefined : `Copy ${value}`)}
+      aria-label={describedAs ?? (label ? undefined : `${t('shell.action.copy')} ${value}`)}
       aria-live="polite"
       className={cx(
         'inline-flex touch-target items-center justify-center gap-1.5 rounded-lg border',

@@ -12,6 +12,7 @@ import type {IconName} from './Icon'
 export interface Destination {
   href: string
   label: string
+  labelKey?: string
   icon: IconName
   /**
    * Other path prefixes this destination is the home of. A service lives under
@@ -23,14 +24,26 @@ export interface Destination {
 const PROJECTS: Destination = {
   href: '/',
   label: 'Projects',
+  labelKey: 'shell.nav.projects',
   icon: 'projects',
   owns: ['/projects', '/services'],
 }
-const DATABASES: Destination = {href: '/databases', label: 'Databases', icon: 'database'}
-const BACKUPS: Destination = {href: '/backups', label: 'Backups', icon: 'backup'}
+const DATABASES: Destination = {
+  href: '/databases',
+  label: 'Databases',
+  labelKey: 'shell.nav.databases',
+  icon: 'database',
+}
+const BACKUPS: Destination = {
+  href: '/backups',
+  label: 'Backups',
+  labelKey: 'shell.nav.backups',
+  icon: 'backup',
+}
 const ORGANIZATIONS: Destination = {
   href: '/orgs',
   label: 'Organizations',
+  labelKey: 'shell.nav.organizations',
   icon: 'organization',
 }
 
@@ -48,22 +61,22 @@ export const PHONE_TABS: Destination[] = [PROJECTS, DATABASES, BACKUPS]
 
 /** This account, rather than any organization. */
 export const ACCOUNT_SETTINGS: Destination[] = [
-  {href: '/settings/profile', label: 'Profile', icon: 'account'},
-  {href: '/settings/security', label: 'Security', icon: 'shield'},
-  {href: '/settings/tokens', label: 'API tokens', icon: 'key'},
+  {href: '/settings/profile', label: 'Profile', labelKey: 'shell.nav.profile', icon: 'account'},
+  {href: '/settings/security', label: 'Security', labelKey: 'shell.nav.security', icon: 'shield'},
+  {href: '/settings/tokens', label: 'API tokens', labelKey: 'shell.nav.apiTokens', icon: 'key'},
 ]
 
 /** `/admin/**`, behind ROLE_ADMIN. The server checks; this only decides what is drawn. */
 export const PLATFORM: Destination[] = [
-  {href: '/admin/nodes', label: 'Nodes', icon: 'node'},
-  {href: '/admin/placement', label: 'Placement', icon: 'node'},
-  {href: '/admin/organizations', label: 'Tenants', icon: 'organization'},
-  {href: '/admin/plans', label: 'Plans', icon: 'plan'},
-  {href: '/admin/accounts', label: 'Accounts', icon: 'account'},
-  {href: '/admin/databases', label: 'Database engines', icon: 'database'},
-  {href: '/admin/backups', label: 'Backup destinations', icon: 'backup'},
-  {href: '/admin/audit', label: 'Audit log', icon: 'audit'},
-  {href: '/admin/jobs', label: 'Jobs', icon: 'jobs'},
+  {href: '/admin/nodes', label: 'Nodes', labelKey: 'shell.nav.nodes', icon: 'node'},
+  {href: '/admin/placement', label: 'Placement', labelKey: 'shell.nav.placement', icon: 'node'},
+  {href: '/admin/organizations', label: 'Tenants', labelKey: 'shell.nav.tenants', icon: 'organization'},
+  {href: '/admin/plans', label: 'Plans', labelKey: 'shell.nav.plans', icon: 'plan'},
+  {href: '/admin/accounts', label: 'Accounts', labelKey: 'shell.nav.accounts', icon: 'account'},
+  {href: '/admin/databases', label: 'Database engines', labelKey: 'shell.nav.databaseEngines', icon: 'database'},
+  {href: '/admin/backups', label: 'Backup destinations', labelKey: 'shell.nav.backupDestinations', icon: 'backup'},
+  {href: '/admin/audit', label: 'Audit log', labelKey: 'shell.nav.auditLog', icon: 'audit'},
+  {href: '/admin/jobs', label: 'Jobs', labelKey: 'shell.nav.jobs', icon: 'jobs'},
 ]
 
 /** The path part of an Inertia URL, without its query string or trailing slash. */

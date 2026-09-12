@@ -10,6 +10,7 @@ import {Sidebar} from './Sidebar'
 import {Toaster} from './Toaster'
 import {TopBar} from './TopBar'
 import {useTheme} from './useTheme'
+import {t} from '@/i18n'
 
 /**
  * The application chrome every signed-in page renders inside.
@@ -42,7 +43,7 @@ export function AppLayout({children}: {children: ReactNode}) {
         href="#wisper-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-accent-600 focus:px-4 focus:py-2 focus:text-white"
       >
-        Skip to content
+        {t('shell.skipToContent')}
       </a>
 
       <Sidebar />

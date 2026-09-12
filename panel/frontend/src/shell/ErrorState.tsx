@@ -2,6 +2,7 @@ import type {ReactNode} from 'react'
 
 import {Button} from './Button'
 import {cx} from './cx'
+import {t} from '@/i18n'
 
 /**
  * A failure inside a page that otherwise rendered.
@@ -29,13 +30,15 @@ export interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = 'This part could not be loaded',
+  title,
   description,
   onRetry,
-  retryLabel = 'Try again',
+  retryLabel,
   action,
   className,
 }: ErrorStateProps) {
+  const displayTitle = title ?? t('shell.state.error')
+  const displayRetry = retryLabel ?? t('shell.action.retry')
   return (
     <div
       role="alert"
@@ -55,7 +58,7 @@ export function ErrorState({
           />
         </svg>
       </span>
-      <h3 className="text-base font-semibold text-ink-900 dark:text-ink-100">{title}</h3>
+      <h3 className="text-base font-semibold text-ink-900 dark:text-ink-100">{displayTitle}</h3>
       <p className="max-w-prose text-sm leading-relaxed text-ink-600 dark:text-ink-400">
         {description}
       </p>
@@ -63,7 +66,7 @@ export function ErrorState({
         <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
           {onRetry ? (
             <Button variant="secondary" onClick={onRetry}>
-              {retryLabel}
+              {displayRetry}
             </Button>
           ) : null}
           {action}
