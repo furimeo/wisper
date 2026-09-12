@@ -202,10 +202,30 @@ Do not downgrade a version to make an old tutorial compile. Read the current API
 
 ---
 
-## 7. Language
+## 7. Language and Localization
 
 All code, comments, identifiers, commit messages and in-repo documentation are in
 **English**. Commit messages follow Conventional Commits.
+
+### 7.1 Full-site localization (English and Vietnamese)
+
+The panel web interface must be **100% localized in both English (`en`) and Vietnamese (`vi`)**.
+No partial translations, no hardcoded customer-facing text, and no raw keys shown to users.
+
+- **Translation mechanism**: All UI text is retrieved via `t('feature.screen.item', params)`
+  from `@/i18n`. Hardcoded user-visible text in components or views is forbidden.
+- **Flat JSON catalogues**: Catalogues live in `panel/frontend/src/i18n/<locale>/<domain>.json`.
+  Every catalogue MUST be a **flat key-value JSON** where keys are fully qualified dotted paths
+  (e.g., `"service.list.col_service": "..."`). **Never use nested JSON objects** because the
+  runtime lookup directly indexes `catalog[key]`.
+- **100% key parity**: Every translation key in `en/<domain>.json` MUST have an exact matching
+  entry in `vi/<domain>.json`, and vice versa.
+- **Grammar & plurals**: English uses `{one: "...", other: "..."}` for plural boundaries with
+  `{count}`. Vietnamese has no grammatical plural, so its catalogue entry is always a single string
+  (e.g., `"{count} dịch vụ"`).
+- **Technical terms stay standard**: Infrastructure & protocol terms remain English in both
+  locales: `node`, `sasayaki`, `backup`, `runsc`, `gVisor`, `cgroups v2`, `Docker`, `API token`,
+  `cron`, etc. Do not invent awkward translations for standard engineering terms.
 
 ---
 
