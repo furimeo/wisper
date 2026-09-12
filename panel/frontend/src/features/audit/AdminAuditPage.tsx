@@ -2,6 +2,7 @@ import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
 import {Button, Card, Drawer, PageHeader, Pagination, useIsWide} from '@/shell'
+import {t} from '@/i18n'
 
 import {AuditEntryList} from './AuditEntryList'
 import {AuditFilterForm} from './AuditFilterForm'
@@ -42,23 +43,22 @@ export default function AdminAuditPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Audit log" />
+      <Head title={t('audit.title')} />
 
       <PageHeader
-        title="Audit log"
-        description="Who did what, to what, and how it ended - including everything that was
-          refused. A trail that recorded only what succeeded could not reconstruct an incident."
+        title={t('audit.title')}
+        description={t('audit.description')}
         actions={
           wide ? null : (
             <Button variant="secondary" block onClick={() => setFiltering(true)}>
-              {active === 0 ? 'Filter' : `Filter (${active})`}
+              {active === 0 ? t('audit.filter') : t('audit.filterWithCount', {count: active})}
             </Button>
           )
         }
       />
 
       {wide ? (
-        <Card title="Filter" description="Everything here goes into the URL, so it can be shared.">
+        <Card title={t('audit.filterCard.title')} description={t('audit.filterCard.description')}>
           <AuditFilterForm
             filter={filter}
             actions={actions}
@@ -71,7 +71,7 @@ export default function AdminAuditPage() {
           open={filtering}
           onClose={() => setFiltering(false)}
           side="right"
-          title="Filter the trail"
+          title={t('audit.drawer.title')}
         >
           <AuditFilterForm
             filter={filter}
@@ -85,11 +85,8 @@ export default function AdminAuditPage() {
 
       {refusals > 0 ? (
         <p className="rounded-xl border border-degraded/50 bg-degraded/10 px-4 py-3 text-sm leading-relaxed">
-          {refusals === 1
-            ? 'One entry on this page is a refusal.'
-            : `${refusals} entries on this page are refusals.`}{' '}
-          Somebody asked for something they were not allowed to have. That is usually a
-          permission that needs granting, and occasionally it is not.
+          {t('audit.refusals.notice', {count: refusals})}{' '}
+          {t('audit.refusals.body')}
         </p>
       ) : null}
 
@@ -99,7 +96,7 @@ export default function AdminAuditPage() {
         total={page.total}
         offset={page.offset}
         pageSize={page.pageSize}
-        unit="entries"
+        unit={t('audit.unit')}
         hrefFor={(offset) => auditUrl(filter, {offset})}
       />
     </div>

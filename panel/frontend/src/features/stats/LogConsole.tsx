@@ -1,5 +1,6 @@
 import {useEffect, useMemo, useRef, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, CopyButton, cx} from '@/shell'
 
 import {tailText, visibleLines} from './logLines'
@@ -54,35 +55,35 @@ export function LogConsole({stream, placed}: {stream: LogStream; placed: boolean
           pulse={!stream.tail.ended && !stream.paused && !stream.connected}
         >
           {stream.tail.ended
-            ? 'Ended'
+            ? t('stats.console.statusEnded')
             : stream.paused
-              ? 'Paused'
+              ? t('stats.console.statusPaused')
               : stream.connected
-                ? 'Following'
-                : 'Connecting'}
+                ? t('stats.console.statusFollowing')
+                : t('stats.console.statusConnecting')}
         </Badge>
 
         <span className="text-xs tabular-nums text-ink-500 dark:text-ink-400">
-          {lines.length.toLocaleString()} lines
+          {t('stats.console.linesCount', {count: lines.length})}
         </span>
 
         {stream.tail.droppedBytes > 0 ? (
           <Badge tone="degraded">
-            {stream.tail.droppedBytes.toLocaleString()} bytes dropped
+            {t('stats.console.bytesDropped', {count: stream.tail.droppedBytes.toLocaleString()})}
           </Badge>
         ) : null}
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => setWrap((current) => !current)}>
-            {wrap ? 'No wrap' : 'Wrap'}
+            {wrap ? t('stats.console.noWrap') : t('stats.console.wrap')}
           </Button>
           <Button variant="ghost" size="sm" onClick={stream.clear}>
-            Clear
+            {t('stats.console.clear')}
           </Button>
-          <CopyButton value={tailText(stream.tail)} label="Copy" size="sm" />
+          <CopyButton value={tailText(stream.tail)} label={t('stats.console.copy')} size="sm" />
           {stream.tail.ended ? (
             <Button variant="secondary" size="sm" onClick={stream.reconnect}>
-              Follow again
+              {t('stats.console.followAgain')}
             </Button>
           ) : (
             <Button
@@ -91,7 +92,7 @@ export function LogConsole({stream, placed}: {stream: LogStream; placed: boolean
               onClick={() => stream.setPaused(!stream.paused)}
               disabled={!placed}
             >
-              {stream.paused ? 'Resume' : 'Pause'}
+              {stream.paused ? t('stats.console.resume') : t('stats.console.pause')}
             </Button>
           )}
         </div>
@@ -99,14 +100,13 @@ export function LogConsole({stream, placed}: {stream: LogStream; placed: boolean
 
       {stream.reconnecting ? (
         <p className="rounded-lg bg-degraded/15 px-3 py-2 text-sm text-ink-800 dark:text-ink-100">
-          The stream dropped. It reopens by itself, asking the node for everything since the
-          last line - so nothing written in between is lost.{' '}
+          {t('stats.console.streamDropped')}{' '}
           <button
             type="button"
             onClick={stream.reconnect}
             className="underline underline-offset-2"
           >
-            Reconnect now
+            {t('stats.console.reconnectNow')}
           </button>
         </p>
       ) : null}
@@ -129,8 +129,8 @@ export function LogConsole({stream, placed}: {stream: LogStream; placed: boolean
           {chunks.length === 0 ? (
             <p className="text-ink-500 dark:text-ink-400">
               {placed
-                ? 'Nothing has been written yet. This is a live tail, so anything the container prints from now on appears here.'
-                : 'Nothing is running this service, so there is no output to tail.'}
+                ? t('stats.console.emptyPlaced')
+                : t('stats.console.emptyUnplaced')}
             </p>
           ) : (
             <pre className={cx('m-0', wrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre')}>
@@ -165,7 +165,7 @@ export function LogConsole({stream, placed}: {stream: LogStream; placed: boolean
             }}
             className="absolute bottom-3 right-3 shadow-lg"
           >
-            Jump to latest
+            {t('stats.console.jumpToLatest')}
           </Button>
         )}
       </div>

@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Badge, Icon, RelativeTime} from '@/shell'
 
 import type {MemberView} from './orgTypes'
@@ -34,9 +35,9 @@ export function MemberRow({
             {member.email}
           </span>
           <Badge tone={member.accepted ? 'neutral' : 'degraded'}>
-            {member.accepted ? roleLabel(member.role) : 'Invited'}
+            {member.accepted ? roleLabel(member.role) : t('org.members.invitedBadge')}
           </Badge>
-          {isViewer ? <Badge tone="accent">You</Badge> : null}
+          {isViewer ? <Badge tone="accent">{t('org.members.youBadge')}</Badge> : null}
         </span>
 
         <span className="mt-0.5 block truncate text-sm text-ink-500 dark:text-ink-400">
@@ -47,22 +48,35 @@ export function MemberRow({
           {member.accepted ? (
             member.acceptedAt ? (
               <>
-                Joined <RelativeTime at={member.acceptedAt} /> as{' '}
-                {roleLabel(member.role).toLowerCase()}
+                {t('org.members.joined', {
+                  time: '',
+                  role: roleLabel(member.role).toLowerCase(),
+                }).split('{time}')[0]}
+                <RelativeTime at={member.acceptedAt} />
+                {t('org.members.joined', {
+                  time: '',
+                  role: roleLabel(member.role).toLowerCase(),
+                }).split('{time}')[1]}
               </>
             ) : (
               <>{roleLabel(member.role)}</>
             )
           ) : (
             <>
-              Invited as {roleLabel(member.role).toLowerCase()}
+              {t('org.members.invitedAs', {
+                role: roleLabel(member.role).toLowerCase(),
+                time: '',
+              }).split('{time}')[0]}
               {member.invitedAt ? (
                 <>
                   {' '}
                   <RelativeTime at={member.invitedAt} />
                 </>
               ) : null}
-              , not answered yet
+              {t('org.members.invitedAs', {
+                role: roleLabel(member.role).toLowerCase(),
+                time: '',
+              }).split('{time}')[1]}
             </>
           )}
         </span>

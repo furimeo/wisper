@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {useI18n} from '@/i18n'
 import {Badge, Button, ButtonLink, Card, Icon, cx} from '@/shell'
 
 import {CertificateStatus} from './CertificateStatus'
@@ -29,6 +30,7 @@ export function DomainCard({
   nodeAddress: string | null
   writable: boolean
 }) {
+  const {t} = useI18n()
   const [open, setOpen] = useState(domain.atRisk)
   const detailsId = `domain-${domain.id}-details`
 
@@ -51,13 +53,13 @@ export function DomainCard({
         {tlsLabel(domain.tlsMode)}
         {domain.forceHttps && domain.tlsMode !== 'OFF'
           ? domain.verified
-            ? ' · plain HTTP is redirected'
-            : ' · the HTTP redirect stays off until this hostname is verified'
+            ? t('domain.card.httpRedirected')
+            : t('domain.card.httpRedirectPending')
           : ''}
-        {domain.targetPort === null ? '' : ` · sent to port ${domain.targetPort}`}
+        {domain.targetPort === null ? '' : t('domain.card.sentToPort', {port: domain.targetPort})}
         {domain.redirectToHostname === null
           ? ''
-          : ` · permanently redirected to ${domain.redirectToHostname}`}
+          : t('domain.card.redirectedTo', {hostname: domain.redirectToHostname})}
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -68,12 +70,12 @@ export function DomainCard({
           variant="secondary"
           icon={<Icon name="external" className="size-4" />}
         >
-          Open
+          {t('domain.card.action.open')}
         </ButtonLink>
 
         {writable && !domain.verified ? (
           <Button onClick={() => checkDomainNow(serviceId, domain)}>
-            Check now
+            {t('domain.card.action.checkNow')}
           </Button>
         ) : null}
 
@@ -89,7 +91,7 @@ export function DomainCard({
             />
           }
         >
-          {open ? 'Hide details' : 'DNS and certificate'}
+          {open ? t('domain.card.action.hideDetails') : t('domain.card.action.showDetails')}
         </Button>
       </div>
 
@@ -97,14 +99,14 @@ export function DomainCard({
         <div id={detailsId} className="mt-4 flex flex-col gap-4 border-t border-ink-200 pt-4 dark:border-ink-800">
           <section>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-ink-400">
-              DNS
+              {t('domain.card.section.dns')}
             </h3>
             <DnsRecordInstructions domain={domain} nodeAddress={nodeAddress} />
           </section>
 
           <section>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-ink-400">
-              Certificate
+              {t('domain.card.section.certificate')}
             </h3>
             <CertificateStatus domain={domain} />
           </section>
@@ -116,14 +118,14 @@ export function DomainCard({
                   variant="secondary"
                   onClick={() => makePrimaryDomain(serviceId, domain)}
                 >
-                  Make this the main address
+                  {t('domain.card.action.makePrimary')}
                 </Button>
               )}
               <Button
                 variant="danger"
                 onClick={() => void removeDomain(serviceId, domain)}
               >
-                Remove {domain.hostname}
+                {t('domain.card.action.remove', {hostname: domain.hostname})}
               </Button>
             </section>
           ) : null}

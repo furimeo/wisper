@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {formatBytes} from '@/shell'
 
 import type {QuotaResource, QuotaSource} from './orgTypes'
@@ -18,94 +19,28 @@ import type {QuotaResource, QuotaSource} from './orgTypes'
 export type QuotaUnit = 'count' | 'bytes' | 'millicores'
 
 interface Vocabulary {
-  label: string
   unit: QuotaUnit
-  /** The singular noun for a count, so "1 project" is not "1 projects". */
-  noun?: string
-  /** What being at the ceiling stops the customer doing. Shown when they are near it. */
-  consequence: string
 }
 
 const VOCABULARY: Record<QuotaResource, Vocabulary> = {
-  PROJECT: {
-    label: 'Projects',
-    unit: 'count',
-    noun: 'project',
-    consequence: 'You cannot open another project.',
-  },
-  SERVICE: {
-    label: 'Services',
-    unit: 'count',
-    noun: 'service',
-    consequence: 'You cannot add another service.',
-  },
-  DOMAIN: {
-    label: 'Domains',
-    unit: 'count',
-    noun: 'domain',
-    consequence: 'You cannot point another hostname at a service.',
-  },
-  MANAGED_DATABASE: {
-    label: 'Databases',
-    unit: 'count',
-    noun: 'database',
-    consequence: 'You cannot create another database.',
-  },
-  CRON_TASK: {
-    label: 'Scheduled tasks',
-    unit: 'count',
-    noun: 'task',
-    consequence: 'You cannot schedule another command.',
-  },
-  MEMBER: {
-    label: 'Members',
-    unit: 'count',
-    noun: 'member',
-    consequence: 'You cannot invite anybody else.',
-  },
-  API_TOKEN: {
-    label: 'API tokens',
-    unit: 'count',
-    noun: 'token',
-    consequence: 'You cannot issue another token.',
-  },
-  VOLUME_BYTES: {
-    label: 'Disk',
-    unit: 'bytes',
-    consequence: 'You cannot attach or grow a volume.',
-  },
-  MEMORY_BYTES: {
-    label: 'Memory',
-    unit: 'bytes',
-    consequence: 'You cannot give a service more memory.',
-  },
-  CPU_MILLICORES: {
-    label: 'CPU',
-    unit: 'millicores',
-    consequence: 'You cannot give a service more CPU.',
-  },
-  BACKUP_BYTES: {
-    label: 'Backup storage',
-    unit: 'bytes',
-    consequence: 'The next snapshot will be refused.',
-  },
-  RESTORE_POINT: {
-    label: 'Snapshots',
-    unit: 'count',
-    noun: 'snapshot',
-    consequence: 'The oldest snapshot has to go before another is taken.',
-  },
-  DEPLOYMENTS_PER_DAY: {
-    label: 'Deployments a day',
-    unit: 'count',
-    noun: 'deployment',
-    consequence: 'Deploys are paused until the rolling day moves on.',
-  },
+  PROJECT: {unit: 'count'},
+  SERVICE: {unit: 'count'},
+  DOMAIN: {unit: 'count'},
+  MANAGED_DATABASE: {unit: 'count'},
+  CRON_TASK: {unit: 'count'},
+  MEMBER: {unit: 'count'},
+  API_TOKEN: {unit: 'count'},
+  VOLUME_BYTES: {unit: 'bytes'},
+  MEMORY_BYTES: {unit: 'bytes'},
+  CPU_MILLICORES: {unit: 'millicores'},
+  BACKUP_BYTES: {unit: 'bytes'},
+  RESTORE_POINT: {unit: 'count'},
+  DEPLOYMENTS_PER_DAY: {unit: 'count'},
 }
 
 /** The customer-facing name of a limit. */
 export function quotaLabel(resource: QuotaResource): string {
-  return VOCABULARY[resource].label
+  return t(`org.quota.label.${resource}`) || resource
 }
 
 /** Whether the figure is a size, a share of a core, or a plain count. */
@@ -115,7 +50,7 @@ export function quotaUnit(resource: QuotaResource): QuotaUnit {
 
 /** What hitting this ceiling stops the customer doing. */
 export function quotaConsequence(resource: QuotaResource): string {
-  return VOCABULARY[resource].consequence
+  return t(`org.quota.consequence.${resource}`) || ''
 }
 
 /**
@@ -139,26 +74,28 @@ export function quotaFigure(resource: QuotaResource, value: number): string {
 export function formatCores(millicores: number): string {
   const cores = millicores / 1000
   const written = Number.isInteger(cores) ? cores.toString() : cores.toFixed(2).replace(/0$/, '')
-  return `${written} ${cores === 1 ? 'core' : 'cores'}`
+  const unit = t('org.quota.coresUnit', {count: written})
+  return `${written} ${unit.replace('{count}', '').trim() || (cores === 1 ? 'core' : 'cores')}`
 }
 
 /** "3 of 10 projects", the sentence under a quota bar. */
 export function quotaSentence(resource: QuotaResource, used: number, limit: number): string {
-  const noun = VOCABULARY[resource].noun
-  const figures = `${quotaFigure(resource, used)} of ${quotaFigure(resource, limit)}`
-  return noun ? `${figures} ${limit === 1 ? noun : `${noun}s`}` : figures
+  const noun = t(`org.quota.noun.${resource}`)
+  const figures = t('org.quota.of', {
+    used: quotaFigure(resource, used),
+    limit: quotaFigure(resource, limit),
+  })
+  if (!noun) {
+    return figures
+  }
+  // Plural suffix in English: if noun ends up as english word and limit !== 1, append s
+  const withNoun = noun.startsWith('org.') ? '' : `${figures} ${limit === 1 || noun.includes(' ') ? noun : `${noun}s`}`
+  return withNoun || figures
 }
 
 /** Where the number in force came from, said in words. */
 export function quotaSourceLabel(source: QuotaSource): string {
-  switch (source) {
-    case 'ORGANIZATION_OVERRIDE':
-      return 'Exception granted for this organization'
-    case 'PLAN':
-      return 'From the plan'
-    default:
-      return 'Not set on the plan'
-  }
+  return t(`org.quota.source.${source}`) || source
 }
 
 /**

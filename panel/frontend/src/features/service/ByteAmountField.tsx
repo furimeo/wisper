@@ -1,18 +1,8 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Field, Input, Select, formatBytes} from '@/shell'
 
-/**
- * A size, typed in a unit a person uses and submitted in the bytes the column stores.
- *
- * `service.memory_bytes` and `service.disk_bytes` are bytes, and a box asking for 268435456
- * is a box people get wrong by a factor of 1024 in both directions. So the number and the
- * unit are two controls, and the value that leaves here is always bytes.
- *
- * The unit is local state rather than derived from the value on every keystroke. Deriving
- * it means typing "1024" into a MiB box makes the box jump to "1 GiB" mid-word, which is
- * the sort of helpfulness that costs a customer their place in a form.
- */
 const UNITS = {
   MiB: 1024 * 1024,
   GiB: 1024 * 1024 * 1024,
@@ -69,7 +59,7 @@ export function ByteAmountField({
           }}
         />
         <Select
-          aria-label={`${label} unit`}
+          aria-label={t('service.byte_amount.unit_label', {label})}
           value={unit}
           disabled={disabled}
           className="w-28"
@@ -89,7 +79,7 @@ function hintFor(hint: string | undefined, known: boolean, bytes: number): strin
     return hint
   }
   const exact = formatBytes(bytes)
-  return hint ? `${hint} Currently ${exact}.` : exact
+  return hint ? `${hint} ${t('service.byte_amount.currently', {exact})}` : exact
 }
 
 /** 1.5 stays 1.5; 5.0 becomes 5. Four decimals is past anything a person types. */

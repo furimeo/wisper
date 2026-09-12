@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Button, Card, Input, PageHeader, mayWrite, useFormFields} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -14,23 +15,6 @@ import {ServiceTabs} from './ServiceTabs'
 import {valuesFromService} from './serviceFormValues'
 import type {BuildPreset, RestartPolicy, RuntimeIsolation, ServiceView} from './serviceTypes'
 
-/**
- * `GET /services/{serviceId}/settings` - everything about a service except whether it is
- * running.
- *
- * The same field groups the new-service form uses, seeded from the service as it stands.
- * That reuse is the point: two forms describing one row is two places for a hint to be
- * wrong, and the one that is wrong is always the one you did not open.
- *
- * Neither the kind nor the address is here, and there is no input for either.
- * `SettingsForm` has no component for them, so a box would be a promise the panel cannot
- * keep - an app and a site are different rows in three CHECK constraints, and a URL does
- * not move because something is always still pointing at the old one.
- *
- * One Save for the whole form rather than one per card. It is one POST and one record on
- * the server; three buttons would imply three independent writes, and the customer who
- * pressed the first two would find out otherwise from a spec the node applied twice.
- */
 type ServiceSettingsProps = {
   service: ServiceView
   viewerRole: MemberRole
@@ -52,15 +36,15 @@ export default function ServiceSettingsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`${service.name} settings`} />
+      <Head title={t('service.settings.head_title', {name: service.name})} />
       <ServiceTabs serviceId={service.id} />
 
       <PageHeader
-        title="Settings"
+        title={t('service.settings.title')}
         description={
           service.archived
-            ? 'This service is archived. Restore its project before changing anything.'
-            : 'Saving publishes a new spec. The node applies it on its next reconcile.'
+            ? t('service.settings.description_archived')
+            : t('service.settings.description_active')
         }
       />
 
@@ -70,8 +54,8 @@ export default function ServiceSettingsPage() {
         <Card>
           <p className="text-sm text-ink-700 dark:text-ink-300">
             {service.archived
-              ? 'Archived services are read-only here. Restore the project from its settings screen.'
-              : 'You have read access to this organization, so this form is off.'}
+              ? t('service.settings.archived_notice')
+              : t('service.settings.read_only_notice')}
           </p>
         </Card>
       )}
@@ -83,25 +67,24 @@ export default function ServiceSettingsPage() {
           save()
         }}
       >
-        <Card title="Name">
+        <Card title={t('service.settings.name_card_title')}>
           <div className="flex flex-col gap-4">
             <Input
               {...form.bind('name')}
-              label="Name"
+              label={t('service.settings.name_label')}
               required
               disabled={!writable}
               maxLength={120}
               autoComplete="off"
             />
             <p className="text-sm text-ink-500 dark:text-ink-400">
-              Address: <code className="font-mono">/{service.slug}</code>. It cannot be changed -
-              something is always still pointing at the old one.
+              {t('service.settings.address_hint', {slug: service.slug})}
             </p>
           </div>
         </Card>
 
         {service.app ? (
-          <Card title="Container" description="What the node runs, and how it keeps it running.">
+          <Card title={t('service.settings.container_title')} description={t('service.settings.container_description')}>
             <RuntimeFields
               form={form}
               restartPolicies={restartPolicies}
@@ -112,11 +95,11 @@ export default function ServiceSettingsPage() {
         ) : null}
 
         <Card
-          title="Source"
+          title={t('service.settings.source_title')}
           description={
             service.site
-              ? 'A site is built from a repository, and the build produces the directory the node serves.'
-              : 'Optional for an app: how your code gets into a language-runtime image.'
+              ? t('service.settings.source_description_site')
+              : t('service.settings.source_description_app')
           }
         >
           <div className="flex flex-col gap-4">
@@ -134,12 +117,12 @@ export default function ServiceSettingsPage() {
           </div>
         </Card>
 
-        <Card title="Limits" description="Enforced by the node through cgroups.">
+        <Card title={t('service.settings.limits_title')} description={t('service.settings.limits_description')}>
           <ResourceFields form={form} disabled={!writable} />
         </Card>
 
         {service.app ? (
-          <Card title="Isolation">
+          <Card title={t('service.settings.isolation_title')}>
             <IsolationFields form={form} isolations={isolations} disabled={!writable} />
           </Card>
         ) : null}
@@ -152,7 +135,7 @@ export default function ServiceSettingsPage() {
             disabled={!writable || !form.dirty}
             onClick={save}
           >
-            Save changes
+            {t('service.settings.save_changes')}
           </Button>
           <Button
             variant="secondary"
@@ -161,7 +144,7 @@ export default function ServiceSettingsPage() {
             disabled={!form.dirty || form.processing}
             onClick={() => form.reset()}
           >
-            Discard
+            {t('service.settings.discard')}
           </Button>
         </div>
         <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />

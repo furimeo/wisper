@@ -1,6 +1,7 @@
 import {Link, router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Icon, askConfirmation} from '@/shell'
 
 import type {NodeSummary} from './nodeTypes'
@@ -29,12 +30,11 @@ export function NodeSuspensionAlert({node}: {node: NodeSummary}) {
 
   async function resume() {
     const confirmed = await askConfirmation({
-      title: `Resume ${node.name}?`,
+      title: t('node.suspension.resumeConfirm.title', {name: node.name}),
       body: cloned
-        ? 'Only do this once you know which machine is the real one. Resuming both halves of a ' +
-          'clone puts two daemons on one credential, and they will fight over the same workloads.'
-        : 'The panel starts publishing to this node again and sends it the current spec.',
-      confirmLabel: 'Resume it',
+        ? t('node.suspension.resumeConfirm.bodyCloned')
+        : t('node.suspension.resumeConfirm.bodyNormal'),
+      confirmLabel: t('node.suspension.resumeConfirm.confirm'),
       tone: cloned ? 'danger' : 'normal',
     })
     if (!confirmed) {
@@ -55,13 +55,13 @@ export function NodeSuspensionAlert({node}: {node: NodeSummary}) {
     >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 shrink-0 text-failed">
-          <Icon name="shield" label="Suspended" />
+          <Icon name="shield" label={t('node.lifecycle.suspended')} />
         </span>
         <div className="min-w-0 flex-1">
           <h2 id={`suspended-${node.id}`} className="text-base font-semibold">
             {cloned
-              ? `${node.name} looks like it has been cloned`
-              : `${node.name} is suspended`}
+              ? t('node.suspension.headerCloned', {name: node.name})
+              : t('node.suspension.headerSuspended', {name: node.name})}
           </h2>
 
           <p className="mt-1.5 text-sm leading-relaxed text-ink-700 dark:text-ink-300">
@@ -70,12 +70,7 @@ export function NodeSuspensionAlert({node}: {node: NodeSummary}) {
 
           {cloned ? (
             <p className="mt-2 text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-              A node&apos;s fingerprint is its <code className="font-mono">machine-id</code>{' '}
-              and hardware serial. Two addresses presenting one fingerprint means a running
-              VM was copied, so both halves were suspended rather than having the workload
-              quietly split between them. Decide which machine is the real one, run{' '}
-              <code className="font-mono">sasayaki uninstall</code> on the other, then
-              resume the survivor.
+              {t('node.suspension.clonedDetail')}
             </p>
           ) : null}
 
@@ -86,7 +81,7 @@ export function NodeSuspensionAlert({node}: {node: NodeSummary}) {
               onClick={() => void resume()}
               className="w-full sm:w-auto"
             >
-              Resume this node
+              {t('node.suspension.resumeButton')}
             </Button>
           </div>
         </div>
@@ -116,20 +111,14 @@ export function ClonedNodeAlert({nodes}: {nodes: NodeSummary[]}) {
     >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 shrink-0 text-failed">
-          <Icon name="shield" label="Alert" />
+          <Icon name="shield" label={t('node.doctor.outcome.warn')} />
         </span>
         <div className="min-w-0 flex-1">
           <h2 id="cloned-nodes" className="text-base font-semibold">
-            {cloned.length === 1
-              ? 'One node was suspended for a duplicate fingerprint'
-              : `${cloned.length} nodes were suspended for a duplicate fingerprint`}
+            {t('node.cloned.title', {count: cloned.length})}
           </h2>
           <p className="mt-1.5 text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-            The same <code className="font-mono">machine-id</code> and hardware serial
-            arrived from more than one address, which is what copying a running VM looks
-            like. Everything involved was suspended and nothing was stopped: the containers
-            on both machines are still serving. Work out which one is real, uninstall the
-            other, and resume the survivor.
+            {t('node.cloned.description')}
           </p>
 
           <ul className="mt-3 flex flex-col gap-2">

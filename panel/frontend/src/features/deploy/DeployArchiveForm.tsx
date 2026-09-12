@@ -1,6 +1,7 @@
 import type {DragEvent} from 'react'
 import {useRef, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Icon, cx, formatBytes, useFormFields} from '@/shell'
 
 import type {DeploymentTarget} from './deployTypes'
@@ -98,12 +99,12 @@ export function DeployArchiveForm({
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium text-ink-900 dark:text-ink-100">
-              {chosen ? chosen.name : 'Choose a zip of the site'}
+              {chosen ? chosen.name : t('deploy.archive_form.choose_zip')}
             </span>
             <span className="block text-sm text-ink-500 dark:text-ink-400">
               {chosen
                 ? formatBytes(chosen.size)
-                : 'Or drag one here. The zip is unpacked into a new release directory.'}
+                : t('deploy.archive_form.drag_hint')}
             </span>
           </span>
         </button>
@@ -123,7 +124,7 @@ export function DeployArchiveForm({
             aria-valuenow={form.progress}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label="Uploading the archive"
+            aria-label={t('deploy.archive_form.uploading_aria')}
           >
             <div
               className="h-full rounded-full bg-accent-500 transition-[width]"
@@ -131,7 +132,7 @@ export function DeployArchiveForm({
             />
           </div>
           <p className="mt-1.5 text-sm text-ink-500 tabular-nums dark:text-ink-400">
-            Uploading… {form.progress}%
+            {t('deploy.archive_form.uploading_progress', {progress: form.progress})}
           </p>
         </div>
       ) : null}
@@ -142,7 +143,7 @@ export function DeployArchiveForm({
         loading={uploading}
         disabled={disabled || chosen === null}
       >
-        Upload and deploy
+        {t('deploy.archive_form.upload_and_deploy')}
       </Button>
 
       {disabled && disabledReason ? (

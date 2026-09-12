@@ -1,5 +1,6 @@
 import type {MouseEvent, ReactNode} from 'react'
 
+import {t} from '@/i18n'
 import {ByteSize, Icon, RelativeTime, cx} from '@/shell'
 
 import {FileGlyph} from './FileGlyph'
@@ -58,7 +59,7 @@ export function FileTable({
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-sm">
-        <caption className="sr-only">Files in this folder</caption>
+        <caption className="sr-only">{t('files.table.caption')}</caption>
         <thead>
           <tr className="border-b border-ink-200 dark:border-ink-800">
             <th scope="col" className="w-10 px-3 py-2.5">
@@ -66,14 +67,14 @@ export function FileTable({
                 type="checkbox"
                 checked={selection.all}
                 onChange={() => (selection.all ? selection.clear() : selection.selectAll())}
-                aria-label={selection.all ? 'Clear the selection' : 'Select everything shown'}
+                aria-label={selection.all ? t('files.table.aria_clear') : t('files.table.aria_select_all')}
                 className="size-4 rounded border-ink-400 accent-accent-600 dark:border-ink-600"
               />
             </th>
-            <SortableHeader label="Name" sortKey="name" order={order} onSort={onSort} />
-            <SortableHeader label="Size" sortKey="size" order={order} onSort={onSort} align="right" />
-            <SortableHeader label="Modified" sortKey="modified" order={order} onSort={onSort} />
-            <HeaderCell>Permissions</HeaderCell>
+            <SortableHeader label={t('files.table.col_name')} sortKey="name" order={order} onSort={onSort} />
+            <SortableHeader label={t('files.table.col_size')} sortKey="size" order={order} onSort={onSort} align="right" />
+            <SortableHeader label={t('files.table.col_modified')} sortKey="modified" order={order} onSort={onSort} />
+            <HeaderCell>{t('files.table.col_permissions')}</HeaderCell>
             <th className="w-12 px-2" />
           </tr>
         </thead>
@@ -111,7 +112,7 @@ export function FileTable({
                     checked={isSelected}
                     onClick={(event) => event.stopPropagation()}
                     onChange={() => selection.toggle(index)}
-                    aria-label={`Select ${entry.name}`}
+                    aria-label={t('files.table.aria_select_entry', {name: entry.name})}
                     className="size-4 rounded border-ink-400 accent-accent-600 dark:border-ink-600"
                   />
                 </td>
@@ -123,7 +124,7 @@ export function FileTable({
                     </span>
                     {entry.symlink ? (
                       <span className="shrink-0 text-xs font-normal text-ink-500">
-                        → {entry.symlinkTarget ?? 'link'}
+                        {t('files.table.link_target', {target: entry.symlinkTarget ?? t('files.table.link_fallback')})}
                       </span>
                     ) : null}
                   </span>
@@ -132,7 +133,7 @@ export function FileTable({
                   {entry.directory ? '-' : <ByteSize bytes={entry.sizeBytes} />}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 text-ink-600 dark:text-ink-400">
-                  <RelativeTime at={entry.modifiedAt} fallback="never" />
+                  <RelativeTime at={entry.modifiedAt} fallback={t('files.table.never_modified')} />
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-ink-500 dark:text-ink-400">
                   {permissionText(entry.mode)}
@@ -149,7 +150,7 @@ export function FileTable({
                       const box = event.currentTarget.getBoundingClientRect()
                       onOverflow(index, {x: box.right - 240, y: box.bottom + 4})
                     }}
-                    aria-label={`Actions for ${entry.name}`}
+                    aria-label={t('files.table.aria_actions_for', {name: entry.name})}
                     className="inline-flex size-9 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-200/60 dark:hover:bg-ink-700"
                   >
                     <Icon name="more" />

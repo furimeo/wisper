@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Card, CopyButton, Tabs} from '@/shell'
 import type {TabItem} from '@/shell'
 
@@ -32,20 +33,22 @@ export function WebhookCard({target}: {target: DeploymentTarget}) {
 
   return (
     <Card
-      title="Deploy on push"
+      title={t('deploy.webhook.title')}
       action={
         <Badge tone={target.autoDeploy ? 'running' : 'neutral'} dot>
-          {target.autoDeploy ? 'On' : 'Off'}
+          {target.autoDeploy ? t('deploy.webhook.badge_on') : t('deploy.webhook.badge_off')}
         </Badge>
       }
       description={
         target.autoDeploy
-          ? `Every push to ${target.repositoryBranch ?? 'the configured branch'} starts a deployment.`
-          : 'Automatic deployment is off, so a push is recorded and nothing is built.'
+          ? t('deploy.webhook.desc_on', {
+              branch: target.repositoryBranch ?? t('deploy.webhook.configured_branch'),
+            })
+          : t('deploy.webhook.desc_off')
       }
     >
       <Tabs
-        label="Git provider"
+        label={t('deploy.webhook.tabs_label')}
         items={items}
         value={provider}
         onSelect={(value) => setProvider(value === 'gitlab' ? 'gitlab' : 'github')}
@@ -54,8 +57,8 @@ export function WebhookCard({target}: {target: DeploymentTarget}) {
 
       <p className="mb-2 text-sm text-ink-600 dark:text-ink-400">
         {provider === 'github'
-          ? 'Add this as a webhook with content type application/json and the push event only.'
-          : 'Add this under Settings → Webhooks with the push events trigger.'}
+          ? t('deploy.webhook.instructions_github')
+          : t('deploy.webhook.instructions_gitlab')}
       </p>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -64,19 +67,17 @@ export function WebhookCard({target}: {target: DeploymentTarget}) {
         </code>
         <CopyButton
           value={url}
-          label="Copy"
-          describedAs={`Copy the ${provider} webhook URL`}
+          label={t('deploy.webhook.copy_label')}
+          describedAs={t('deploy.webhook.copy_described_as', {provider})}
           className="sm:shrink-0"
         />
       </div>
 
       <p className="mt-3 text-sm text-ink-500 dark:text-ink-400">
         {provider === 'github'
-          ? 'GitHub signs each delivery with this service’s webhook secret and wisper checks it before reading a byte of the body. '
-          : 'GitLab sends this service’s webhook secret as a token header and wisper checks it before reading a byte of the body. '}
-        The secret was generated when the service was created and the panel does not
-        display it again. A delivery signed with anything else is answered 401, and the
-        reason appears in the provider’s own delivery log.
+          ? t('deploy.webhook.security_note_github')
+          : t('deploy.webhook.security_note_gitlab')}
+        {t('deploy.webhook.security_note_common')}
       </p>
     </Card>
   )

@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Modal, Textarea} from '@/shell'
 
 /**
@@ -36,13 +37,13 @@ export function TerminalPasteDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title="Paste into the shell"
-      description="Your browser did not give the panel access to the clipboard, so paste it here instead."
+      title={t('terminal.paste_dialog.title')}
+      description={t('terminal.paste_dialog.description')}
       size="sm"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} block>
-            Cancel
+            {t('terminal.paste_dialog.cancel')}
           </Button>
           <Button
             onClick={() => {
@@ -52,13 +53,13 @@ export function TerminalPasteDialog({
             disabled={text === ''}
             block
           >
-            Send
+            {t('terminal.paste_dialog.send')}
           </Button>
         </>
       }
     >
       <Textarea
-        label="Text"
+        label={t('terminal.paste_dialog.text_label')}
         value={text}
         onChange={(event) => setText(event.target.value)}
         rows={6}
@@ -66,7 +67,7 @@ export function TerminalPasteDialog({
         autoCapitalize="off"
         autoCorrect="off"
         spellCheck={false}
-        hint="Sent to the shell exactly as it is, including the line breaks."
+        hint={t('terminal.paste_dialog.text_hint')}
       />
     </Modal>
   )

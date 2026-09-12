@@ -10,6 +10,7 @@ import {
   askConfirmation,
   toast,
 } from '@/shell'
+import {t} from '@/i18n'
 
 import {ServiceTabs} from '@/features/service/ServiceTabs'
 import type {ServiceLocation} from '@/features/service/serviceTypes'
@@ -153,7 +154,7 @@ export default function FileManagerPage() {
         setLoadError(
           cause instanceof FileRequestFailed
             ? cause.message
-            : 'The rest of this folder did not arrive. The node may have gone away.',
+            : t('files.page.load_more_error'),
         )
       })
       .finally(() => setLoadingMore(false))
@@ -164,9 +165,12 @@ export default function FileManagerPage() {
       return
     }
     const confirmed = await askConfirmation({
-      title: targets.length === 1 ? 'Delete this entry?' : `Delete ${targets.length} entries?`,
-      body: 'Folders are deleted with everything inside them. Nothing here goes to a bin.',
-      confirmLabel: 'Delete',
+      title:
+        targets.length === 1
+          ? t('files.page.delete_confirm_title_one')
+          : t('files.page.delete_confirm_title_many', {count: targets.length}),
+      body: t('files.page.delete_confirm_body'),
+      confirmLabel: t('files.page.delete_confirm_button'),
       tone: 'danger',
     })
     if (!confirmed) {
@@ -180,7 +184,7 @@ export default function FileManagerPage() {
     )
     clear()
     if (gone > 1) {
-      toast.success(`Deleted ${gone} entries.`)
+      toast.success(t('files.page.deleted_toast', {count: gone}))
     }
   }
 
@@ -192,17 +196,14 @@ export default function FileManagerPage() {
         return
       }
       if (entry.symlink) {
-        toast.info(
-          `${entry.name} is a link. The panel reports links and never follows them, so open ` +
-            'what it points at directly.',
-        )
+        toast.info(t('files.page.symlink_notice', {name: entry.name}))
         return
       }
       if (isEditable(entry, maxEditableBytes)) {
         setOverlay({kind: 'edit', entry})
         return
       }
-      toast.info(`${entry.name} is too large to open here. Downloading it instead.`)
+      toast.info(t('files.page.too_large_notice', {name: entry.name}))
       window.location.href = downloadHref(serviceId, root.id, entry.path)
     },
     [serviceId, root.id, showHidden, maxEditableBytes],
@@ -302,19 +303,21 @@ export default function FileManagerPage() {
   )
 
   const uploadRefusal = canWrite
-    ? 'Uploading is off while this tree cannot be reached.'
+    ? t('files.page.upload_refusal_unavailable')
     : root.writable
-      ? 'You have read access to this organization, so uploading is off.'
-      : "This is a static site's releases tree. Its files come from the last build, and anything written here would be replaced by the next deployment."
+      ? t('files.page.upload_refusal_readonly')
+      : t('files.page.upload_refusal_static_site')
+
+  const pendingUploads = uploads.items.filter((item) => item.status !== 'done')
 
   return (
     <div className="flex flex-col gap-3">
-      <Head title={`Files · ${service.name}`} />
+      <Head title={t('files.page.head_title', {service: service.name})} />
       <ServiceTabs serviceId={serviceId} />
 
       <PageHeader
-        title="Files"
-        description={`${root.label}, on the machine holding ${service.name}. There is no SFTP: this is the way in.`}
+        title={t('files.page.title')}
+        description={t('files.page.page_desc', {root: root.label, service: service.name})}
         actions={
           <FileToolbar states={states} onAction={(kind) => act(kind)} refreshing={refreshing} />
         }
@@ -346,20 +349,21 @@ export default function FileManagerPage() {
         >
           <Spinner />
           <span className="flex-1">
-            Uploading {uploads.items.filter((item) => item.status !== 'done').length} file
-            {uploads.items.filter((item) => item.status !== 'done').length === 1 ? '' : 's'}
-            {uploads.percent === null ? '' : ` · ${uploads.percent}%`}
+            {t('files.page.uploading_bar', {
+              count: pendingUploads.length,
+              percent: uploads.percent === null ? '' : ` · ${uploads.percent}%`,
+            })}
           </span>
-          <span className="text-xs text-ink-600 dark:text-ink-300">Show</span>
+          <span className="text-xs text-ink-600 dark:text-ink-300">{t('files.page.uploading_bar_show')}</span>
         </button>
       ) : null}
 
       {unavailable ? (
         <ErrorState
-          title="These files cannot be listed right now"
+          title={t('files.page.error_title')}
           description={unavailable}
           onRetry={refresh}
-          retryLabel="Try again"
+          retryLabel={t('files.page.retry_label')}
         />
       ) : (
         <Card padded={false}>
@@ -381,7 +385,7 @@ export default function FileManagerPage() {
             readOnlyNote={
               canWrite
                 ? null
-                : 'This tree is read-only for you, so the operations that would change it are switched off.'
+                : t('files.page.read_only_note')
             }
           />
         </Card>
@@ -389,12 +393,12 @@ export default function FileManagerPage() {
 
       <div className="px-1">
         <Checkbox
-          label="Show dotfiles"
+          label={t('files.page.show_dotfiles')}
           checked={showHidden}
           onChange={(event) =>
             router.visit(browseHref(serviceId, root.id, path, event.target.checked))
           }
-          hint="Hidden by default: what a customer came to see is their own files, and this is one tap."
+          hint={t('files.page.show_dotfiles_hint')}
         />
       </div>
 
@@ -403,10 +407,10 @@ export default function FileManagerPage() {
         anchor={menu?.anchor ?? null}
         title={
           selection.count === 1
-            ? (selection.entries[0]?.name ?? 'This folder')
+            ? (selection.entries[0]?.name ?? t('files.menu.this_folder'))
             : selection.count > 1
-              ? `${selection.count} selected`
-              : 'This folder'
+              ? t('files.menu.selected_count', {count: selection.count})
+              : t('files.menu.this_folder')
         }
         states={states}
         onAction={(kind) => act(kind)}
@@ -420,10 +424,10 @@ export default function FileManagerPage() {
         }}
         onFolders={(names) =>
           toast.error(
-            `${names.join(', ')} ${names.length === 1 ? 'is a folder' : 'are folders'}. ` +
-              'Compress it first, upload the archive, then use Extract on it - that keeps the ' +
-              'structure and survives a dropped connection, which a folder of loose files ' +
-              'would not.',
+            t('files.page.folder_dropped_error', {
+              names: names.join(', '),
+              verb: names.length === 1 ? t('files.page.verb_is') : t('files.page.verb_are'),
+            }),
           )
         }
         disabled={!canWrite || unavailable !== null}

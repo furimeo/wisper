@@ -1,6 +1,7 @@
 import {Head, router, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   Button,
@@ -50,9 +51,9 @@ export default function AdminPlanDetailPage() {
 
   async function archive() {
     const confirmed = await askConfirmation({
-      title: `Retire ${plan.code}?`,
-      body: `It stops being offered to new organizations. The ${tenantCount} already on it stay on it, unchanged.`,
-      confirmLabel: 'Retire it',
+      title: t('org.planDetail.confirmRetireTitle', {code: plan.code}),
+      body: t('org.planDetail.confirmRetireBody', {count: tenantCount}),
+      confirmLabel: t('org.planDetail.confirmRetireBtn'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -66,7 +67,7 @@ export default function AdminPlanDetailPage() {
 
       <PageHeader
         title={plan.name}
-        description={plan.description || `The ${plan.code} tier and the thirteen numbers on it.`}
+        description={plan.description || t('org.planDetail.fallbackDesc', {code: plan.code})}
         actions={
           plan.selectable && !plan.isDefault ? (
             <Button
@@ -74,7 +75,7 @@ export default function AdminPlanDetailPage() {
               loading={working}
               onClick={() => post(`/admin/plans/${plan.id}/default`)}
             >
-              Make default
+              {t('org.plans.makeDefault')}
             </Button>
           ) : null
         }
@@ -83,27 +84,26 @@ export default function AdminPlanDetailPage() {
       {unset > 0 ? (
         <div className="rounded-xl border border-degraded/40 bg-degraded/10 px-4 py-3.5 md:px-5">
           <p className="text-sm font-semibold text-ink-900 dark:text-ink-100">
-            {unset === 1 ? 'One limit has never been set' : `${unset} limits have never been set`}
+            {t('org.planDetail.unsetAlertTitle', {count: unset})}
           </p>
           <p className="mt-1 text-sm leading-relaxed text-ink-800 dark:text-ink-200">
-            An unset limit is zero, so every one of them refuses the customer's first attempt.
-            They are marked below.
+            {t('org.planDetail.unsetAlertDesc')}
           </p>
         </div>
       ) : null}
 
       <Card
-        title="Tier"
+        title={t('org.planDetail.tierCardTitle')}
         action={
           <div className="flex items-center gap-2">
-            {plan.isDefault ? <Badge tone="accent">Default</Badge> : null}
-            {plan.selectable ? null : <Badge tone="neutral">Retired</Badge>}
+            {plan.isDefault ? <Badge tone="accent">{t('org.plans.badgeDefault')}</Badge> : null}
+            {plan.selectable ? null : <Badge tone="neutral">{t('org.plans.badgeRetired')}</Badge>}
           </div>
         }
         footer={
           plan.selectable ? (
             <Button variant="secondary" block className="sm:w-auto" loading={working} onClick={() => void archive()}>
-              Retire this plan
+              {t('org.planDetail.retireBtn')}
             </Button>
           ) : (
             <Button
@@ -113,34 +113,33 @@ export default function AdminPlanDetailPage() {
               loading={working}
               onClick={() => post(`/admin/plans/${plan.id}/restore`)}
             >
-              Offer it again
+              {t('org.planDetail.offerAgainBtn')}
             </Button>
           )
         }
       >
         <CardFacts>
-          <CardFact label="Code">
+          <CardFact label={t('org.planDetail.code')}>
             <code className="font-mono">{plan.code}</code>
           </CardFact>
-          <CardFact label="Organizations on it">{tenantCount}</CardFact>
-          <CardFact label="Created">
+          <CardFact label={t('org.planDetail.orgsOnIt')}>{tenantCount}</CardFact>
+          <CardFact label={t('org.planDetail.created')}>
             <RelativeTime at={plan.createdAt} />
           </CardFact>
-          <CardFact label="Last change">
+          <CardFact label={t('org.planDetail.lastChange')}>
             <RelativeTime at={plan.updatedAt} />
           </CardFact>
         </CardFacts>
         {plan.selectable ? null : (
           <p className="mt-2 text-sm leading-relaxed text-ink-600 dark:text-ink-400">
-            Retired: no new organization can be opened on it and no tenant can be moved onto it.
-            The {tenantCount} already here are unaffected.
+            {t('org.planDetail.retiredNotice', {count: tenantCount})}
           </p>
         )}
       </Card>
 
       <Card
-        title="Limits"
-        description={`Applies to every organization on this tier${tenantCount === 0 ? '' : ` - ${tenantCount} of them`}, except where an exception has been granted.`}
+        title={t('org.planDetail.limitsTitle')}
+        description={t('org.planDetail.limitsDesc', {count: tenantCount})}
         padded={false}
       >
         <ul className="divide-y divide-ink-200 dark:divide-ink-800">
@@ -156,12 +155,12 @@ export default function AdminPlanDetailPage() {
                     <span className="text-sm font-medium text-ink-900 dark:text-ink-100">
                       {quotaLabel(limit.resource)}
                     </span>
-                    {limit.explicit ? null : <Badge tone="degraded">Never set</Badge>}
+                    {limit.explicit ? null : <Badge tone="degraded">{t('org.planDetail.neverSetBadge')}</Badge>}
                   </span>
                   <span className="mt-0.5 block text-xs text-ink-500 dark:text-ink-400">
                     {limit.limit === 0
                       ? quotaConsequence(limit.resource)
-                      : `Up to ${quotaFigure(limit.resource, limit.limit)}`}
+                      : t('org.planDetail.upTo', {amount: quotaFigure(limit.resource, limit.limit)})}
                   </span>
                 </span>
 

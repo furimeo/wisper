@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useRef, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, csrfToken, cx} from '@/shell'
 
 import type {SignInNotice} from './authTypes'
@@ -40,11 +41,11 @@ export default function SignInPage() {
 
   return (
     <main className="flex min-h-dvh flex-col justify-center px-5 py-10">
-      <Head title="Sign in" />
+      <Head title={t('auth.signIn.title')} />
 
       <div className="mx-auto w-full max-w-sm">
         <p className="font-mono text-sm text-accent-600 dark:text-accent-400">wisper</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">Sign in</h1>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{t('auth.signIn.title')}</h1>
 
         {notice ? (
           <p
@@ -79,7 +80,7 @@ export default function SignInPage() {
 
           <Input
             name="username"
-            label="Email address"
+            label={t('auth.signIn.email')}
             type="email"
             required
             autoFocus
@@ -89,13 +90,13 @@ export default function SignInPage() {
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="next"
-            placeholder="you@example.com"
+            placeholder={t('auth.signIn.emailPlaceholder')}
           />
 
           <div className="flex flex-col gap-1">
             <Input
               name="password"
-              label="Password"
+              label={t('auth.signIn.password')}
               type={revealed ? 'text' : 'password'}
               required
               autoComplete="current-password"
@@ -107,21 +108,19 @@ export default function SignInPage() {
               there reveals the password to the room.
             */}
             <Checkbox
-              label="Show password"
+              label={t('auth.signIn.showPassword')}
               checked={revealed}
               onChange={(event) => setRevealed(event.target.checked)}
             />
           </div>
 
           <Button type="submit" block loading={submitting}>
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting ? t('auth.signIn.submitting') : t('auth.signIn.submit')}
           </Button>
         </form>
 
         <p className="mt-6 text-xs leading-relaxed text-ink-500">
-          Accounts are created by the platform operator. If you cannot get in and the
-          message above does not say why, ask them to check whether your account is
-          suspended.
+          {t('auth.signIn.footer')}
         </p>
       </div>
     </main>

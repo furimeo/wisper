@@ -2,6 +2,7 @@ import {Head, usePage} from '@inertiajs/react'
 
 import {QuotaMeter} from '@/features/org/QuotaMeter'
 import type {QuotaAllowance} from '@/features/org/orgTypes'
+import {t} from '@/i18n'
 import {Card, PageHeader, mayWrite, useCurrentOrganization} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -41,24 +42,18 @@ export default function SnapshotsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Snapshots" />
+      <Head title={t('backup.snapshots.title')} />
 
       <BackupTabs organizationId={organizationId} />
 
       <PageHeader
-        title="Snapshots"
-        description="Each one is a point you can go back to. Restoring puts it over the live data
-          after taking a snapshot of what is there now; verifying restores it somewhere disposable
-          and throws the copy away."
+        title={t('backup.snapshots.title')}
+        description={t('backup.snapshots.description')}
       />
 
       {unproven > 0 ? (
         <p className="rounded-xl border border-degraded/50 bg-degraded/10 px-4 py-3 text-sm leading-relaxed">
-          {unproven === 1
-            ? 'One snapshot has never been restored.'
-            : `${unproven} of your ${available.length} restorable snapshots have never been restored.`}{' '}
-          Verifying one takes a few minutes and touches nothing live - it is the difference
-          between having backups and knowing they work.
+          {t('backup.snapshots.unproven', {count: unproven, total: available.length})}
         </p>
       ) : null}
 
@@ -71,8 +66,8 @@ export default function SnapshotsPage() {
       <RestoreHistory organizationId={organizationId} restores={restores} />
 
       <Card
-        title="Storage used"
-        description="Across every destination this organization writes to."
+        title={t('backup.snapshots.storageUsed')}
+        description={t('backup.snapshots.storageUsedDesc')}
       >
         <QuotaMeter allowance={byteAllowance} />
       </Card>

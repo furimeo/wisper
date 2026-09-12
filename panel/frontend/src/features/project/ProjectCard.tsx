@@ -1,5 +1,6 @@
 import {Link} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Badge, Icon, RelativeTime} from '@/shell'
 
 import type {ProjectSummary} from './projectTypes'
@@ -29,7 +30,7 @@ export function ProjectCard({project}: {project: ProjectSummary}) {
           <span className="truncate text-sm font-semibold text-ink-900 dark:text-ink-100">
             {project.name}
           </span>
-          {project.archived ? <Badge tone="neutral">Archived</Badge> : null}
+          {project.archived ? <Badge tone="neutral">{t('project.card.archived')}</Badge> : null}
         </div>
 
         <p className="mt-0.5 truncate text-sm text-ink-500 dark:text-ink-400">
@@ -38,21 +39,21 @@ export function ProjectCard({project}: {project: ProjectSummary}) {
 
         <p className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
           {total === 0 ? (
-            <>Nothing in it yet</>
+            <>{t('project.card.empty')}</>
           ) : (
             <>
-              {total} {total === 1 ? 'service' : 'services'}
+              {t('project.card.servicesCount', {count: total})}
               {project.archived ? null : (
                 <>
                   {' · '}
                   <span className={allUp ? 'text-running' : running === 0 ? '' : 'text-degraded'}>
-                    {running} running
+                    {t('project.card.running', {count: running})}
                   </span>
                 </>
               )}
             </>
           )}
-          {' · opened '}
+          {t('project.card.opened')}
           <RelativeTime at={project.createdAt} />
         </p>
       </div>

@@ -26,5 +26,9 @@ export function t(key: string, params?: TranslateParams): string {
   return translate(currentCatalog(), currentLocale(), key, params)
 }
 
+export function useI18n(): {t: typeof t} {
+  return {t}
+}
+
 export {installCatalog, loadCatalog, currentLocale}
 export type {Catalog, Message, TranslateParams}

@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Tabs} from '@/shell'
 
 /**
@@ -13,8 +14,8 @@ export function ProjectTabs({projectId}: {projectId: string}) {
     <Tabs
       label="Project sections"
       items={[
-        {href: `/projects/${projectId}`, label: 'Overview'},
-        {href: `/projects/${projectId}/settings`, label: 'Settings'},
+        {href: `/projects/${projectId}`, label: t('project.tabs.overview')},
+        {href: `/projects/${projectId}/settings`, label: t('project.tabs.settings')},
       ]}
     />
   )

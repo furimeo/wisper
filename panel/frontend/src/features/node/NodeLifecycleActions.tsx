@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Card, Modal, Textarea, askConfirmation, useFormFields} from '@/shell'
 
 import type {NodeDetail} from './nodeTypes'
@@ -41,12 +42,9 @@ export function NodeLifecycleActions({node}: {node: NodeDetail}) {
 
   async function upgrade() {
     const confirmed = await askConfirmation({
-      title: `Upgrade ${summary.name} to ${node.upgradeAvailable}?`,
-      body:
-        'The node downloads the new binary, verifies its checksum, swaps it atomically and ' +
-        'restarts. Customer containers are not restarted - sasayaki is only the control plane. ' +
-        'If the new binary fails to come up, the node rolls back to the one it is running now.',
-      confirmLabel: 'Upgrade it',
+      title: t('node.confirm.upgrade.title', {name: summary.name, version: node.upgradeAvailable ?? ''}),
+      body: t('node.confirm.upgrade.body'),
+      confirmLabel: t('node.confirm.upgrade.confirm'),
     })
     if (confirmed) {
       post('upgrade')
@@ -55,15 +53,12 @@ export function NodeLifecycleActions({node}: {node: NodeDetail}) {
 
   async function remove() {
     const confirmed = await askConfirmation({
-      title: `Delete the record for ${summary.name}?`,
-      body:
-        'Nothing on the machine is touched: containers keep running, volumes keep their bytes ' +
-        'and Caddy keeps serving. The panel simply stops knowing about it. Run `sasayaki ' +
-        'uninstall` on the machine afterwards to remove the daemon.',
-      confirmLabel: 'Delete the record',
+      title: t('node.confirm.delete.title', {name: summary.name}),
+      body: t('node.confirm.delete.body'),
+      confirmLabel: t('node.confirm.delete.confirm'),
       tone: 'danger',
       requireText: summary.name,
-      requireTextLabel: `Type ${summary.name} to confirm`,
+      requireTextLabel: t('node.confirm.delete.requireTextLabel', {name: summary.name}),
     })
     if (confirmed) {
       post('delete', {confirmation: summary.name})
@@ -75,9 +70,8 @@ export function NodeLifecycleActions({node}: {node: NodeDetail}) {
   return (
     <>
       <Card
-        title="Operations"
-        description="Nothing here stops a customer's containers. Draining moves what can move,
-          suspending stops the panel publishing, and deleting only removes the panel's record."
+        title={t('node.ops.title')}
+        description={t('node.ops.description')}
       >
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Button
@@ -87,7 +81,7 @@ export function NodeLifecycleActions({node}: {node: NodeDetail}) {
             loading={pending === 'drain-survey'}
             onClick={() => post('drain-survey')}
           >
-            What would draining do?
+            {t('node.ops.survey')}
           </Button>
 
           <Button
@@ -96,7 +90,7 @@ export function NodeLifecycleActions({node}: {node: NodeDetail}) {
             disabled={!controllable || summary.lifecycle === 'DRAINING'}
             onClick={() => setAsking('drain')}
           >
-            Drain
+            {t('node.ops.drain')}
           </Button>
 
           {summary.lifecycle === 'SUSPENDED' ? (
@@ -106,7 +100,7 @@ export function NodeLifecycleActions({node}: {node: NodeDetail}) {
               loading={pending === 'resume'}
               onClick={() => post('resume')}
             >
-              Resume
+              {t('node.ops.resume')}
             </Button>
           ) : (
             <Button
@@ -115,7 +109,7 @@ export function NodeLifecycleActions({node}: {node: NodeDetail}) {
               disabled={!controllable}
               onClick={() => setAsking('suspend')}
             >
-              Suspend
+              {t('node.ops.suspend')}
             </Button>
           )}
 
@@ -127,8 +121,8 @@ export function NodeLifecycleActions({node}: {node: NodeDetail}) {
             onClick={() => void upgrade()}
           >
             {node.upgradeAvailable === null
-              ? 'Agent is current'
-              : `Upgrade to ${node.upgradeAvailable}`}
+              ? t('node.ops.agentCurrent')
+              : t('node.ops.upgradeTo', {version: node.upgradeAvailable})}
           </Button>
 
           <Button
@@ -138,14 +132,13 @@ export function NodeLifecycleActions({node}: {node: NodeDetail}) {
             loading={pending === 'delete'}
             onClick={() => void remove()}
           >
-            Delete this node record
+            {t('node.ops.deleteRecord')}
           </Button>
         </div>
 
         {summary.connected ? null : (
           <p className="mt-3 text-sm leading-relaxed text-ink-500 dark:text-ink-400">
-            Draining and upgrading need an open control stream, and there is none right now.
-            Suspending and deleting are panel-side and work regardless.
+            {t('node.ops.streamWarning')}
           </p>
         )}
       </Card>
@@ -192,7 +185,7 @@ function ReasonDialog({
       return
     }
     if (form.data.reason.trim().length === 0) {
-      form.setError('reason', 'Say why. It is shown on the node’s page.')
+      form.setError('reason', t('node.reason.required'))
       return
     }
     onSubmit(kind, form.data.reason.trim())
@@ -205,35 +198,32 @@ function ReasonDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title={draining ? `Drain ${nodeName}?` : `Suspend ${nodeName}?`}
+      title={draining ? t('node.reason.drain.title', {name: nodeName}) : t('node.reason.suspend.title', {name: nodeName})}
       description={
         draining
-          ? 'It stops accepting new placements and evacuates every service that has no volume. ' +
-            'Anything holding a volume stays where it is and is listed for you - a silent ' +
-            'migration is silent data loss.'
-          : 'The panel stops publishing to this machine. Everything already running on it keeps ' +
-            'running, and it keeps serving customers.'
+          ? t('node.reason.drain.description')
+          : t('node.reason.suspend.description')
       }
       footer={
         <div className="flex flex-col gap-2 sm:flex-row-reverse">
           <Button block className="sm:w-auto" onClick={submit}>
-            {draining ? 'Drain it' : 'Suspend it'}
+            {draining ? t('node.reason.drain.submit') : t('node.reason.suspend.submit')}
           </Button>
           <Button variant="ghost" block className="sm:w-auto" onClick={onClose}>
-            Cancel
+            {t('node.reason.cancel')}
           </Button>
         </div>
       }
     >
       <Textarea
         {...form.bind('reason')}
-        label="Why"
+        label={t('node.reason.why')}
         rows={3}
         autoGrow
         maxLength={500}
         required
-        placeholder={draining ? 'Replacing the disks on Thursday' : 'Investigating a noisy neighbour'}
-        hint="Shown on this node's page afterwards."
+        placeholder={draining ? t('node.reason.drain.placeholder') : t('node.reason.suspend.placeholder')}
+        hint={t('node.reason.hint')}
       />
     </Modal>
   )

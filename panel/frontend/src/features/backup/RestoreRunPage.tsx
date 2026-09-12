@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   ButtonLink,
@@ -45,10 +46,10 @@ export default function RestoreRunPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`Restore of ${restore.targetLabel}`} />
+      <Head title={t('backup.restoreRun.title', {target: restore.targetLabel})} />
 
       <PageHeader
-        title={`Restoring ${restore.targetLabel}`}
+        title={t('backup.restoreRun.heading', {target: restore.targetLabel})}
         description={restoreSentence(restore)}
         actions={
           <ButtonLink
@@ -57,7 +58,7 @@ export default function RestoreRunPage() {
             block
             className="sm:w-auto"
           >
-            Back to snapshots
+            {t('backup.restoreRun.back')}
           </ButtonLink>
         }
       />
@@ -70,31 +71,29 @@ export default function RestoreRunPage() {
         {restore.finished ? null : (
           <span className="flex items-center gap-2 text-sm text-ink-500 dark:text-ink-400">
             <Spinner />
-            This page follows it on its own.
+            {t('backup.restoreRun.followingNotice')}
           </span>
         )}
       </div>
 
       {restore.errorMessage ? (
         <p className="rounded-xl border border-failed/50 bg-failed/10 px-4 py-3 text-sm leading-relaxed">
-          <span className="font-medium">It failed: </span>
+          <span className="font-medium">{t('backup.restoreRun.failedNotice')}</span>
           {restore.errorMessage}
         </p>
       ) : null}
 
       {restore.safetyRestorePointId ? (
         <Card
-          title="The way back"
-          description="Before anything was overwritten, a snapshot was taken of the data that was
-            there. If this restore turns out to have been the wrong one, that snapshot is what you
-            restore next."
+          title={t('backup.restoreRun.safetyTitle')}
+          description={t('backup.restoreRun.safetyDesc')}
           action={
             <ButtonLink
               href={`/backups/${organizationId}/snapshots`}
               variant="secondary"
               size="sm"
             >
-              Find it
+              {t('backup.restoreRun.findIt')}
             </ButtonLink>
           }
         >
@@ -104,7 +103,7 @@ export default function RestoreRunPage() {
         </Card>
       ) : null}
 
-      <Card title="Progress" description="The node's own log, as it reports it." padded={false}>
+      <Card title={t('backup.restoreRun.progressTitle')} description={t('backup.restoreRun.progressDesc')} padded={false}>
         {restore.log && restore.log.trim().length > 0 ? (
           <pre className="max-h-96 overflow-auto px-4 py-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-ink-800 md:px-5 dark:text-ink-200">
             {restore.log}
@@ -112,36 +111,36 @@ export default function RestoreRunPage() {
         ) : (
           <p className="px-4 py-4 text-sm leading-relaxed text-ink-500 md:px-5 dark:text-ink-400">
             {restore.finished
-              ? 'The node finished without sending a log. Nothing is missing - a small restore has little to say.'
-              : 'Nothing yet. A restore emits a handful of lines over several minutes, and they appear here as the node sends them.'}
+              ? t('backup.restoreRun.emptyFinished')
+              : t('backup.restoreRun.emptyRunning')}
           </p>
         )}
       </Card>
 
-      <Card title="Facts">
+      <Card title={t('backup.restoreRun.factsTitle')}>
         <CardFacts>
-          <CardFact label="What was restored">{restore.targetLabel}</CardFact>
-          <CardFact label="Mode">{restoreModeLabel(restore.mode)}</CardFact>
-          <CardFact label="Snapshot taken">
-            <RelativeTime at={restore.snapshotTakenAt} fallback="unknown" />
+          <CardFact label={t('backup.restoreRun.factWhat')}>{restore.targetLabel}</CardFact>
+          <CardFact label={t('backup.restoreRun.factMode')}>{restoreModeLabel(restore.mode)}</CardFact>
+          <CardFact label={t('backup.restoreRun.factTaken')}>
+            <RelativeTime at={restore.snapshotTakenAt} fallback={t('backup.restoreRun.unknown')} />
           </CardFact>
-          <CardFact label="Started">
-            <RelativeTime at={restore.startedAt} fallback="not yet" />
+          <CardFact label={t('backup.restoreRun.factStarted')}>
+            <RelativeTime at={restore.startedAt} fallback={t('backup.restoreRun.notYet')} />
           </CardFact>
-          <CardFact label="Finished">
-            <RelativeTime at={restore.finishedAt} fallback="still running" />
+          <CardFact label={t('backup.restoreRun.factFinished')}>
+            <RelativeTime at={restore.finishedAt} fallback={t('backup.restoreRun.stillRunning')} />
           </CardFact>
-          <CardFact label="Bytes restored">
-            <ByteSize bytes={restore.bytesRestored} fallback="not reported" />
+          <CardFact label={t('backup.restoreRun.factBytes')}>
+            <ByteSize bytes={restore.bytesRestored} fallback={t('database.adminDetail.facts.notReported')} />
           </CardFact>
-          <CardFact label="Node">
+          <CardFact label={t('backup.restoreRun.factNode')}>
             {restore.nodeId ? (
               <span className="font-mono text-xs">{restore.nodeId.slice(0, 8)}</span>
             ) : (
-              <span className="text-ink-500 dark:text-ink-400">not assigned yet</span>
+              <span className="text-ink-500 dark:text-ink-400">{t('backup.restoreRun.notAssigned')}</span>
             )}
           </CardFact>
-          <CardFact label="Started by">{restore.requestedBy ?? 'the platform'}</CardFact>
+          <CardFact label={t('backup.restoreRun.factBy')}>{restore.requestedBy ?? t('backup.restoreRun.platform')}</CardFact>
         </CardFacts>
       </Card>
     </div>

@@ -1,5 +1,6 @@
 import {router} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {askConfirmation} from '@/shell'
 
 import type {DeploymentSummary} from './deployTypes'
@@ -28,17 +29,14 @@ export async function rollbackRelease(
   const what = deployment.commitSubject
     ? `“${deployment.commitSubject}”${commit ? ` (${commit})` : ''}`
     : commit
-      ? `commit ${commit}`
-      : 'that release'
+      ? t('deploy.rollback.commit_phrase', {commit})
+      : t('deploy.rollback.that_release')
 
   const confirmed = await askConfirmation({
-    title: `Roll back to deployment #${deployment.sequence}?`,
-    body:
-      `Visitors get ${what} again, usually within seconds - the release is still on the ` +
-      'node, so nothing is rebuilt. This is recorded as a new deployment, and whatever is ' +
-      'live now stays in the history and can be rolled back to in turn.',
-    confirmLabel: `Roll back to #${deployment.sequence}`,
-    cancelLabel: 'Leave it as it is',
+    title: t('deploy.rollback.confirm_title', {sequence: deployment.sequence}),
+    body: t('deploy.rollback.confirm_body', {what}),
+    confirmLabel: t('deploy.rollback.confirm_button', {sequence: deployment.sequence}),
+    cancelLabel: t('deploy.rollback.cancel_button'),
     tone: 'danger',
   })
   if (!confirmed) {

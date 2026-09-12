@@ -1,5 +1,6 @@
 import {useRef} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, Modal, cx, formatBytes} from '@/shell'
 import type {BadgeTone} from '@/shell'
 
@@ -16,13 +17,21 @@ const TONES: Record<UploadStatus, BadgeTone> = {
   cancelled: 'neutral',
 }
 
-const LABELS: Record<UploadStatus, string> = {
-  queued: 'Waiting',
-  uploading: 'Uploading',
-  interrupted: 'Interrupted',
-  failed: 'Refused',
-  done: 'Uploaded',
-  cancelled: 'Cancelled',
+function getStatusLabel(status: UploadStatus): string {
+  switch (status) {
+    case 'queued':
+      return t('files.upload.status_waiting')
+    case 'uploading':
+      return t('files.upload.status_uploading')
+    case 'interrupted':
+      return t('files.upload.status_interrupted')
+    case 'failed':
+      return t('files.upload.status_refused')
+    case 'done':
+      return t('files.upload.status_uploaded')
+    case 'cancelled':
+      return t('files.upload.status_cancelled')
+  }
 }
 
 /**
@@ -69,10 +78,12 @@ export function UploadDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title="Upload"
+      title={t('files.upload.modal_title')}
       description={
         canWrite
-          ? `Into ${destination === '' ? 'the top of this tree' : destination}`
+          ? t('files.upload.into_desc', {
+              destination: destination === '' ? t('files.upload.top_of_tree') : destination,
+            })
           : undefined
       }
       size="lg"
@@ -80,11 +91,11 @@ export function UploadDialog({
         <>
           {finished.length > 0 ? (
             <Button variant="secondary" onClick={uploads.clearFinished} block>
-              Clear finished
+              {t('files.upload.clear_finished')}
             </Button>
           ) : null}
           <Button onClick={onClose} block>
-            {uploads.busy ? 'Keep uploading in the background' : 'Close'}
+            {uploads.busy ? t('files.upload.keep_background') : t('files.upload.close')}
           </Button>
         </>
       }
@@ -109,14 +120,13 @@ export function UploadDialog({
             />
             <FileActionIcon kind="upload" className="size-6 text-ink-400" />
             <p className="text-sm text-ink-600 dark:text-ink-400">
-              Drop files anywhere on the page, or pick them here.
+              {t('files.upload.drop_or_pick')}
             </p>
             <Button variant="secondary" onClick={() => picker.current?.click()}>
-              Choose files
+              {t('files.upload.choose_files')}
             </Button>
             <p className="max-w-prose text-xs text-ink-500 dark:text-ink-400">
-              Uploads are sent in chunks and carry on by themselves after a dropped
-              connection - they resume from where they stopped rather than starting again.
+              {t('files.upload.chunked_notice')}
             </p>
           </div>
         ) : (
@@ -156,7 +166,7 @@ function UploadRow({item, uploads}: {item: UploadItem; uploads: ChunkedUpload}) 
           <p className="mt-0.5 truncate text-xs text-ink-500 dark:text-ink-400">{item.path}</p>
         </div>
         <Badge tone={TONES[item.status]} dot pulse={item.status === 'uploading'}>
-          {LABELS[item.status]}
+          {getStatusLabel(item.status)}
         </Badge>
       </div>
 
@@ -164,7 +174,7 @@ function UploadRow({item, uploads}: {item: UploadItem; uploads: ChunkedUpload}) 
         <div
           className="h-1.5 w-full overflow-hidden rounded-full bg-ink-200 dark:bg-ink-800"
           role="img"
-          aria-label={`${percent}% of ${item.name} uploaded`}
+          aria-label={t('files.upload.progress_aria', {percent, name: item.name})}
         >
           <div
             className={cx(
@@ -182,23 +192,26 @@ function UploadRow({item, uploads}: {item: UploadItem; uploads: ChunkedUpload}) 
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs tabular-nums text-ink-500 dark:text-ink-400">
-          {formatBytes(item.sentBytes)} of {formatBytes(item.totalBytes)}
-          {item.resumed && running ? ' · carried on from where it stopped' : ''}
+          {t('files.upload.bytes_progress', {
+            sent: formatBytes(item.sentBytes),
+            total: formatBytes(item.totalBytes),
+          })}
+          {item.resumed && running ? t('files.upload.resumed_note') : ''}
         </p>
         <div className="flex items-center gap-2">
           {running ? (
             <Button variant="ghost" size="sm" onClick={() => uploads.cancel(item.id)}>
-              Cancel
+              {t('files.upload.cancel')}
             </Button>
           ) : null}
           {item.status === 'interrupted' || item.status === 'failed' ? (
             <Button variant="secondary" size="sm" onClick={() => uploads.resume(item.id)}>
-              Resume
+              {t('files.upload.resume')}
             </Button>
           ) : null}
           {running ? null : (
             <Button variant="ghost" size="sm" onClick={() => uploads.dismiss(item.id)}>
-              Dismiss
+              {t('files.upload.dismiss')}
             </Button>
           )}
         </div>

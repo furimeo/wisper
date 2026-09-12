@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Input, Modal, Select, Textarea, useFormFields, useOrganizations} from '@/shell'
 
 import {deriveSlug, slugRule} from './deriveSlug'
@@ -44,12 +45,12 @@ export function CreateProjectDialog({open, onClose, organizationId}: CreateProje
     <Modal
       open={open}
       onClose={onClose}
-      title="New project"
-      description="A project groups the services that ship together and share an address book."
+      title={t('project.create.title')}
+      description={t('project.create.description')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.processing}>
-            Cancel
+            {t('project.create.cancel')}
           </Button>
           <Button
             loading={form.processing}
@@ -63,15 +64,14 @@ export function CreateProjectDialog({open, onClose, organizationId}: CreateProje
               })
             }
           >
-            Create project
+            {t('project.create.submit')}
           </Button>
         </>
       }
     >
       {available.length === 0 ? (
         <p className="text-sm text-ink-600 dark:text-ink-400">
-          You are not a member of an organization yet. Accept an invitation, or open one from
-          the Organizations screen, and a project can go in it.
+          {t('project.create.noOrgs')}
         </p>
       ) : (
         <form
@@ -88,7 +88,7 @@ export function CreateProjectDialog({open, onClose, organizationId}: CreateProje
         >
           <Select
             {...form.bind('organizationId')}
-            label="Organization"
+            label={t('project.create.org')}
             required
             options={available.map((organization) => ({
               value: organization.id,
@@ -98,7 +98,7 @@ export function CreateProjectDialog({open, onClose, organizationId}: CreateProje
 
           <Input
             {...form.bind('name')}
-            label="Name"
+            label={t('project.create.name')}
             required
             autoFocus
             maxLength={120}
@@ -108,23 +108,23 @@ export function CreateProjectDialog({open, onClose, organizationId}: CreateProje
 
           <Input
             {...form.bind('slug')}
-            label="Address"
+            label={t('project.create.slug')}
             maxLength={63}
             placeholder={derived || 'storefront'}
             autoComplete="off"
             inputMode="url"
             hint={
               derived
-                ? `Leave it empty and the address becomes "${derived}".`
+                ? t('project.create.slugDerivedHint', {slug: derived})
                 : slugRule(2)
             }
           />
 
           <Textarea
             {...form.bind('description')}
-            label="Description"
+            label={t('project.create.desc')}
             maxLength={500}
-            hint="Optional. What this project is for, for whoever joins next."
+            hint={t('project.create.descHint')}
           />
 
           {/* Submits on Enter from any field without a second visible button. */}

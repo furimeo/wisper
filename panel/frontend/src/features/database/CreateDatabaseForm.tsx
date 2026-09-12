@@ -1,4 +1,5 @@
 import {ByteAmountField} from '@/features/service/ByteAmountField'
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, Modal, Select, useFormFields} from '@/shell'
 
 import type {EngineKind, ManagedDatabaseView} from './databaseTypes'
@@ -77,9 +78,8 @@ export function CreateDatabaseForm({
     <Modal
       open={open}
       onClose={onClose}
-      title="New database"
-      description="It is created on the engine already running on the node your project's services
-        are placed on, with a login of its own that can reach nothing else."
+      title={t('database.form.create.title')}
+      description={t('database.form.create.description')}
       footer={
         <div className="flex flex-col gap-2 sm:flex-row-reverse">
           <Button
@@ -89,10 +89,10 @@ export function CreateDatabaseForm({
             disabled={projects.length === 0}
             onClick={submit}
           >
-            Create it
+            {t('database.form.create.submit')}
           </Button>
           <Button variant="ghost" block className="sm:w-auto" onClick={onClose}>
-            Cancel
+            {t('database.form.create.cancel')}
           </Button>
         </div>
       }
@@ -106,52 +106,48 @@ export function CreateDatabaseForm({
       >
         <Select
           {...form.bind('projectId')}
-          label="Project"
+          label={t('database.form.create.project')}
           required
           options={projects.map((project) => ({value: project.id, label: project.label}))}
-          hint="The database belongs to a project, which is what decides who can reach it."
+          hint={t('database.form.create.projectHint')}
         />
 
         <Select
           {...form.bind('engine')}
-          label="Engine"
+          label={t('database.form.create.engine')}
           required
           options={engines.map((engine) => ({value: engine, label: engineLabel(engine)}))}
         />
 
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('database.form.create.name')}
           required
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
           placeholder="shop_production"
           className="font-mono"
-          hint="Lower-case letters, digits and underscores, starting with a letter. This is the
-            name you type back to drop it."
+          hint={t('database.form.create.nameHint')}
         />
 
         <ByteAmountField
-          label="Size limit"
+          label={t('database.form.create.sizeLimit')}
           name="quotaBytes"
           bytes={form.data.quotaBytes}
           onBytes={(value) => form.set('quotaBytes', value)}
           error={form.error('quotaBytes')}
-          hint="Measured by the node on its own schedule. You can change it later without
-            touching the data."
+          hint={t('database.form.create.sizeLimitHint')}
         />
 
         <Checkbox
           {...form.check('dedicated')}
-          label="Give this organization its own engine container"
-          hint="Shared is the default and it is the right answer for almost everything: a
-            PostgreSQL container costs 30-50MB sitting idle, and one per customer does not
-            scale. A dedicated instance isolates noisy neighbours at that cost."
+          label={t('database.form.create.dedicated')}
+          hint={t('database.form.create.dedicatedHint')}
         />
 
         <button type="submit" className="sr-only">
-          Create database
+          {t('database.form.create.submit')}
         </button>
       </form>
     </Modal>

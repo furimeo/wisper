@@ -1,5 +1,6 @@
 import {Link} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Badge, ByteSize, Card, EmptyState, Icon, RelativeTime} from '@/shell'
 
 import type {RestoreRunView} from './backupTypes'
@@ -24,18 +25,15 @@ export function RestoreHistory({
 }) {
   return (
     <Card
-      title="Restores"
-      description="Including the verify runs, which restore somewhere disposable and throw the
-        result away. Those are what turn “we take backups” into “we have restored this one”."
+      title={t('backup.history.title')}
+      description={t('backup.history.description')}
       padded={restores.length === 0}
     >
       {restores.length === 0 ? (
         <EmptyState
           icon={<Icon name="backup" />}
-          title="Nothing has been restored yet"
-          description="Pick a snapshot and press Verify. It restores alongside the live data,
-            checks the archive is good and throws the copy away, so it costs nothing but a few
-            minutes and it is the only way to know a backup works."
+          title={t('backup.history.empty.title')}
+          description={t('backup.history.empty.desc')}
         />
       ) : (
         <ul className="divide-y divide-ink-200 dark:divide-ink-800">
@@ -51,7 +49,7 @@ export function RestoreHistory({
                   </p>
                   <p className="truncate text-xs text-ink-500 dark:text-ink-400">
                     {restoreModeLabel(restore.mode)} ·{' '}
-                    <RelativeTime at={restore.startedAt} fallback="not started" />
+                    <RelativeTime at={restore.startedAt} fallback={t('backup.restoreRun.notStarted')} />
                     {restore.bytesRestored === null ? null : (
                       <>
                         {' · '}

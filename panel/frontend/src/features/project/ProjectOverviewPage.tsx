@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Badge, ButtonLink, Card, Icon, PageHeader, mayWrite} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -44,11 +45,11 @@ export default function ProjectOverviewPage() {
 
       <PageHeader
         title={project.name}
-        description={project.description || `Services in /${project.slug}.`}
+        description={project.description || t('project.overview.fallbackDesc', {slug: project.slug})}
         actions={
           writable && !full ? (
             <ButtonLink href={`/projects/${project.id}/services/new`} icon={<Icon name="node" />}>
-              Add a service
+              {t('project.overview.addService')}
             </ButtonLink>
           ) : null
         }
@@ -57,8 +58,7 @@ export default function ProjectOverviewPage() {
       {project.archived ? (
         <Card>
           <p className="text-sm text-ink-700 dark:text-ink-300">
-            This project is archived. Its services are stopped and nothing was deleted - restore
-            it from Settings to start them again.
+            {t('project.overview.archivedNotice')}
           </p>
         </Card>
       ) : null}
@@ -70,11 +70,11 @@ export default function ProjectOverviewPage() {
       ) : null}
 
       <Card
-        title="Services"
-        description="Intent is what you asked for; the pill is what the node last reported."
+        title={t('project.overview.servicesCardTitle')}
+        description={t('project.overview.servicesCardDesc')}
         action={
           <Badge tone={live.length > 0 ? 'accent' : 'neutral'}>
-            {serviceAllowance.used} of {serviceAllowance.limit}
+            {serviceAllowance.used} / {serviceAllowance.limit}
           </Badge>
         }
         padded={false}
@@ -84,7 +84,7 @@ export default function ProjectOverviewPage() {
           emptyAction={
             writable && !full ? (
               <ButtonLink href={`/projects/${project.id}/services/new`}>
-                Add the first service
+                {t('project.overview.addFirstService')}
               </ButtonLink>
             ) : null
           }

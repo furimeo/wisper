@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 
 import {PageHeader, Pagination} from '@/shell'
+import {t} from '@/i18n'
 
 import {FailedJobList} from './FailedJobList'
 import {JobQueueHealth} from './JobQueueHealth'
@@ -29,13 +30,11 @@ export default function AdminJobsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Jobs" />
+      <Head title={t('jobs.title')} />
 
       <PageHeader
-        title="Jobs"
-        description="The panel's own work queue. Deployments, backups, spec publication and
-          the nightly sweeps all run through it, so a stalled queue looks like a dozen
-          unrelated things being broken."
+        title={t('jobs.title')}
+        description={t('jobs.description')}
       />
 
       <JobQueueHealth summary={summary} />
@@ -46,7 +45,7 @@ export default function AdminJobsPage() {
         total={page.total}
         offset={page.offset}
         pageSize={page.pageSize}
-        unit="failing jobs"
+        unit={t('jobs.unit')}
         hrefFor={(offset) => (offset === 0 ? '/admin/jobs' : `/admin/jobs?offset=${offset}`)}
       />
     </div>

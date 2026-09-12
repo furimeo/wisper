@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {ByteSize, Icon, RelativeTime, SwipeRow, cx} from '@/shell'
 import type {SwipeAction} from '@/shell'
 
@@ -71,7 +72,7 @@ export function FileRow({
             type="checkbox"
             checked={selected}
             onChange={onToggleSelected}
-            aria-label={`Select ${entry.name}`}
+            aria-label={t('files.row.aria_select_entry', {name: entry.name})}
             className={cx(
               'size-5 rounded border-ink-400 accent-accent-600 dark:border-ink-600',
               selecting || selected ? '' : 'opacity-60',
@@ -95,12 +96,12 @@ export function FileRow({
               {entry.name}
               {entry.symlink ? (
                 <span className="ml-1.5 text-xs font-normal text-ink-500">
-                  → {entry.symlinkTarget ?? 'link'}
+                  {t('files.table.link_target', {target: entry.symlinkTarget ?? t('files.table.link_fallback')})}
                 </span>
               ) : null}
             </span>
             <span className="mt-0.5 flex items-center gap-2 text-xs text-ink-500 dark:text-ink-400">
-              <RelativeTime at={entry.modifiedAt} fallback="never modified" />
+              <RelativeTime at={entry.modifiedAt} fallback={t('files.row.never_modified')} />
               <span aria-hidden="true">·</span>
               <span className="font-mono">{entry.modeOctal}</span>
             </span>
@@ -118,7 +119,7 @@ export function FileRow({
         <button
           type="button"
           onClick={onOverflow}
-          aria-label={`Actions for ${entry.name}`}
+          aria-label={t('files.row.aria_actions_for', {name: entry.name})}
           className="flex touch-target shrink-0 items-center justify-center px-1 text-ink-500"
         >
           <Icon name="more" />

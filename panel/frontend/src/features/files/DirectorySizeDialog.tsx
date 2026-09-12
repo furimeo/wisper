@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, ByteQuota, ByteSize, Button, ErrorState, Modal, Spinner} from '@/shell'
 
 import {FileRequestFailed, measureDirectory} from './fileRequests'
@@ -51,7 +52,7 @@ export function DirectorySizeDialog({
         setFailure(
           cause instanceof FileRequestFailed
             ? cause.message
-            : 'The node did not finish measuring this folder.',
+            : t('files.measure.default_error'),
         )
       })
     return () => abort.abort()
@@ -61,46 +62,46 @@ export function DirectorySizeDialog({
     <Modal
       open={path !== null}
       onClose={onClose}
-      title="Folder size"
-      description={path === '' ? 'The top of this tree' : (path ?? undefined)}
+      title={t('files.measure.title')}
+      description={path === '' ? t('files.measure.top_of_tree') : (path ?? undefined)}
       size="sm"
       footer={
         <Button variant="secondary" onClick={onClose} block>
-          Close
+          {t('files.measure.close')}
         </Button>
       }
     >
       {failure ? (
         <ErrorState
-          title="It could not be measured"
+          title={t('files.measure.error_title')}
           description={failure}
           onRetry={() => setAttempt((count) => count + 1)}
         />
       ) : size === null ? (
         <div className="flex items-center gap-3 py-6 text-sm text-ink-600 dark:text-ink-400">
           <Spinner />
-          Walking the tree. A folder with a lot in it takes a few seconds.
+          {t('files.measure.walking')}
         </div>
       ) : (
         <dl className="flex flex-col gap-3 text-sm">
           <div className="flex items-baseline justify-between gap-3">
-            <dt className="text-ink-600 dark:text-ink-400">Total</dt>
+            <dt className="text-ink-600 dark:text-ink-400">{t('files.measure.total')}</dt>
             <dd className="flex items-center gap-2 font-medium text-ink-900 dark:text-ink-100">
-              {size.approximate ? <Badge tone="degraded">at least</Badge> : null}
+              {size.approximate ? <Badge tone="degraded">{t('files.measure.at_least')}</Badge> : null}
               <ByteSize bytes={size.bytes} />
             </dd>
           </div>
           <div className="flex items-baseline justify-between gap-3">
-            <dt className="text-ink-600 dark:text-ink-400">Files</dt>
+            <dt className="text-ink-600 dark:text-ink-400">{t('files.measure.files')}</dt>
             <dd className="tabular-nums">{size.fileCount.toLocaleString()}</dd>
           </div>
           <div className="flex items-baseline justify-between gap-3">
-            <dt className="text-ink-600 dark:text-ink-400">Folders</dt>
+            <dt className="text-ink-600 dark:text-ink-400">{t('files.measure.folders')}</dt>
             <dd className="tabular-nums">{size.directoryCount.toLocaleString()}</dd>
           </div>
           {size.quotaBytes > 0 ? (
             <div className="pt-1">
-              <dt className="mb-1 text-ink-600 dark:text-ink-400">Against this tree's quota</dt>
+              <dt className="mb-1 text-ink-600 dark:text-ink-400">{t('files.measure.quota_label')}</dt>
               <dd>
                 <ByteQuota used={size.bytes} limit={size.quotaBytes} />
               </dd>
@@ -108,8 +109,7 @@ export function DirectorySizeDialog({
           ) : null}
           {size.approximate ? (
             <p className="pt-1 text-xs text-ink-500 dark:text-ink-400">
-              The node stopped at its walk budget, so the real total is larger than this.
-              Measuring a smaller folder gives an exact answer.
+              {t('files.measure.approximate_note')}
             </p>
           ) : null}
         </dl>

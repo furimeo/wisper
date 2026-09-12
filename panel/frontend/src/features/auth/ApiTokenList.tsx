@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Badge, Card, EmptyState, Icon} from '@/shell'
 
 import type {AccountOrganization, ApiTokenView} from './authTypes'
@@ -25,18 +26,16 @@ export function ApiTokenList({tokens, organizations}: ApiTokenListProps) {
 
   return (
     <Card
-      title="Your tokens"
-      description="Revoked and expired ones are kept so you can tell what a call in the audit log
-        came from."
-      action={<Badge tone={live.length > 0 ? 'running' : 'neutral'}>{live.length} active</Badge>}
+      title={t('auth.tokens.cardTitle')}
+      description={t('auth.tokens.cardDesc')}
+      action={<Badge tone={live.length > 0 ? 'running' : 'neutral'}>{t('auth.tokens.activeBadge', {count: live.length})}</Badge>}
       padded={ordered.length > 0}
     >
       {ordered.length === 0 ? (
         <EmptyState
           icon={<Icon name="key" />}
-          title="No tokens yet"
-          description="Create one above when something other than a browser needs to reach the
-            panel - a deployment pipeline, a backup script, your own tooling."
+          title={t('auth.tokens.emptyTitle')}
+          description={t('auth.tokens.emptyDesc')}
         />
       ) : (
         <ul className="flex flex-col gap-3">
@@ -46,7 +45,7 @@ export function ApiTokenList({tokens, organizations}: ApiTokenListProps) {
               token={token}
               organizationName={
                 token.organizationId
-                  ? (names.get(token.organizationId) ?? 'Another organization')
+                  ? (names.get(token.organizationId) ?? t('auth.tokens.anotherOrg'))
                   : null
               }
             />

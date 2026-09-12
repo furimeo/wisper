@@ -1,5 +1,6 @@
 import {Link} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Badge, Icon} from '@/shell'
 
 import type {OrganizationSummary} from './orgTypes'
@@ -28,7 +29,7 @@ export function OrganizationRow({organization}: {organization: OrganizationSumma
               {organization.name}
             </span>
             <Badge tone={organization.suspended ? 'failed' : 'neutral'}>
-              {organization.suspended ? 'Suspended' : roleLabel(organization.role)}
+              {organization.suspended ? t('org.row.suspended') : roleLabel(organization.role)}
             </Badge>
           </span>
 
@@ -38,8 +39,7 @@ export function OrganizationRow({organization}: {organization: OrganizationSumma
 
           {organization.suspended ? (
             <span className="mt-1 block text-xs leading-relaxed text-failed">
-              {organization.suspensionReason ||
-                'Suspended by an operator. Nothing new can be created until it is resumed.'}
+              {organization.suspensionReason || t('org.row.suspendedDefaultReason')}
             </span>
           ) : null}
         </span>

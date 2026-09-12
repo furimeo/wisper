@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {cx} from '@/shell'
 
 import type {ServiceKind} from '@/features/service/serviceTypes'
@@ -25,7 +26,7 @@ export function ServiceKindChooser({
   return (
     <fieldset className="flex flex-col gap-2" disabled={disabled}>
       <legend className="mb-1 text-sm font-medium text-ink-700 dark:text-ink-300">
-        What are you deploying?
+        {t('project.newService.kindPrompt')}
       </legend>
 
       {kinds.map((kind) => {

@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {ACCOUNT_SETTINGS, Tabs} from '@/shell'
 
 /**
@@ -15,7 +16,7 @@ import {ACCOUNT_SETTINGS, Tabs} from '@/shell'
 export function SettingsTabs() {
   return (
     <Tabs
-      label="Account settings"
+      label={t('auth.settings.tabsLabel')}
       items={ACCOUNT_SETTINGS.map((destination) => ({
         href: destination.href,
         label: destination.label,

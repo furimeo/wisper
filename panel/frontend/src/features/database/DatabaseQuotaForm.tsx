@@ -1,5 +1,6 @@
 import {ByteAmountField} from '@/features/service/ByteAmountField'
-import {ByteSize, Button, Card, mayWrite, useFormFields} from '@/shell'
+import {t} from '@/i18n'
+import {ByteSize, Button, Card, formatBytes, mayWrite, useFormFields} from '@/shell'
 import type {MemberRole} from '@/shell'
 
 import type {ManagedDatabaseView} from './databaseTypes'
@@ -41,9 +42,8 @@ export function DatabaseQuotaForm({
 
   return (
     <Card
-      title="Size"
-      description="Measured on the node. Raising the limit takes effect on the node's next
-        reconcile; nothing is moved or rewritten."
+      title={t('database.quota.title')}
+      description={t('database.quota.description')}
       footer={
         writable ? (
           <div className="flex flex-col gap-2 sm:flex-row-reverse">
@@ -54,11 +54,11 @@ export function DatabaseQuotaForm({
               disabled={!form.dirty}
               onClick={() => form.submit(`/databases/${database.id}/quota`)}
             >
-              Save the limit
+              {t('database.quota.save')}
             </Button>
             {form.dirty ? (
               <Button variant="ghost" block className="sm:w-auto" onClick={form.reset}>
-                Discard
+                {t('database.quota.discard')}
               </Button>
             ) : null}
           </div>
@@ -68,7 +68,7 @@ export function DatabaseQuotaForm({
       <div className="flex flex-col gap-4">
         <div>
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-sm font-medium text-ink-800 dark:text-ink-200">Used</span>
+            <span className="text-sm font-medium text-ink-800 dark:text-ink-200">{t('database.quota.used')}</span>
             <span
               className={
                 over
@@ -79,7 +79,7 @@ export function DatabaseQuotaForm({
               }
             >
               {measured === null ? (
-                'not measured yet'
+                t('database.quota.notMeasuredYet')
               ) : (
                 <>
                   <ByteSize bytes={measured} /> of <ByteSize bytes={database.quotaBytes} />
@@ -93,8 +93,8 @@ export function DatabaseQuotaForm({
             role="img"
             aria-label={
               share === null
-                ? 'Size not measured yet'
-                : `${Math.round(share * 100)} per cent of the limit used`
+                ? t('database.quota.ariaNotMeasured')
+                : t('database.quota.ariaUsed', {percent: Math.round(share * 100)})
             }
           >
             {share === null ? null : (
@@ -109,8 +109,7 @@ export function DatabaseQuotaForm({
 
           {over ? (
             <p className="mt-2 text-sm leading-relaxed text-failed">
-              This database is past its limit. Writes to it can start failing - raise the limit
-              here, or delete data inside it.
+              {t('database.quota.pastLimit')}
             </p>
           ) : null}
         </div>
@@ -123,21 +122,20 @@ export function DatabaseQuotaForm({
             }}
           >
             <ByteAmountField
-              label="Size limit"
+              label={t('database.quota.limit')}
               name="quotaBytes"
               bytes={form.data.quotaBytes}
               onBytes={(value) => form.set('quotaBytes', value)}
               error={form.error('quotaBytes')}
-              hint="Your organization's plan caps the total across every database it owns."
+              hint={t('database.quota.limitHint')}
             />
             <button type="submit" className="sr-only">
-              Save the limit
+              {t('database.quota.save')}
             </button>
           </form>
         ) : (
           <p className="text-sm text-ink-500 dark:text-ink-400">
-            The limit is <ByteSize bytes={database.quotaBytes} />. Changing it needs a role that
-            can write.
+            {t('database.quota.readOnly', {limit: formatBytes(database.quotaBytes)})}
           </p>
         )}
       </div>

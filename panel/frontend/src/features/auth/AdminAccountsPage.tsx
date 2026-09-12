@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useMemo, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Card, EmptyState, Icon, Input, PageHeader} from '@/shell'
 
 import type {AccountProfile, PlatformRole} from './authTypes'
@@ -45,11 +46,10 @@ export default function AdminAccountsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Accounts" />
+      <Head title={t('auth.admin.title')} />
       <PageHeader
-        title="Accounts"
-        description="Everyone who can sign in to this installation. There is no public sign-up, so
-          this page is the only way in."
+        title={t('auth.admin.title')}
+        description={t('auth.admin.description')}
       />
 
       <CreateAccountForm roles={roles} />
@@ -59,22 +59,21 @@ export default function AdminAccountsPage() {
         badges beside the title take about 200px, and at 375px that leaves the header's
         text column narrow enough to break one word per line.
       */}
-      <Card title="People" action={<Badge>{accounts.length}</Badge>}>
+      <Card title={t('auth.admin.cardTitle')} action={<Badge>{accounts.length}</Badge>}>
         <div className="mb-3 flex flex-wrap gap-1.5">
           <Badge tone={activeAdminCount <= 1 ? 'degraded' : 'neutral'} dot>
-            {activeAdminCount} operator{activeAdminCount === 1 ? '' : 's'}
+            {t('auth.admin.operatorsBadge', {count: activeAdminCount})}
           </Badge>
           {suspendedCount > 0 ? (
             <Badge tone="failed" dot>
-              {suspendedCount} suspended
+              {t('auth.admin.suspendedBadge', {count: suspendedCount})}
             </Badge>
           ) : null}
         </div>
 
         {activeAdminCount <= 1 ? (
           <p className="mb-3 rounded-lg border border-degraded/40 bg-degraded/10 px-3 py-2 text-sm leading-relaxed text-ink-800 dark:text-ink-100">
-            One active operator. If that account is lost, nobody can administer the
-            platform - promote a second one.
+            {t('auth.admin.singleOperatorWarning')}
           </p>
         ) : null}
 
@@ -85,8 +84,8 @@ export default function AdminAccountsPage() {
           autoCapitalize="none"
           spellCheck={false}
           enterKeyHint="search"
-          placeholder="Filter by name or address"
-          aria-label="Filter accounts"
+          placeholder={t('auth.admin.filterPlaceholder')}
+          aria-label={t('auth.admin.filterAria')}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -94,8 +93,8 @@ export default function AdminAccountsPage() {
         {matching.length === 0 ? (
           <EmptyState
             icon={<Icon name="account" />}
-            title="Nothing matches"
-            description={`No account's name or address contains “${query}”. Clear the filter to see all ${accounts.length}.`}
+            title={t('auth.admin.emptyMatchTitle')}
+            description={t('auth.admin.emptyMatchDesc', {query, total: accounts.length})}
           />
         ) : (
           <ul className="mt-3 flex flex-col gap-3">

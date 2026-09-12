@@ -1,5 +1,6 @@
 import type {ReactNode} from 'react'
 
+import {t} from '@/i18n'
 import {Card, CardFact, CardFacts, RelativeTime} from '@/shell'
 
 import type {NodeDetail} from './nodeTypes'
@@ -23,113 +24,119 @@ export function NodeFacts({node}: {node: NodeDetail}) {
   const skew = clockSkewSentence(node.clockSkewMillis)
 
   return (
-    <Card title="Facts">
+    <Card title={t('node.facts.title')}>
       <CardFacts>
-        <CardFact label="Node id">
+        <CardFact label={t('node.facts.nodeId')}>
           <span className="font-mono text-xs" title={summary.id}>
             {shortId(summary.id)}
           </span>
         </CardFact>
 
-        <CardFact label="Public address">
+        <CardFact label={t('node.facts.publicAddress')}>
           {summary.publicAddress ? (
             <span className="font-mono text-xs">{summary.publicAddress}</span>
           ) : (
-            <Muted>not set - a domain has nothing to point at</Muted>
+            <Muted>{t('node.facts.publicAddressNotSet')}</Muted>
           )}
         </CardFact>
 
-        <CardFact label="Agent version">
+        <CardFact label={t('node.facts.agentVersion')}>
           {summary.agentVersion ? (
             <span className="font-mono text-xs">
               {summary.agentVersion}
               {node.upgradeAvailable ? (
                 <span className="ml-1.5 font-sans text-degraded">
-                  → {node.upgradeAvailable} available
+                  {t('node.facts.upgradeAvailable', {version: node.upgradeAvailable})}
                 </span>
               ) : null}
             </span>
           ) : (
-            <Muted>never reported</Muted>
+            <Muted>{t('node.facts.neverReported')}</Muted>
           )}
         </CardFact>
 
-        <CardFact label="Protocol version">
+        <CardFact label={t('node.facts.protocolVersion')}>
           {summary.protocolVersion === null ? (
-            <Muted>never negotiated</Muted>
+            <Muted>{t('node.facts.neverNegotiated')}</Muted>
           ) : (
             <span className="tabular-nums">{summary.protocolVersion}</span>
           )}
         </CardFact>
 
-        <CardFact label="Generation">
+        <CardFact label={t('node.facts.generation')}>
           <span className="tabular-nums">
-            {summary.appliedGeneration} applied / {summary.desiredGeneration} published
+            {t('node.facts.generationApplied', {
+              applied: summary.appliedGeneration,
+              desired: summary.desiredGeneration,
+            })}
           </span>
           {summary.converged ? null : (
             <span className="mt-0.5 block text-xs text-degraded">
-              Still catching up. It reconciles every fifteen seconds.
+              {t('node.facts.stillCatchingUp')}
             </span>
           )}
         </CardFact>
 
-        <CardFact label="Workloads">
+        <CardFact label={t('node.facts.workloads')}>
           <span className="tabular-nums">
-            {summary.runningWorkloadCount} running of {summary.workloadCount}
+            {t('node.facts.workloadsCount', {
+              running: summary.runningWorkloadCount,
+              total: summary.workloadCount,
+            })}
           </span>
         </CardFact>
 
-        <CardFact label="Last heartbeat">
-          <RelativeTime at={summary.lastHeartbeatAt} fallback="never" />
+        <CardFact label={t('node.facts.lastHeartbeat')}>
+          <RelativeTime at={summary.lastHeartbeatAt} fallback={t('node.facts.none')} />
         </CardFact>
 
-        <CardFact label="Stream">
+        <CardFact label={t('node.facts.stream')}>
           {summary.connected ? (
             <>
-              open since <RelativeTime at={node.lastConnectedAt} fallback="an unknown time" />
+              {t('node.facts.streamOpenSince')}<RelativeTime at={node.lastConnectedAt} fallback={t('node.facts.unknownTime')} />
             </>
           ) : (
             <>
-              closed <RelativeTime at={node.lastDisconnected} fallback="- never opened" />
+              {t('node.facts.streamClosed')}<RelativeTime at={node.lastDisconnected} fallback={t('node.facts.neverOpened')} />
             </>
           )}
         </CardFact>
 
-        <CardFact label="Dial endpoint">
+        <CardFact label={t('node.facts.dialEndpoint')}>
           <span className="font-mono text-xs break-all">{node.dialEndpoint}</span>
         </CardFact>
 
-        <CardFact label="Docker">
+        <CardFact label={t('node.facts.docker')}>
           {summary.dockerHealthy === null ? (
-            <Muted>not reported</Muted>
+            <Muted>{t('node.capacity.notReported')}</Muted>
           ) : summary.dockerHealthy ? (
-            <>{node.dockerVersion ?? 'reachable'}</>
+            <>{node.dockerVersion ?? t('node.facts.dockerReachable')}</>
           ) : (
             <span className="text-failed">
-              unreachable - the node is retrying and has deleted nothing
+              {t('node.facts.dockerUnreachable')}
             </span>
           )}
         </CardFact>
 
-        <CardFact label="Kernel">{node.kernelVersion ?? <Muted>not reported</Muted>}</CardFact>
+        <CardFact label={t('node.facts.kernel')}>{node.kernelVersion ?? <Muted>{t('node.capacity.notReported')}</Muted>}</CardFact>
 
-        <CardFact label="Operating system">
-          {node.osDescription ?? <Muted>not reported</Muted>}
+        <CardFact label={t('node.facts.os')}>
+          {node.osDescription ?? <Muted>{t('node.capacity.notReported')}</Muted>}
         </CardFact>
 
-        <CardFact label="Volume filesystem">
+        <CardFact label={t('node.facts.volumeFilesystem')}>
           {node.volumeFilesystem ? (
             <span className={summary.quotaAdvisory ? 'text-failed' : undefined}>
               {node.volumeFilesystem}
-              {summary.quotaAdvisory ? ' - no project quota' : ''}
+              {summary.quotaAdvisory ? t('node.facts.noProjectQuota') : ''}
             </span>
           ) : (
-            <Muted>not reported</Muted>
+            <Muted>{t('node.capacity.notReported')}</Muted>
           )}
         </CardFact>
 
-        <CardFact label="Tags">
-          {summary.tags.length === 0 ? <Muted>none</Muted> : summary.tags.join(', ')}
+        <CardFact label={t('node.facts.tags')}>
+          {summary.tags.length === 0 ? <Muted>{t('node.facts.none')}</Muted> : summary.tags.join(', ')}
         </CardFact>
       </CardFacts>
 
@@ -141,7 +148,7 @@ export function NodeFacts({node}: {node: NodeDetail}) {
 
       {summary.reconcileError ? (
         <p className="mt-3 rounded-lg border border-failed/50 bg-failed/10 px-3 py-2.5 text-sm leading-relaxed">
-          <span className="font-medium">Last reconcile failed: </span>
+          <span className="font-medium">{t('node.facts.lastReconcileFailed')}</span>
           {summary.reconcileError}
         </p>
       ) : null}

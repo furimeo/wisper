@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Badge, ButtonLink, Card, PageHeader} from '@/shell'
 
 import {ServiceTabs} from '@/features/service/ServiceTabs'
@@ -40,20 +41,20 @@ export default function ServiceLogsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`Logs · ${service.name}`} />
+      <Head title={t('stats.serviceLogs.title', {name: service.name})} />
       <ServiceTabs serviceId={service.serviceId} />
 
       <PageHeader
-        title="Logs"
+        title={t('stats.serviceLogs.header')}
         description={
           cron
-            ? 'One scheduled run, from the node that executed it.'
-            : `Everything ${service.name} writes to stdout and stderr, tailed from the node holding it. The last ${tailLines} lines arrive first.`
+            ? t('stats.serviceLogs.descCron')
+            : t('stats.serviceLogs.descContainer', {name: service.name, tailLines})
         }
         actions={
           cron ? (
             <ButtonLink href={`/services/${service.serviceId}/logs`} variant="secondary">
-              Container output
+              {t('stats.serviceLogs.actionContainer')}
             </ButtonLink>
           ) : null
         }
@@ -61,7 +62,7 @@ export default function ServiceLogsPage() {
 
       {cron ? (
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="accent">Scheduled run</Badge>
+          <Badge tone="accent">{t('stats.serviceLogs.scheduledRunBadge')}</Badge>
           <span className="font-mono text-xs text-ink-500 dark:text-ink-400">{subjectId}</span>
         </div>
       ) : null}
@@ -69,27 +70,23 @@ export default function ServiceLogsPage() {
       {placed ? (
         <LogConsole stream={stream} placed={placed} />
       ) : (
-        <Card title="Nothing is running this service">
+        <Card title={t('stats.serviceLogs.emptyTitle')}>
           <p className="text-sm text-ink-700 dark:text-ink-300">
-            Logs are read from the container, so there has to be one. Start {service.name} and
-            this page will follow its output from the first line - the panel does not keep a
-            copy, so there is nothing here from before it was placed on a node.
+            {t('stats.serviceLogs.emptyDesc', {name: service.name})}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <ButtonLink href={`/services/${service.serviceId}`} variant="secondary">
-              Go to the service
+              {t('stats.serviceLogs.goToService')}
             </ButtonLink>
             <ButtonLink href={`/services/${service.serviceId}/deployments`} variant="secondary">
-              Deployments
+              {t('stats.serviceLogs.deployments')}
             </ButtonLink>
           </div>
         </Card>
       )}
 
       <p className="px-1 text-xs text-ink-500 dark:text-ink-400">
-        This is a tail, not an archive. The panel keeps no copy of container output, so what
-        is on screen is what the node still holds - build logs are the exception and live on
-        their deployment.
+        {t('stats.serviceLogs.footer')}
       </p>
     </div>
   )

@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Badge} from '@/shell'
 
 import type {DatabaseEngineView, ManagedDatabaseView} from './databaseTypes'
@@ -16,7 +17,7 @@ export function DatabaseStateBadge({database}: {database: ManagedDatabaseView}) 
   if (database.overQuota && database.state === 'READY') {
     return (
       <Badge tone="failed" dot>
-        Over its limit
+        {t('database.badge.overLimit')}
       </Badge>
     )
   }
@@ -37,20 +38,23 @@ export function EngineStateBadge({engine}: {engine: DatabaseEngineView}) {
   if (engine.reportedState === null) {
     return (
       <Badge tone="neutral" dot pulse={engine.desiredState === 'RUNNING'}>
-        Not reported yet
+        {t('database.badge.engineNotReported')}
       </Badge>
     )
   }
   if (!engine.converged) {
     return (
       <Badge tone="degraded" dot pulse>
-        {engine.reportedState.toLowerCase()}, wanted {engine.desiredState.toLowerCase()}
+        {t('database.badge.engineWanted', {
+          reported: engine.reportedState.toLowerCase(),
+          desired: engine.desiredState.toLowerCase(),
+        })}
       </Badge>
     )
   }
   return (
     <Badge tone={engine.desiredState === 'RUNNING' ? 'running' : 'neutral'} dot>
-      {engine.desiredState === 'RUNNING' ? 'Running' : 'Stopped'}
+      {engine.desiredState === 'RUNNING' ? t('database.badge.engineRunning') : t('database.badge.engineStopped')}
     </Badge>
   )
 }

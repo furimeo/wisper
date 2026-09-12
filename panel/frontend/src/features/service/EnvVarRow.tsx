@@ -1,19 +1,8 @@
+import {t} from '@/i18n'
 import {Badge, CopyButton, Icon} from '@/shell'
 
 import type {EnvVar} from './serviceTypes'
 
-/**
- * One plain environment variable.
- *
- * The value is masked by default and the mask is a fixed eight dots rather than one per
- * character: a customer standing on a train has somebody behind them, and a mask whose
- * width leaks the length of an API key is a mask that tells you which key it is.
- *
- * Copy sits outside the row's own button. Nesting an interactive control inside another
- * one is invalid HTML and, more to the point, makes the outer target eat the tap on a
- * phone about a third of the time. The row opens the editor; the button next to it
- * copies; neither is inside the other.
- */
 export function EnvVarRow({
   variable,
   revealed,
@@ -32,10 +21,10 @@ export function EnvVarRow({
           <code className="truncate font-mono text-sm font-medium text-ink-900 dark:text-ink-100">
             {variable.name}
           </code>
-          {variable.buildTime ? <Badge tone="accent">Build</Badge> : null}
+          {variable.buildTime ? <Badge tone="accent">{t('service.variables.build_badge')}</Badge> : null}
         </span>
         <span className="mt-0.5 block truncate font-mono text-xs text-ink-500 dark:text-ink-400">
-          {revealed ? variable.value || '(empty)' : '••••••••'}
+          {revealed ? variable.value || t('service.variables.empty_value') : '••••••••'}
         </span>
       </span>
       {onOpen ? <Icon name="chevronRight" className="size-4 shrink-0 text-ink-400" /> : null}
@@ -62,7 +51,7 @@ export function EnvVarRow({
         <CopyButton
           value={variable.value}
           size="sm"
-          describedAs={`Copy the value of ${variable.name}`}
+          describedAs={t('service.variables.copy_value', {name: variable.name})}
           className="border-transparent"
         />
       </span>

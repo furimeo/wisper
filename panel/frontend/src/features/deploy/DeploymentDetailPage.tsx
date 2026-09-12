@@ -1,5 +1,6 @@
 import {Head, router, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Button, ButtonLink, Card, Icon, PageHeader, mayWrite} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -14,19 +15,6 @@ import type {DeploymentLog, DeploymentSummary, DeploymentTarget} from './deployT
 import {cancellable, describe, inFlight, rollbackTarget} from './deployVocabulary'
 import {rollbackRelease} from './rollbackRelease'
 
-/**
- * `GET /services/{serviceId}/deployments/{deploymentId}` - one deployment, live.
- *
- * The log comes down twice by design: the first five hundred lines are rendered from the
- * table with the page, so a finished build is readable the instant it paints, and the SSE
- * stream then picks up from `logCursor` and sends only what is not already here. A
- * customer on a train whose connection drops reads one continuous log, because every line
- * carries its sequence and the browser resumes from the last one it got.
- *
- * The order down the page is what somebody wants on a phone in the two minutes they are
- * watching a deploy: what state is it in, then the output, then the path it took, then the
- * details they only want when comparing this deploy with another.
- */
 type DeploymentDetailProps = {
   service: DeploymentTarget
   deployment: DeploymentSummary
@@ -43,11 +31,11 @@ export default function DeploymentDetailPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`Deployment #${deployment.sequence} · ${service.name}`} />
+      <Head title={t('deploy.detail.head_title', {sequence: deployment.sequence, name: service.name})} />
       <ServiceTabs serviceId={service.serviceId} />
 
       <PageHeader
-        title={`Deployment #${deployment.sequence}`}
+        title={t('deploy.detail.title', {sequence: deployment.sequence})}
         description={describe(deployment)}
         actions={
           <>
@@ -56,19 +44,19 @@ export default function DeploymentDetailPage() {
               variant="secondary"
               icon={<Icon name="chevronLeft" className="size-4" />}
             >
-              All deployments
+              {t('deploy.detail.all_deployments')}
             </ButtonLink>
             {writable && cancellable(deployment) ? (
               <Button
                 variant="danger"
                 onClick={() => void cancelDeployment(service.serviceId, deployment)}
               >
-                Cancel this build
+                {t('deploy.detail.cancel_build')}
               </Button>
             ) : null}
             {writable && rollbackTarget(deployment) ? (
               <Button onClick={() => void rollbackRelease(service.serviceId, deployment)}>
-                Roll back to this
+                {t('deploy.detail.rollback_to_this')}
               </Button>
             ) : null}
           </>
@@ -80,12 +68,12 @@ export default function DeploymentDetailPage() {
           <DeploymentStatusBadge deployment={deployment} />
           <span className="text-sm text-ink-600 dark:text-ink-400">
             {deployment.current
-              ? 'This release is what visitors are being served.'
+              ? t('deploy.detail.status_banner_current')
               : deployment.status === 'SUCCEEDED'
-                ? 'Published, and something newer has taken over since.'
+                ? t('deploy.detail.status_banner_succeeded')
                 : running
-                  ? 'Still moving. This page follows the build as it goes.'
-                  : 'Nothing further will happen to this deployment.'}
+                  ? t('deploy.detail.status_banner_running')
+                  : t('deploy.detail.status_banner_terminal')}
           </span>
         </div>
 
@@ -106,9 +94,6 @@ export default function DeploymentDetailPage() {
         initialLines={log}
         cursor={logCursor}
         onEnded={() => {
-          // The prop is the status this page was rendered with. The stream only ends when
-          // the deployment reached a terminal state, so once it does, re-read the row
-          // rather than leave a "Building" pill above a log that has stopped.
           if (running) {
             router.reload({only: ['deployment']})
           }

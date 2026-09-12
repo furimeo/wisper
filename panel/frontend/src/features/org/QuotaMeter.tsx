@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {cx} from '@/shell'
 
 import type {QuotaAllowance} from './orgTypes'
@@ -73,12 +74,16 @@ export function QuotaMeter({
           )}
         >
           {over
-            ? `Over the limit. ${quotaConsequence(resource)}`
-            : `You are at ${percent}% of your ${quotaLabel(resource).toLowerCase()}. ${quotaConsequence(resource)}`}
+            ? t('org.quota.overTheLimit', {consequence: quotaConsequence(resource)})
+            : t('org.quota.nearTheLimit', {
+                percent,
+                label: quotaLabel(resource).toLowerCase(),
+                consequence: quotaConsequence(resource),
+              })}
         </p>
       ) : source === 'UNSET' ? (
         <p className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
-          Not set on this plan, so nothing is allowed. Ask an operator to set it.
+          {t('org.quota.source.unsetHint')}
         </p>
       ) : source === 'ORGANIZATION_OVERRIDE' ? (
         <p className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">

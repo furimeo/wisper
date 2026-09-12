@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, cx} from '@/shell'
 
 import {FileActionIcon} from './FileActionIcon'
@@ -44,7 +45,7 @@ export function FileSelectionBar({
   return (
     <div
       role="toolbar"
-      aria-label={`${count} selected`}
+      aria-label={t('files.selection.selected_count', {count: count.toLocaleString()})}
       className={cx(
         'flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2',
         'border-accent-500/40 bg-accent-500/10',
@@ -52,7 +53,7 @@ export function FileSelectionBar({
       )}
     >
       <span className="text-sm font-medium tabular-nums text-ink-800 dark:text-ink-100">
-        {count.toLocaleString()} selected
+        {t('files.selection.selected_count', {count: count.toLocaleString()})}
       </span>
 
       <div className="ml-auto flex flex-wrap items-center gap-1">
@@ -75,7 +76,7 @@ export function FileSelectionBar({
           )
         })}
         <Button variant="ghost" size="sm" onClick={onClear}>
-          Clear
+          {t('files.selection.clear_button')}
         </Button>
       </div>
     </div>

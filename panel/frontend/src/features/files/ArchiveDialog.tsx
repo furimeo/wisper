@@ -1,15 +1,18 @@
 import {router} from '@inertiajs/react'
 import {useEffect, useRef, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Input, Modal, Select, csrfToken} from '@/shell'
 
 import {filesBase} from './fileRequests'
 
 /** `zip` opens anywhere; `tar.gz` keeps permissions and symlinks a zip would flatten. */
-const FORMATS = [
-  {value: 'zip', label: 'Zip (.zip)'},
-  {value: 'tar.gz', label: 'Gzipped tar (.tar.gz)'},
-]
+function getFormats() {
+  return [
+    {value: 'zip', label: t('files.archive.format_zip')},
+    {value: 'tar.gz', label: t('files.archive.format_targz')},
+  ]
+}
 
 /**
  * Pack the selected entries into one archive, on the node.
@@ -68,7 +71,7 @@ export function ArchiveDialog({
   const submit = () => {
     const target = destination.trim()
     if (target === '') {
-      setError('The archive needs a name.')
+      setError(t('files.archive.empty_error'))
       return
     }
     const body = new FormData()
@@ -95,16 +98,20 @@ export function ArchiveDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title={paths.length === 1 ? 'Compress' : `Compress ${paths.length} entries`}
-      description="The node builds the archive; nothing is uploaded or downloaded to do it."
+      title={
+        paths.length === 1
+          ? t('files.archive.title_one')
+          : t('files.archive.title_many', {count: paths.length})
+      }
+      description={t('files.archive.description')}
       size="sm"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} block>
-            Cancel
+            {t('files.archive.cancel')}
           </Button>
           <Button onClick={submit} loading={processing} block>
-            Compress
+            {t('files.archive.compress')}
           </Button>
         </>
       }
@@ -117,9 +124,9 @@ export function ArchiveDialog({
         }}
       >
         <Select
-          label="Format"
+          label={t('files.archive.format_label')}
           value={format}
-          options={FORMATS}
+          options={getFormats()}
           onChange={(event) => {
             const next = event.target.value
             setFormat(next)
@@ -127,7 +134,7 @@ export function ArchiveDialog({
           }}
         />
         <Input
-          label="Archive path"
+          label={t('files.archive.path_label')}
           name="destination"
           value={destination}
           onChange={(event) => setDestination(event.target.value)}
@@ -135,12 +142,12 @@ export function ArchiveDialog({
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
-          hint="Relative to the top of this tree."
+          hint={t('files.archive.path_hint')}
         />
         <p className="text-sm text-ink-600 dark:text-ink-400">
           {paths.length === 1
             ? paths[0]
-            : `${paths.length} entries from this folder, packed as they are named here.`}
+            : t('files.archive.summary_many', {count: paths.length})}
         </p>
       </form>
     </Modal>

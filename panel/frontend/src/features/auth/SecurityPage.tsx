@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {PageHeader} from '@/shell'
 
 import type {AccountProfile, SessionView, TwoFactorEnrolment} from './authTypes'
@@ -41,11 +42,11 @@ export default function SecurityPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Security" />
+      <Head title={t('auth.security.title')} />
       <SettingsTabs />
       <PageHeader
-        title="Security"
-        description={`Everything that decides who can get into ${profile.email}.`}
+        title={t('auth.security.title')}
+        description={t('auth.security.description', {email: profile.email})}
       />
 
       <TotpEnrolment

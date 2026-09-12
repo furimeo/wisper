@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Input, Modal, Textarea, useFormFields} from '@/shell'
 
 /**
@@ -29,15 +30,15 @@ export function CreatePlanDialog({open, onClose}: {open: boolean; onClose: () =>
     <Modal
       open={open}
       onClose={onClose}
-      title="New plan"
-      description="Every limit starts at zero, so set them before anybody is moved onto it."
+      title={t('org.createPlan.title')}
+      description={t('org.createPlan.desc')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.processing}>
-            Cancel
+            {t('org.createPlan.cancel')}
           </Button>
           <Button loading={form.processing} onClick={create}>
-            Create plan
+            {t('org.createPlan.submit')}
           </Button>
         </>
       }
@@ -51,7 +52,7 @@ export function CreatePlanDialog({open, onClose}: {open: boolean; onClose: () =>
       >
         <Input
           {...form.bind('code')}
-          label="Code"
+          label={t('org.createPlan.code')}
           required
           autoFocus
           maxLength={40}
@@ -60,24 +61,24 @@ export function CreatePlanDialog({open, onClose}: {open: boolean; onClose: () =>
           spellCheck={false}
           className="font-mono"
           placeholder="pro"
-          hint="Short, stable, and what appears in audit lines. It is not shown to customers as a title."
+          hint={t('org.createPlan.codeHint')}
         />
 
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('org.createPlan.name')}
           required
           maxLength={120}
           autoComplete="off"
           placeholder="Pro"
-          hint="What the customer sees on their organization screen."
+          hint={t('org.createPlan.nameHint')}
         />
 
         <Textarea
           {...form.bind('description')}
-          label="Description"
+          label={t('org.createPlan.description')}
           maxLength={500}
-          hint="Optional. One line about who this tier is for."
+          hint={t('org.createPlan.descHint')}
         />
 
         <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />

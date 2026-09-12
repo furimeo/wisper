@@ -1,3 +1,4 @@
+import {useI18n} from '@/i18n'
 import {Badge} from '@/shell'
 
 import type {DomainView} from './domainTypes'
@@ -14,6 +15,8 @@ import {verificationLabel, verificationTone, wantsCertificate} from './domainVoc
  * edge cannot serve without one.
  */
 export function DomainStateBadge({domain}: {domain: DomainView}) {
+  const {t} = useI18n()
+
   if (!domain.verified) {
     return (
       <Badge
@@ -29,7 +32,7 @@ export function DomainStateBadge({domain}: {domain: DomainView}) {
   if (!wantsCertificate(domain)) {
     return (
       <Badge tone="neutral" dot>
-        HTTP only
+        {t('domain.badge.httpOnly')}
       </Badge>
     )
   }
@@ -38,7 +41,7 @@ export function DomainStateBadge({domain}: {domain: DomainView}) {
   if (certificate !== null && (certificate.state === 'FAILED' || certificate.renewalFailureCount > 0)) {
     return (
       <Badge tone="failed" dot>
-        Certificate failing
+        {t('domain.badge.certFailing')}
       </Badge>
     )
   }
@@ -46,14 +49,14 @@ export function DomainStateBadge({domain}: {domain: DomainView}) {
   if (domain.serving) {
     return (
       <Badge tone="running" dot>
-        Live
+        {t('domain.badge.live')}
       </Badge>
     )
   }
 
   return (
     <Badge tone="accent" dot pulse>
-      Waiting for the node
+      {t('domain.badge.waitingNode')}
     </Badge>
   )
 }

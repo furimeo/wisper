@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Badge, ByteSize, Card, CardFact, CardFacts, CopyButton, RelativeTime} from '@/shell'
 
 import {formatCores} from '@/features/org/quotaVocabulary'
@@ -5,42 +6,26 @@ import {formatCores} from '@/features/org/quotaVocabulary'
 import type {ServiceView} from './serviceTypes'
 import {isolationLabel, kindLabel, presetLabel, restartPolicyLabel} from './serviceVocabulary'
 
-/**
- * What the service is made of, read-only.
- *
- * Two cards in one file because they answer one question - "what did I configure here?" -
- * and a customer opening the overview reads them as one block. Splitting them would
- * produce two files that are always imported together and always changed together.
- *
- * The branch on kind is not cosmetic. `ServiceShape` refuses an image, a port, a command
- * and a health check on a static site, and refuses nothing about a build on an app, so
- * the two kinds genuinely have different facts. Printing "Image: none" against a site
- * would be a row that answers a question the site cannot be asked.
- *
- * Everything here is editable on Settings. Nothing here is editable here: the overview is
- * the screen people open forty times a day, and an input on it is an input that gets
- * changed by a thumb aiming for the tab strip.
- */
 export function ServiceFacts({service}: {service: ServiceView}) {
   return (
     <>
       <Card
-        title={service.site ? 'What it publishes' : 'What it runs'}
+        title={service.site ? t('service.facts.what_it_publishes') : t('service.facts.what_it_runs')}
         action={<Badge tone="accent">{kindLabel(service.kind)}</Badge>}
       >
         <CardFacts>
           {service.app ? (
             <>
-              <CardFact label="Image">
+              <CardFact label={t('service.facts.image')}>
                 {service.image ? (
                   <code className="font-mono text-xs break-all">{service.image}</code>
                 ) : (
-                  'Not set'
+                  t('service.facts.not_set')
                 )}
               </CardFact>
 
               {service.imageDigest ? (
-                <CardFact label="Digest the node pulled">
+                <CardFact label={t('service.facts.digest_pulled')}>
                   <span className="flex items-center gap-2">
                     <code className="font-mono text-xs break-all">
                       {shorten(service.imageDigest)}
@@ -48,111 +33,117 @@ export function ServiceFacts({service}: {service: ServiceView}) {
                     <CopyButton
                       value={service.imageDigest}
                       size="sm"
-                      describedAs="Copy the image digest"
+                      describedAs={t('service.facts.copy_digest')}
                     />
                   </span>
                 </CardFact>
               ) : null}
 
-              <CardFact label="Command">
+              <CardFact label={t('service.facts.command')}>
                 {service.command ? (
                   <code className="font-mono text-xs break-all">{service.command}</code>
                 ) : (
-                  "The image's own CMD"
+                  t('service.facts.image_cmd')
                 )}
               </CardFact>
 
               {service.entrypoint ? (
-                <CardFact label="Entrypoint">
+                <CardFact label={t('service.facts.entrypoint')}>
                   <code className="font-mono text-xs break-all">{service.entrypoint}</code>
                 </CardFact>
               ) : null}
 
-              <CardFact label="Working directory">
+              <CardFact label={t('service.facts.working_dir')}>
                 {service.workingDir ? (
                   <code className="font-mono text-xs break-all">{service.workingDir}</code>
                 ) : (
-                  "The image's own"
+                  t('service.facts.image_working_dir')
                 )}
               </CardFact>
 
-              <CardFact label="Port">
-                {service.containerPort ?? 'None - nothing can route to it yet'}
+              <CardFact label={t('service.facts.port')}>
+                {service.containerPort ?? t('service.facts.port_none')}
               </CardFact>
 
-              <CardFact label="Health check">
+              <CardFact label={t('service.facts.health_check')}>
                 {service.healthCheckPath
-                  ? `${service.healthCheckPath} every ${service.healthCheckIntervalSeconds}s`
-                  : 'None'}
+                  ? t('service.facts.health_check_desc', {
+                      path: service.healthCheckPath,
+                      interval: service.healthCheckIntervalSeconds,
+                    })
+                  : t('service.facts.none')}
               </CardFact>
 
-              <CardFact label="Restart">{restartPolicyLabel(service.restartPolicy)}</CardFact>
+              <CardFact label={t('service.facts.restart')}>{restartPolicyLabel(service.restartPolicy)}</CardFact>
             </>
           ) : (
             <>
-              <CardFact label="Build">
-                {service.buildPreset ? presetLabel(service.buildPreset) : 'Not set'}
+              <CardFact label={t('service.facts.build')}>
+                {service.buildPreset ? presetLabel(service.buildPreset) : t('service.facts.not_set')}
               </CardFact>
 
-              <CardFact label="Build command">
+              <CardFact label={t('service.facts.build_command')}>
                 {service.buildCommand ? (
                   <code className="font-mono text-xs break-all">{service.buildCommand}</code>
                 ) : (
-                  "The preset's own"
+                  t('service.facts.preset_own')
                 )}
               </CardFact>
 
-              <CardFact label="Output directory">
+              <CardFact label={t('service.facts.output_dir')}>
                 <code className="font-mono text-xs break-all">
                   {service.buildOutputDir || '.'}
                 </code>
               </CardFact>
 
-              <CardFact label="Releases kept">
-                {service.keepReleases} - a rollback is a symlink swap, not a rebuild
+              <CardFact label={t('service.facts.releases_kept')}>
+                {t('service.facts.releases_kept_hint', {count: service.keepReleases})}
               </CardFact>
             </>
           )}
 
-          <CardFact label="Repository">
+          <CardFact label={t('service.facts.repository')}>
             {service.repositoryUrl ? (
               <span className="flex flex-col gap-0.5">
                 <code className="font-mono text-xs break-all">{service.repositoryUrl}</code>
                 <span className="text-xs text-ink-500 dark:text-ink-400">
-                  {service.repositoryBranch || 'default branch'}
-                  {service.hasRepositoryCredential ? ' · deploy key stored' : ''}
-                  {service.autoDeploy ? ' · deploys on push' : ' · deploys when you ask'}
+                  {service.repositoryBranch || t('service.facts.default_branch')}
+                  {service.hasRepositoryCredential ? t('service.facts.deploy_key_stored') : ''}
+                  {service.autoDeploy ? t('service.facts.deploys_on_push') : t('service.facts.deploys_when_asked')}
                 </span>
               </span>
             ) : (
-              'None. Deploy by uploading an archive, or add one on Settings.'
+              t('service.facts.no_repository')
             )}
           </CardFact>
 
-          <CardFact label="Created">
+          <CardFact label={t('service.facts.created')}>
             <RelativeTime at={service.createdAt} />
           </CardFact>
         </CardFacts>
       </Card>
 
       <Card
-        title="Limits and isolation"
-        description="Enforced on the node by cgroups, and counted against your plan."
+        title={t('service.facts.limits_and_isolation')}
+        description={t('service.facts.limits_description')}
       >
         <CardFacts>
-          <CardFact label="CPU">
-            {service.cpuMillicores} millicores · {formatCores(service.cpuMillicores)}
+          <CardFact label={t('service.facts.cpu')}>
+            {t('service.facts.cpu_millicores', {
+              millicores: service.cpuMillicores,
+              cores: formatCores(service.cpuMillicores),
+            })}
           </CardFact>
-          <CardFact label="Memory">
+          <CardFact label={t('service.facts.memory')}>
             <ByteSize bytes={service.memoryBytes} />
           </CardFact>
-          <CardFact label="Disk (the container's own layer)">
+          <CardFact label={t('service.facts.disk')}>
             <ByteSize bytes={service.diskBytes} />
           </CardFact>
-          <CardFact label="Processes">{service.pidsLimit}</CardFact>
-          <CardFact label="Isolation">{isolationLabel(service.runtimeIsolation)}</CardFact>
-          <CardFact label="Placement tags">
-            {service.requiredTags.length > 0 ? service.requiredTags.join(', ') : 'Any node'}
+          <CardFact label={t('service.facts.processes')}>{service.pidsLimit}</CardFact>
+          <CardFact label={t('service.facts.isolation')}>{isolationLabel(service.runtimeIsolation)}</CardFact>
+          <CardFact label={t('service.facts.placement_tags')}>
+            {service.requiredTags.length > 0 ? service.requiredTags.join(', ') : t('service.facts.any_node')}
           </CardFact>
         </CardFacts>
       </Card>

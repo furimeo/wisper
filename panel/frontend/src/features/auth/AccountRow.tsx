@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {
   Badge,
   Button,
@@ -42,9 +43,9 @@ export function AccountRow({account, lastOperator}: AccountRowProps) {
       return
     }
     const confirmed = await askConfirmation({
-      title: `Suspend ${account.email}?`,
-      body: 'They cannot sign in, and every session they have is ended on its next request. Their projects keep running.',
-      confirmLabel: 'Suspend',
+      title: t('auth.admin.suspendConfirmTitle', {email: account.email}),
+      body: t('auth.admin.suspendConfirmBody'),
+      confirmLabel: t('auth.admin.suspendConfirmBtn'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -56,14 +57,14 @@ export function AccountRow({account, lastOperator}: AccountRowProps) {
     <li className="rounded-lg border border-ink-200 p-3 dark:border-ink-800">
       <div className="flex flex-wrap items-center gap-2">
         <span className="mr-auto text-sm font-medium break-all">{account.displayName}</span>
-        {account.platformRole === 'ADMIN' ? <Badge tone="accent">Operator</Badge> : null}
+        {account.platformRole === 'ADMIN' ? <Badge tone="accent">{t('auth.admin.operatorBadge')}</Badge> : null}
         {suspended ? (
           <Badge tone="failed" dot>
-            Suspended
+            {t('auth.admin.suspendedBadge', {count: ''}).replace('{count}', '').trim() || t('auth.status.suspended')}
           </Badge>
         ) : (
           <Badge tone="running" dot>
-            Active
+            {t('auth.admin.activeBadge')}
           </Badge>
         )}
       </div>
@@ -73,26 +74,28 @@ export function AccountRow({account, lastOperator}: AccountRowProps) {
       </p>
 
       <CardFacts>
-        <CardFact label="Two-factor">{account.twoFactorEnabled ? 'On' : 'Off'}</CardFact>
-        <CardFact label="Last signed in">
-          <RelativeTime at={account.lastLoginAt} fallback="Never" />
+        <CardFact label={t('auth.admin.twoFactor')}>
+          {account.twoFactorEnabled ? t('auth.admin.twoFactorOn') : t('auth.admin.twoFactorOff')}
+        </CardFact>
+        <CardFact label={t('auth.admin.lastSignIn')}>
+          <RelativeTime at={account.lastLoginAt} fallback={t('auth.admin.never')} />
           {account.lastLoginAddress ? (
-            <span className="text-ink-500"> from {account.lastLoginAddress}</span>
+            <span className="text-ink-500">{t('auth.tokens.fromIp', {ip: account.lastLoginAddress})}</span>
           ) : null}
         </CardFact>
-        <CardFact label="Password changed">
+        <CardFact label={t('auth.admin.passwordChanged')}>
           <RelativeTime
             at={account.passwordChangedAt}
-            fallback="Never - still the issued one"
+            fallback={t('auth.admin.passwordNever')}
           />
         </CardFact>
-        <CardFact label="Created">
+        <CardFact label={t('auth.admin.created')}>
           <RelativeTime at={account.createdAt} />
         </CardFact>
         {account.lockedUntil ? (
-          <CardFact label="Locked until">
+          <CardFact label={t('auth.admin.lockedUntil')}>
             <span className="text-failed">
-              <RelativeTime at={account.lockedUntil} /> - too many wrong passwords
+              <RelativeTime at={account.lockedUntil} />{t('auth.admin.tooManyWrong')}
             </span>
           </CardFact>
         ) : null}
@@ -105,13 +108,12 @@ export function AccountRow({account, lastOperator}: AccountRowProps) {
         disabled={!suspended && lastOperator}
         onClick={() => void change()}
       >
-        {suspended ? 'Let them sign in again' : 'Suspend and sign out'}
+        {suspended ? t('auth.admin.reactivate') : t('auth.admin.suspend')}
       </Button>
 
       {!suspended && lastOperator ? (
         <p className="mt-2 text-xs leading-relaxed text-ink-500">
-          The last operator who can still sign in. Promote somebody else first, or nobody
-          will be able to administer the platform.
+          {t('auth.admin.lastOperatorNotice')}
         </p>
       ) : null}
     </li>

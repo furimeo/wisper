@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   ByteSize,
@@ -56,15 +57,12 @@ export function SnapshotList({
 
   async function restore(snapshot: RestorePointView) {
     const confirmed = await askConfirmation({
-      title: `Restore ${snapshot.targetLabel} from this snapshot?`,
-      body:
-        `Everything in ${snapshot.targetLabel} is replaced by what was there when this snapshot ` +
-        'was taken. Anything written since is gone from the live copy - a snapshot of the current ' +
-        'data is taken first, so it can be put back, but that is another restore and more minutes.',
-      confirmLabel: 'Restore it',
+      title: t('backup.snapshotList.restoreConfirm.title', {target: snapshot.targetLabel}),
+      body: t('backup.snapshotList.restoreConfirm.body', {target: snapshot.targetLabel}),
+      confirmLabel: t('backup.snapshotList.restoreConfirm.confirm'),
       tone: 'danger',
       requireText: snapshot.targetLabel,
-      requireTextLabel: `Type ${snapshot.targetLabel} to confirm`,
+      requireTextLabel: t('backup.snapshotList.restoreConfirm.requireTextLabel', {target: snapshot.targetLabel}),
     })
     if (confirmed) {
       post(snapshot, 'restore', {confirmed: 'true'})
@@ -73,11 +71,9 @@ export function SnapshotList({
 
   async function remove(snapshot: RestorePointView) {
     const confirmed = await askConfirmation({
-      title: 'Delete this snapshot?',
-      body:
-        'It comes off the list now and the archive itself goes when the node next prunes. If it ' +
-        'is the only copy of something, there will be no way back to it.',
-      confirmLabel: 'Delete it',
+      title: t('backup.snapshotList.deleteConfirm.title'),
+      body: t('backup.snapshotList.deleteConfirm.body'),
+      confirmLabel: t('backup.snapshotList.deleteConfirm.confirm'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -90,13 +86,12 @@ export function SnapshotList({
       <DataList
         items={snapshots}
         keyOf={(snapshot) => snapshot.id}
-        label="snapshots"
+        label={t('backup.snapshotList.label')}
         empty={
           <EmptyState
             icon={<Icon name="backup" />}
-            title="No snapshots yet"
-            description="A schedule produces these, and so does pressing Run now on one. Until
-              there is at least one, there is nothing to restore from."
+            title={t('backup.snapshotList.empty.title')}
+            description={t('backup.snapshotList.empty.desc')}
           />
         }
         actions={
@@ -105,20 +100,20 @@ export function SnapshotList({
                 snapshot.restorable
                   ? [
                       {
-                        label: pending === `${snapshot.id}:verify` ? 'Starting…' : 'Verify it works',
+                        label: pending === `${snapshot.id}:verify` ? t('backup.snapshotList.starting') : t('backup.snapshotList.verify'),
                         onSelect: () => post(snapshot, 'verify'),
                       },
-                      {label: 'Restore in place', tone: 'danger', onSelect: () => void restore(snapshot)},
-                      {label: 'Delete', tone: 'danger', onSelect: () => void remove(snapshot)},
+                      {label: t('backup.snapshotList.restoreInPlace'), tone: 'danger', onSelect: () => void restore(snapshot)},
+                      {label: t('backup.snapshotList.delete'), tone: 'danger', onSelect: () => void remove(snapshot)},
                     ]
-                  : [{label: 'Delete', tone: 'danger', onSelect: () => void remove(snapshot)}]
+                  : [{label: t('backup.snapshotList.delete'), tone: 'danger', onSelect: () => void remove(snapshot)}]
             : undefined
         }
         primary={(snapshot) => (
           <span className="flex items-center gap-2">
             <span className="truncate">{snapshot.targetLabel}</span>
             <Badge>{targetKindLabel(snapshot.targetKind)}</Badge>
-            {snapshot.proven ? <Badge tone="running">verified</Badge> : null}
+            {snapshot.proven ? <Badge tone="running">{t('backup.snapshotList.verified')}</Badge> : null}
           </span>
         )}
         secondary={(snapshot) => <span className="line-clamp-2">{snapshotSentence(snapshot)}</span>}
@@ -139,19 +134,19 @@ export function SnapshotList({
         columns={[
           {
             key: 'target',
-            header: 'Snapshot of',
+            header: t('backup.snapshotList.col.target'),
             cell: (snapshot) => (
               <div className="flex flex-col gap-0.5">
                 <span>{snapshot.targetLabel}</span>
                 <span className="text-xs text-ink-500 dark:text-ink-400">
-                  {targetKindLabel(snapshot.targetKind)} · {snapshot.backupName ?? 'no policy'}
+                  {targetKindLabel(snapshot.targetKind)} · {snapshot.backupName ?? t('backup.snapshotList.noPolicy')}
                 </span>
               </div>
             ),
           },
           {
             key: 'taken',
-            header: 'Taken',
+            header: t('backup.snapshotList.col.taken'),
             cell: (snapshot) => (
               <span className="flex flex-col gap-0.5">
                 <RelativeTime at={snapshot.startedAt} className="text-xs" />
@@ -163,24 +158,24 @@ export function SnapshotList({
           },
           {
             key: 'size',
-            header: 'Size',
+            header: t('backup.snapshotList.col.size'),
             align: 'right',
-            cell: (snapshot) => <ByteSize bytes={snapshot.sizeBytes} fallback="unknown" />,
+            cell: (snapshot) => <ByteSize bytes={snapshot.sizeBytes} fallback="-" />,
           },
-          {key: 'destination', header: 'Destination', cell: (snapshot) => snapshot.destinationName},
+          {key: 'destination', header: t('backup.snapshotList.col.destination'), cell: (snapshot) => snapshot.destinationName},
           {
             key: 'verified',
-            header: 'Verified',
+            header: t('backup.snapshotList.col.verified'),
             cell: (snapshot) =>
               snapshot.proven ? (
                 <RelativeTime at={snapshot.lastVerifiedAt} className="text-xs" />
               ) : (
-                <span className="text-xs text-degraded">never</span>
+                <span className="text-xs text-degraded">{t('backup.snapshotList.never')}</span>
               ),
           },
           {
             key: 'expires',
-            header: 'Expires',
+            header: t('backup.snapshotList.col.expires'),
             align: 'right',
             cell: (snapshot) => (
               <RelativeTime at={snapshot.expiresAt} fallback="-" className="text-xs" />
@@ -188,7 +183,7 @@ export function SnapshotList({
           },
           {
             key: 'state',
-            header: 'State',
+            header: t('backup.snapshotList.col.state'),
             align: 'right',
             cell: (snapshot) => (
               <Badge tone={pointStateTone(snapshot.state)} dot>

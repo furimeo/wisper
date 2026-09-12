@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Card, askConfirmation, mayWrite} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -40,12 +41,9 @@ export function DatabaseActions({
 
   async function rotate() {
     const confirmed = await askConfirmation({
-      title: `Change the password for ${database.name}?`,
-      body:
-        'A new password is set immediately and the old one stops working. Anything connected ' +
-        'with it - a running service, a cron job, your laptop - fails until it is updated. The ' +
-        'new password is shown once, on the page you come back to.',
-      confirmLabel: 'Change it',
+      title: t('database.actions.rotateConfirm.title', {name: database.name}),
+      body: t('database.actions.rotateConfirm.body'),
+      confirmLabel: t('database.actions.rotateConfirm.confirm'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -55,14 +53,12 @@ export function DatabaseActions({
 
   async function drop() {
     const confirmed = await askConfirmation({
-      title: `Drop ${database.name}?`,
-      body:
-        'This deletes the database, its login and everything in it. The panel cannot get it ' +
-        'back; a backup can, if you have one.',
-      confirmLabel: 'Drop it',
+      title: t('database.actions.dropConfirm.title', {name: database.name}),
+      body: t('database.actions.dropConfirm.body'),
+      confirmLabel: t('database.actions.dropConfirm.confirm'),
       tone: 'danger',
       requireText: database.name,
-      requireTextLabel: `Type ${database.name} to confirm`,
+      requireTextLabel: t('database.actions.dropConfirm.requireTextLabel', {name: database.name}),
     })
     if (confirmed) {
       post('delete', {confirmation: database.name})
@@ -71,11 +67,9 @@ export function DatabaseActions({
 
   if (!writable) {
     return (
-      <Card title="Connecting to it">
+      <Card title={t('database.actions.title')}>
         <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-          Your role in {database.organizationName} is read-only, so the connection details and
-          the password are not yours to reveal. Ask an owner or an administrator of the
-          organization.
+          {t('database.actions.readOnlyNotice', {org: database.organizationName})}
         </p>
       </Card>
     )
@@ -83,15 +77,15 @@ export function DatabaseActions({
 
   const blocked = !database.actionable
   const blockedBecause = !database.nodeReachable
-    ? `The panel has no control stream to ${database.nodeName} right now. The database keeps serving; these three need the node to answer.`
+    ? t('database.actions.blockedStream', {node: database.nodeName})
     : database.inFlight
-      ? 'The platform is still working on this database. These become available when it settles.'
-      : 'This database is not in a state these can act on.'
+      ? t('database.actions.blockedInFlight')
+      : t('database.actions.blockedState')
 
   return (
     <Card
-      title="Connecting to it"
-      description="Credentials are shown once and the panel records who asked."
+      title={t('database.actions.title')}
+      description={t('database.actions.description')}
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <Button
@@ -101,7 +95,7 @@ export function DatabaseActions({
           loading={pending === 'reveal'}
           onClick={() => post('reveal')}
         >
-          Show connection details
+          {t('database.actions.showDetails')}
         </Button>
 
         <Button
@@ -112,7 +106,7 @@ export function DatabaseActions({
           loading={pending === 'password'}
           onClick={() => void rotate()}
         >
-          Change the password
+          {t('database.actions.changePassword')}
         </Button>
 
         <Button
@@ -123,7 +117,7 @@ export function DatabaseActions({
           loading={pending === 'delete'}
           onClick={() => void drop()}
         >
-          Drop this database
+          {t('database.actions.drop')}
         </Button>
       </div>
 

@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Input, Modal, Select, useFormFields} from '@/shell'
 
 import {deriveSlug, slugRule} from '@/features/project/deriveSlug'
@@ -47,15 +48,15 @@ export function CreateOrganizationDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title="New organization"
-      description="A tenant of its own: separate members, separate plan, separate limits."
+      title={t('org.create.title')}
+      description={t('org.create.description')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.processing}>
-            Cancel
+            {t('org.create.cancel')}
           </Button>
           <Button loading={form.processing} onClick={create}>
-            Create organization
+            {t('org.create.submit')}
           </Button>
         </>
       }
@@ -69,7 +70,7 @@ export function CreateOrganizationDialog({
       >
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('org.create.name')}
           required
           autoFocus
           maxLength={120}
@@ -79,7 +80,7 @@ export function CreateOrganizationDialog({
 
         <Input
           {...form.bind('slug')}
-          label="Address"
+          label={t('org.create.slug')}
           required
           maxLength={63}
           autoComplete="off"
@@ -94,7 +95,7 @@ export function CreateOrganizationDialog({
                 onClick={() => form.set('slug', derived)}
                 className="rounded px-1 text-xs font-medium text-accent-600 dark:text-accent-400"
               >
-                Use {derived}
+                {t('org.create.useSlug', {slug: derived})}
               </button>
             ) : undefined
           }
@@ -102,15 +103,15 @@ export function CreateOrganizationDialog({
 
         <Select
           {...form.bind('planId')}
-          label="Plan"
+          label={t('org.create.plan')}
           options={[
-            {value: '', label: 'The platform default'},
+            {value: '', label: t('org.create.platformDefault')},
             ...plans.map((plan) => ({value: plan.id, label: planOption(plan)})),
           ]}
           hint={
             plans.length === 0
-              ? 'No plan is selectable right now. The default one is used, and an operator can move you later.'
-              : 'An operator can move the organization to another plan afterwards.'
+              ? t('org.create.noSelectablePlansHint')
+              : t('org.create.plansHint')
           }
         />
 
@@ -122,5 +123,5 @@ export function CreateOrganizationDialog({
 
 /** "Starter (default)" - the marker matters, because it is what an empty choice means. */
 function planOption(plan: Plan): string {
-  return plan.isDefault ? `${plan.name} (default)` : plan.name
+  return plan.isDefault ? t('org.create.planWithDefault', {name: plan.name}) : plan.name
 }

@@ -1,4 +1,5 @@
 import type {BadgeTone} from '@/shell'
+import {t} from '@/i18n'
 
 import type {
   DoctorOutcome,
@@ -20,15 +21,6 @@ import type {
  * is not a sentence; "everything that could move has moved" is.
  */
 
-const LIFECYCLES: Record<NodeLifecycle, string> = {
-  CREATED: 'Awaiting enrolment',
-  ENROLLED: 'Enrolled',
-  DRAINING: 'Draining',
-  DRAINED: 'Drained',
-  SUSPENDED: 'Suspended',
-  RETIRED: 'Retired',
-}
-
 const LIFECYCLE_TONES: Record<NodeLifecycle, BadgeTone> = {
   CREATED: 'neutral',
   ENROLLED: 'running',
@@ -38,34 +30,10 @@ const LIFECYCLE_TONES: Record<NodeLifecycle, BadgeTone> = {
   RETIRED: 'neutral',
 }
 
-const LIFECYCLE_SENTENCES: Record<NodeLifecycle, string> = {
-  CREATED:
-    'The record exists and no machine has enrolled against it yet. Issue a bootstrap token and run the install command on the machine.',
-  ENROLLED: 'Enrolled and under management.',
-  DRAINING:
-    'Moving everything it can to other nodes. Anything holding a volume stays put and is listed for you to decide about.',
-  DRAINED: 'Everything that could move has moved. What is left is pinned by a volume.',
-  SUSPENDED: 'The panel is not publishing to this machine. Whatever is running keeps running.',
-  RETIRED: 'Out of the fleet. Nothing is scheduled here.',
-}
-
-const CONNECTION_STATES: Record<NodeConnectionState, string> = {
-  CONNECTED: 'Connected',
-  DEGRADED: 'Degraded',
-  DISCONNECTED: 'Offline',
-}
-
 const CONNECTION_TONES: Record<NodeConnectionState, BadgeTone> = {
   CONNECTED: 'running',
   DEGRADED: 'degraded',
   DISCONNECTED: 'neutral',
-}
-
-const TOKEN_STATES: Record<EnrolmentTokenState, string> = {
-  LIVE: 'Live',
-  USED: 'Used',
-  REVOKED: 'Revoked',
-  EXPIRED: 'Expired',
 }
 
 const TOKEN_TONES: Record<EnrolmentTokenState, BadgeTone> = {
@@ -75,13 +43,6 @@ const TOKEN_TONES: Record<EnrolmentTokenState, BadgeTone> = {
   EXPIRED: 'neutral',
 }
 
-const OUTCOMES: Record<DoctorOutcome, string> = {
-  PASS: 'Pass',
-  WARN: 'Warning',
-  FAIL: 'Fail',
-  UNSPECIFIED: 'Not reported',
-}
-
 const OUTCOME_TONES: Record<DoctorOutcome, BadgeTone> = {
   PASS: 'running',
   WARN: 'degraded',
@@ -89,14 +50,21 @@ const OUTCOME_TONES: Record<DoctorOutcome, BadgeTone> = {
   UNSPECIFIED: 'neutral',
 }
 
-const SEVERITIES: Record<DoctorSeverity, string> = {
-  REQUIRED: 'Required',
-  ADVISORY: 'Advisory',
-  UNSPECIFIED: 'Unclassified',
-}
-
 export function lifecycleLabel(lifecycle: NodeLifecycle): string {
-  return LIFECYCLES[lifecycle]
+  switch (lifecycle) {
+    case 'CREATED':
+      return t('node.lifecycle.created')
+    case 'ENROLLED':
+      return t('node.lifecycle.enrolled')
+    case 'DRAINING':
+      return t('node.lifecycle.draining')
+    case 'DRAINED':
+      return t('node.lifecycle.drained')
+    case 'SUSPENDED':
+      return t('node.lifecycle.suspended')
+    case 'RETIRED':
+      return t('node.lifecycle.retired')
+  }
 }
 
 export function lifecycleTone(lifecycle: NodeLifecycle): BadgeTone {
@@ -104,11 +72,31 @@ export function lifecycleTone(lifecycle: NodeLifecycle): BadgeTone {
 }
 
 export function lifecycleSentence(lifecycle: NodeLifecycle): string {
-  return LIFECYCLE_SENTENCES[lifecycle]
+  switch (lifecycle) {
+    case 'CREATED':
+      return t('node.lifecycle.sentence.created')
+    case 'ENROLLED':
+      return t('node.lifecycle.sentence.enrolled')
+    case 'DRAINING':
+      return t('node.lifecycle.sentence.draining')
+    case 'DRAINED':
+      return t('node.lifecycle.sentence.drained')
+    case 'SUSPENDED':
+      return t('node.lifecycle.sentence.suspended')
+    case 'RETIRED':
+      return t('node.lifecycle.sentence.retired')
+  }
 }
 
 export function connectionLabel(state: NodeConnectionState): string {
-  return CONNECTION_STATES[state]
+  switch (state) {
+    case 'CONNECTED':
+      return t('node.connection.connected')
+    case 'DEGRADED':
+      return t('node.connection.degraded')
+    case 'DISCONNECTED':
+      return t('node.connection.disconnected')
+  }
 }
 
 export function connectionTone(state: NodeConnectionState): BadgeTone {
@@ -116,7 +104,16 @@ export function connectionTone(state: NodeConnectionState): BadgeTone {
 }
 
 export function tokenStateLabel(state: EnrolmentTokenState): string {
-  return TOKEN_STATES[state]
+  switch (state) {
+    case 'LIVE':
+      return t('node.tokenState.live')
+    case 'USED':
+      return t('node.tokenState.used')
+    case 'REVOKED':
+      return t('node.tokenState.revoked')
+    case 'EXPIRED':
+      return t('node.tokenState.expired')
+  }
 }
 
 export function tokenStateTone(state: EnrolmentTokenState): BadgeTone {
@@ -124,7 +121,16 @@ export function tokenStateTone(state: EnrolmentTokenState): BadgeTone {
 }
 
 export function outcomeLabel(outcome: DoctorOutcome): string {
-  return OUTCOMES[outcome]
+  switch (outcome) {
+    case 'PASS':
+      return t('node.doctor.outcome.pass')
+    case 'WARN':
+      return t('node.doctor.outcome.warn')
+    case 'FAIL':
+      return t('node.doctor.outcome.fail')
+    case 'UNSPECIFIED':
+      return t('node.doctor.outcome.unspecified')
+  }
 }
 
 export function outcomeTone(outcome: DoctorOutcome): BadgeTone {
@@ -132,7 +138,14 @@ export function outcomeTone(outcome: DoctorOutcome): BadgeTone {
 }
 
 export function severityLabel(severity: DoctorSeverity): string {
-  return SEVERITIES[severity]
+  switch (severity) {
+    case 'REQUIRED':
+      return t('node.doctor.severity.required')
+    case 'ADVISORY':
+      return t('node.doctor.severity.advisory')
+    case 'UNSPECIFIED':
+      return t('node.doctor.severity.unspecified')
+  }
 }
 
 /**
@@ -147,27 +160,33 @@ export function nodeSentence(node: NodeSummary): string {
     return node.suspensionExplanation
   }
   if (node.lifecycle === 'CREATED') {
-    return LIFECYCLE_SENTENCES.CREATED
+    return lifecycleSentence('CREATED')
   }
   if (!node.connected) {
-    return 'No control stream. Its containers keep running and it reconnects on its own; the panel just cannot publish to it in the meantime.'
+    return t('node.sentence.disconnected')
   }
   if (node.dockerHealthy === false) {
-    return 'The node cannot reach Docker. It is retrying and it has deleted nothing - "cannot see it" is not "does not exist".'
+    return t('node.sentence.dockerUnhealthy')
   }
   if (node.reconcileError) {
-    return `The last reconcile failed: ${node.reconcileError}`
+    return t('node.sentence.reconcileFailed', {error: node.reconcileError})
   }
   if (!node.converged) {
-    return `Catching up: generation ${node.appliedGeneration} applied of ${node.desiredGeneration} published. It reconciles every fifteen seconds.`
+    return t('node.sentence.catchingUp', {
+      applied: node.appliedGeneration,
+      desired: node.desiredGeneration,
+    })
   }
   if (node.lifecycle === 'DRAINING') {
-    return LIFECYCLE_SENTENCES.DRAINING
+    return lifecycleSentence('DRAINING')
   }
   if (!node.schedulable) {
-    return 'Running normally, and taking no new placements because you asked it not to.'
+    return t('node.sentence.unschedulable')
   }
-  return `Running ${node.runningWorkloadCount} of ${node.workloadCount} workloads, all at the published generation.`
+  return t('node.sentence.runningWorkloads', {
+    running: node.runningWorkloadCount,
+    total: node.workloadCount,
+  })
 }
 
 /**
@@ -210,6 +229,10 @@ export function clockSkewSentence(millis: number | null): string | null {
     return null
   }
   const seconds = Math.round(magnitude / 1000)
-  const amount = seconds < 120 ? `${seconds} seconds` : `${Math.round(seconds / 60)} minutes`
-  return `This machine's clock is ${amount} ${millis > 0 ? 'ahead of' : 'behind'} the panel's. Certificates and ACME break in ways that point somewhere else entirely; fix time sync on the node.`
+  const amount =
+    seconds < 120
+      ? t('node.clockSkew.seconds', {count: seconds})
+      : t('node.clockSkew.minutes', {count: Math.round(seconds / 60)})
+  const direction = millis > 0 ? t('node.clockSkew.ahead') : t('node.clockSkew.behind')
+  return t('node.clockSkew.sentence', {amount, direction})
 }

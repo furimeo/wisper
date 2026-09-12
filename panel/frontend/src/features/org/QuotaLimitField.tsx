@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Field, Input, Select} from '@/shell'
 
 import type {QuotaResource} from './orgTypes'
@@ -63,7 +64,7 @@ export function QuotaLimitField({
         disabled={disabled}
         error={error}
         onChange={(event) => onValue(digits(event.target.value))}
-        hint="Zero means the tenant may not have any at all."
+        hint={t('org.quota.zeroCountHint')}
       />
     )
   }
@@ -86,7 +87,7 @@ export function QuotaLimitField({
           const typed = Number.parseFloat(event.target.value)
           onValue(Number.isFinite(typed) && typed >= 0 ? String(Math.round(typed * 1000)) : '')
         }}
-        hint={known ? `Stored as ${raw} millicores.` : 'One core is 1000 millicores.'}
+        hint={known ? t('org.quota.storedMillicores', {raw}) : t('org.quota.coresHint')}
       />
     )
   }
@@ -99,7 +100,11 @@ export function QuotaLimitField({
       label={quotaLabel(resource)}
       htmlFor={`${name}-amount`}
       error={error}
-      hint={known ? `Stored as ${raw} bytes - ${quotaFigure(resource, raw)}.` : 'Zero means none at all.'}
+      hint={
+        known
+          ? t('org.quota.storedBytes', {raw, formatted: quotaFigure(resource, raw)})
+          : t('org.quota.zeroBytesHint')
+      }
     >
       <div className="flex items-center gap-2">
         <Input

@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {ButtonLink, Icon, PageHeader} from '@/shell'
 
 import {MetricDashboard} from './MetricDashboard'
@@ -30,18 +31,18 @@ export default function AdminNodeMetricsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Node metrics" />
+      <Head title={t('stats.nodeMetrics.title')} />
 
       <PageHeader
-        title="Node metrics"
-        description="The machine's own totals, not the sum of the workloads it is carrying."
+        title={t('stats.nodeMetrics.title')}
+        description={t('stats.nodeMetrics.description')}
         actions={
           <ButtonLink
             href={`/admin/nodes/${nodeId}`}
             variant="secondary"
             icon={<Icon name="node" />}
           >
-            Back to the node
+            {t('stats.nodeMetrics.back')}
           </ButtonLink>
         }
       />
@@ -53,9 +54,11 @@ export default function AdminNodeMetricsPage() {
       />
 
       <p className="px-1 text-xs text-ink-500 dark:text-ink-400">
-        Node {nodeId}. The window this page opened on ran from{' '}
-        {new Date(span.from).toLocaleString()} to {new Date(span.to).toLocaleString()}; raw
-        samples are kept for two days and hourly and daily buckets for a year.
+        {t('stats.nodeMetrics.footer', {
+          nodeId,
+          from: new Date(span.from).toLocaleString(),
+          to: new Date(span.to).toLocaleString(),
+        })}
       </p>
     </div>
   )

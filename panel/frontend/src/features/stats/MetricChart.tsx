@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {cx} from '@/shell'
 
 /**
@@ -82,7 +83,7 @@ export function MetricChart({
 
       {length === 0 ? (
         <p className="rounded-lg border border-dashed border-ink-300 px-3 py-6 text-center text-sm text-ink-500 dark:border-ink-700 dark:text-ink-400">
-          Nothing was measured in this window.
+          {t('stats.chart.empty')}
         </p>
       ) : (
         <div
@@ -98,7 +99,7 @@ export function MetricChart({
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             role="img"
-            aria-label={`${title}, ${length} points, peak ${format(peak)}`}
+            aria-label={t('stats.chart.aria', {title, count: length, peak: format(peak)})}
             className="h-full w-full overflow-visible rounded-lg bg-ink-100/60 dark:bg-ink-800/40"
           >
             {bands.map((band) => {

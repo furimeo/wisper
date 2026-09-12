@@ -1,20 +1,9 @@
+import {t} from '@/i18n'
 import {Tabs} from '@/shell'
 import type {TabItem} from '@/shell'
 
 import type {ServiceCounts} from './serviceTypes'
 
-/**
- * Every screen one service has, in the order somebody works through them.
- *
- * The strip is the same for an app and for a static site, which is deliberate: a site
- * genuinely has a volumes page and a terminal page, and both explain in a sentence why
- * they are empty for it. Hiding a tab teaches the customer the panel cannot do the thing;
- * showing it with an explanation teaches them why it does not apply here. The server takes
- * the same view - `VolumeController` renders a reason rather than a 404.
- *
- * The paths are the ones `docs/contracts/panel-http.md` gives to `service`, `deploy`,
- * `domain`, `files` and `stats`. Nothing here invents a URL.
- */
 export function ServiceTabs({
   serviceId,
   counts,
@@ -26,32 +15,32 @@ export function ServiceTabs({
   const environment = counts ? counts.envVars + counts.secrets : null
 
   const items: TabItem[] = [
-    {href: `/services/${serviceId}`, label: 'Overview'},
-    {href: `/services/${serviceId}/deployments`, label: 'Deployments'},
+    {href: `/services/${serviceId}`, label: t('service.tabs.overview')},
+    {href: `/services/${serviceId}/deployments`, label: t('service.tabs.deployments')},
     {
       href: `/services/${serviceId}/environment`,
-      label: 'Environment',
+      label: t('service.tabs.environment'),
       badge: badge(environment),
     },
     {
       href: `/services/${serviceId}/volumes`,
-      label: 'Volumes',
+      label: t('service.tabs.volumes'),
       badge: badge(counts?.volumes ?? null),
     },
     {
       href: `/services/${serviceId}/tasks`,
-      label: 'Scheduled',
+      label: t('service.tabs.scheduled'),
       badge: badge(counts?.scheduledTasks ?? null),
     },
-    {href: `/services/${serviceId}/domains`, label: 'Domains'},
-    {href: `/services/${serviceId}/files`, label: 'Files'},
-    {href: `/services/${serviceId}/terminal`, label: 'Terminal'},
-    {href: `/services/${serviceId}/logs`, label: 'Logs'},
-    {href: `/services/${serviceId}/metrics`, label: 'Metrics'},
-    {href: `/services/${serviceId}/settings`, label: 'Settings'},
+    {href: `/services/${serviceId}/domains`, label: t('service.tabs.domains')},
+    {href: `/services/${serviceId}/files`, label: t('service.tabs.files')},
+    {href: `/services/${serviceId}/terminal`, label: t('service.tabs.terminal')},
+    {href: `/services/${serviceId}/logs`, label: t('service.tabs.logs')},
+    {href: `/services/${serviceId}/metrics`, label: t('service.tabs.metrics')},
+    {href: `/services/${serviceId}/settings`, label: t('service.tabs.settings')},
   ]
 
-  return <Tabs label="Service sections" items={items} />
+  return <Tabs label={t('service.tabs.sections_label')} items={items} />
 }
 
 /** A count, or nothing at all. A badge reading "0" is a badge worth less than the space. */

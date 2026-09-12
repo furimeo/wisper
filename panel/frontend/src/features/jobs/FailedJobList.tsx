@@ -1,5 +1,6 @@
 import {Badge, DataList, EmptyState, RelativeTime} from '@/shell'
 import type {SwipeAction} from '@/shell'
+import {t} from '@/i18n'
 
 import {discardJob, retryJob} from './jobActions'
 import type {FailedJob} from './jobTypes'
@@ -18,8 +19,8 @@ export function FailedJobList({jobs}: {jobs: FailedJob[]}) {
   if (jobs.length === 0) {
     return (
       <EmptyState
-        title="Nothing is failing"
-        description="Every scheduled job either succeeded or has not run into trouble yet."
+        title={t('jobs.list.empty.title')}
+        description={t('jobs.list.empty.description')}
       />
     )
   }
@@ -27,15 +28,15 @@ export function FailedJobList({jobs}: {jobs: FailedJob[]}) {
   const actionsFor = (job: FailedJob): SwipeAction[] =>
     job.actionable
       ? [
-          {label: 'Run now', onSelect: () => void retryJob(job)},
-          {label: 'Discard', tone: 'danger', onSelect: () => void discardJob(job)},
+          {label: t('jobs.list.action.runNow'), onSelect: () => void retryJob(job)},
+          {label: t('jobs.list.action.discard'), tone: 'danger', onSelect: () => void discardJob(job)},
         ]
       : []
 
   return (
     <DataList
       items={jobs}
-      label="failing jobs"
+      label={t('jobs.unit')}
       keyOf={(job) => `${job.taskName}:${job.instanceId}`}
       primary={(job) => job.taskName}
       secondary={(job) => (
@@ -46,36 +47,38 @@ export function FailedJobList({jobs}: {jobs: FailedJob[]}) {
       trailing={(job) => <Streak job={job} />}
       actions={actionsFor}
       columns={[
-        {key: 'task', header: 'Task', cell: (job) => job.taskName},
+        {key: 'task', header: t('jobs.list.column.task'), cell: (job) => job.taskName},
         {
           key: 'instance',
-          header: 'Instance',
+          header: t('jobs.list.column.instance'),
           cell: (job) => <span className="break-all font-mono text-xs">{job.instanceId}</span>,
         },
-        {key: 'streak', header: 'Failures', align: 'right', cell: (job) => <Streak job={job} />},
+        {key: 'streak', header: t('jobs.list.column.failures'), align: 'right', cell: (job) => <Streak job={job} />},
         {
           key: 'lastFailure',
-          header: 'Last failure',
+          header: t('jobs.list.column.lastFailure'),
           cell: (job) => <RelativeTime at={job.lastFailure} fallback="unknown" />,
         },
         {
           key: 'history',
-          header: 'History',
+          header: t('jobs.list.column.history'),
           cell: (job) =>
             hasEverSucceeded(job) ? (
               <span>
-                worked <RelativeTime at={job.lastSuccess} />
+                {t('jobs.list.history.worked')} <RelativeTime at={job.lastSuccess} />
               </span>
             ) : (
-              <Badge tone="degraded">never succeeded</Badge>
+              <Badge tone="degraded">{t('jobs.list.history.never')}</Badge>
             ),
         },
         {
           key: 'next',
-          header: 'Next attempt',
+          header: t('jobs.list.column.nextAttempt'),
           cell: (job) =>
             job.picked ? (
-              <Badge tone="running">running on {job.pickedBy ?? 'a worker'}</Badge>
+              <Badge tone="running">
+                {t('jobs.list.runningOn', {worker: job.pickedBy ?? t('jobs.list.workerFallback')})}
+              </Badge>
             ) : (
               <RelativeTime at={job.executionTime} />
             ),
@@ -95,7 +98,7 @@ export function FailedJobList({jobs}: {jobs: FailedJob[]}) {
 function Streak({job}: {job: FailedJob}) {
   return (
     <Badge tone={job.consecutiveFailures >= 5 ? 'failed' : 'degraded'}>
-      {job.consecutiveFailures} in a row
+      {t('jobs.list.streak', {count: job.consecutiveFailures})}
     </Badge>
   )
 }

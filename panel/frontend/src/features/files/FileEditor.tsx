@@ -4,6 +4,7 @@ import CodeMirror, {EditorView} from '@uiw/react-codemirror'
 import type {ReactCodeMirrorRef} from '@uiw/react-codemirror'
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, ErrorState, Icon, Spinner, askConfirmation, cx, useDialog, useTheme} from '@/shell'
 
 import {MobileKeyBar} from './MobileKeyBar'
@@ -119,7 +120,7 @@ export function FileEditor({
         setFailure(
           cause instanceof FileRequestFailed
             ? cause.message
-            : 'The file could not be read. The node holding it may be unreachable.',
+            : t('files.editor.default_read_error'),
         )
       })
     return () => abort.abort()
@@ -150,7 +151,7 @@ export function FileEditor({
       if (savingRef.current) {
         return
       }
-      if (!window.confirm('This file has changes that have not been saved. Leave anyway?')) {
+      if (!window.confirm(t('files.editor.leave_confirm'))) {
         return false
       }
       return
@@ -164,10 +165,10 @@ export function FileEditor({
   const requestClose = useCallback(async () => {
     if (dirty && !readOnly) {
       const confirmed = await askConfirmation({
-        title: 'Close without saving?',
-        body: 'The changes in this file have not been written to the volume.',
-        confirmLabel: 'Discard changes',
-        cancelLabel: 'Keep editing',
+        title: t('files.editor.discard_confirm_title'),
+        body: t('files.editor.discard_confirm_body'),
+        confirmLabel: t('files.editor.discard_confirm_button'),
+        cancelLabel: t('files.editor.discard_cancel_button'),
         tone: 'danger',
       })
       if (!confirmed) {
@@ -241,7 +242,7 @@ export function FileEditor({
       onCancel={dialog.onCancel}
       onClick={dialog.onClick}
       onClose={dialog.onClose}
-      aria-label={entry ? `Editing ${entry.path}` : 'Editor'}
+      aria-label={entry ? t('files.editor.aria_editing', {path: entry.path}) : t('files.editor.aria_default')}
       className={cx(
         // The UA gives a dialog a centred box with its own max sizes; all of that has to go
         // before it can fill the viewport.
@@ -263,13 +264,13 @@ export function FileEditor({
           </div>
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
             <Badge tone="neutral">{language.label}</Badge>
-            {dirty ? <Badge tone="degraded">Unsaved</Badge> : null}
-            {readOnly ? <Badge tone="neutral">Read-only</Badge> : null}
+            {dirty ? <Badge tone="degraded">{t('files.editor.badge_unsaved')}</Badge> : null}
+            {readOnly ? <Badge tone="neutral">{t('files.editor.badge_readonly')}</Badge> : null}
           </div>
           <button
             type="button"
             onClick={() => void requestClose()}
-            aria-label="Close the editor"
+            aria-label={t('files.editor.close_aria')}
             className="-mr-2 -mt-1 flex touch-target items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800"
           >
             <Icon name="close" />
@@ -288,26 +289,26 @@ export function FileEditor({
               }
             }}
           >
-            Find
+            {t('files.editor.find_button')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setWrap((on) => !on)}>
-            {wrap ? 'Wrap: on' : 'Wrap: off'}
+            {wrap ? t('files.editor.wrap_on') : t('files.editor.wrap_off')}
           </Button>
           <Button
             variant="ghost"
             size="sm"
             disabled={!dirty}
             onClick={() => setText(baseline)}
-            title={dirty ? 'Put the file back to what was read' : 'Nothing has been changed'}
+            title={dirty ? t('files.editor.revert_title_dirty') : t('files.editor.revert_title_clean')}
           >
-            Revert
+            {t('files.editor.revert_button')}
           </Button>
           <span className="ml-auto flex items-center gap-3 text-xs tabular-nums text-ink-500 dark:text-ink-400">
             <span className="sm:hidden">
-              {dirty ? 'Unsaved' : readOnly ? 'Read-only' : language.label}
+              {dirty ? t('files.editor.badge_unsaved') : readOnly ? t('files.editor.badge_readonly') : language.label}
             </span>
             <span>
-              Line {caret.line}, column {caret.column}
+              {t('files.editor.caret_pos', {line: caret.line, column: caret.column})}
             </span>
           </span>
           <Button
@@ -317,13 +318,13 @@ export function FileEditor({
             disabled={readOnly || !dirty}
             title={
               readOnly
-                ? 'This file is open for reading only.'
+                ? t('files.editor.save_title_readonly')
                 : dirty
-                  ? 'Save to the volume (Ctrl+S)'
-                  : 'Nothing has been changed'
+                  ? t('files.editor.save_title_dirty')
+                  : t('files.editor.save_title_clean')
             }
           >
-            Save
+            {t('files.editor.save_button')}
           </Button>
         </div>
 
@@ -337,17 +338,17 @@ export function FileEditor({
             )}
           >
             {truncated
-              ? 'This file is larger than the panel will open, so you are looking at the beginning of it. Saving is off: writing this buffer back would replace the whole file with the part that was read.'
+              ? t('files.editor.truncated_banner')
               : binary
-                ? 'This does not decode as text, so it is shown as far as it can be and saving is off - writing it back would replace every byte the decoder could not represent. Download it if you need the real contents.'
-                : "This tree is read-only for you, so the file opens for reading. A static site's files come from its last build, and an edit here would be replaced by the next deployment."}
+                ? t('files.editor.binary_banner')
+                : t('files.editor.readonly_banner')}
           </p>
         ) : null}
 
         <div className="flex min-h-0 flex-1 flex-col">
           {failure ? (
             <ErrorState
-              title="The file could not be opened"
+              title={t('files.editor.error_title')}
               description={failure}
               onRetry={() => setAttempt((count) => count + 1)}
               action={
@@ -358,7 +359,7 @@ export function FileEditor({
                       window.location.href = downloadHref(serviceId, rootId, entry.path)
                     }}
                   >
-                    Download it instead
+                    {t('files.editor.download_instead')}
                   </Button>
                 ) : null
               }
@@ -366,7 +367,7 @@ export function FileEditor({
           ) : loading ? (
             <div className="flex items-center gap-3 px-4 py-10 text-sm text-ink-600 dark:text-ink-400">
               <Spinner />
-              Reading the file from the node.
+              {t('files.editor.loading_text')}
             </div>
           ) : (
             <div className="min-h-0 flex-1 overflow-hidden">

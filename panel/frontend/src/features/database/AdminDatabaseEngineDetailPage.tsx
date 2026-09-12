@@ -1,6 +1,7 @@
 import {Head, Link, router, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   Button,
@@ -51,12 +52,9 @@ export default function AdminDatabaseEngineDetailPage() {
 
   async function stop() {
     const confirmed = await askConfirmation({
-      title: `Stop ${engine.engineLabel} on ${engine.nodeName}?`,
-      body:
-        `Every one of the ${engine.databaseCount} databases in this container stops accepting ` +
-        'connections, and every application using them starts failing. The data is untouched and ' +
-        'starting it again brings them back.',
-      confirmLabel: 'Stop it',
+      title: t('database.adminDetail.stopConfirm.title', {engine: engine.engineLabel, node: engine.nodeName}),
+      body: t('database.adminDetail.stopConfirm.body', {count: engine.databaseCount}),
+      confirmLabel: t('database.adminDetail.stopConfirm.confirm'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -66,11 +64,9 @@ export default function AdminDatabaseEngineDetailPage() {
 
   async function remove() {
     const confirmed = await askConfirmation({
-      title: 'Remove this engine from the node’s spec?',
-      body:
-        'The container goes away on the next reconcile. Its data directory on the node is left ' +
-        'exactly where it is, so nothing is lost - but nothing will be serving it either.',
-      confirmLabel: 'Remove it',
+      title: t('database.adminDetail.removeConfirm.title'),
+      body: t('database.adminDetail.removeConfirm.body'),
+      confirmLabel: t('database.adminDetail.removeConfirm.confirm'),
       tone: 'danger',
       requireText: engine.host,
       requireTextLabel: `Type ${engine.host} to confirm`,
@@ -82,10 +78,10 @@ export default function AdminDatabaseEngineDetailPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`${engine.engineLabel} on ${engine.nodeName}`} />
+      <Head title={t('database.adminDetail.title', {engine: engine.engineLabel, node: engine.nodeName})} />
 
       <PageHeader
-        title={`${engine.engineLabel} on ${engine.nodeName}`}
+        title={t('database.adminDetail.title', {engine: engine.engineLabel, node: engine.nodeName})}
         description={engineSentence(engine)}
       />
 
@@ -97,15 +93,14 @@ export default function AdminDatabaseEngineDetailPage() {
 
       {engine.lastError ? (
         <p className="rounded-xl border border-failed/50 bg-failed/10 px-4 py-3 text-sm leading-relaxed">
-          <span className="font-medium">The node last reported: </span>
+          <span className="font-medium">{t('database.adminDetail.reportedNotice')}</span>
           {engine.lastError}
         </p>
       ) : null}
 
       <Card
-        title="Desired state"
-        description="The panel publishes what it wants; the node converges on it every fifteen
-          seconds. Nothing here reaches into the machine."
+        title={t('database.adminDetail.desiredState.title')}
+        description={t('database.adminDetail.desiredState.description')}
       >
         <div className="flex flex-col gap-2 sm:flex-row">
           {engine.desiredState === 'RUNNING' ? (
@@ -116,7 +111,7 @@ export default function AdminDatabaseEngineDetailPage() {
               loading={pending === 'stop'}
               onClick={() => void stop()}
             >
-              Ask the node to stop it
+              {t('database.adminDetail.askStop')}
             </Button>
           ) : (
             <Button
@@ -125,7 +120,7 @@ export default function AdminDatabaseEngineDetailPage() {
               loading={pending === 'start'}
               onClick={() => post('start')}
             >
-              Ask the node to run it
+              {t('database.adminDetail.askRun')}
             </Button>
           )}
 
@@ -137,34 +132,32 @@ export default function AdminDatabaseEngineDetailPage() {
             loading={pending === 'delete'}
             onClick={() => void remove()}
           >
-            Remove from the spec
+            {t('database.adminDetail.removeFromSpec')}
           </Button>
         </div>
 
         {engine.removable ? null : (
           <p className="mt-3 text-sm leading-relaxed text-ink-500 dark:text-ink-400">
-            It still holds {engine.databaseCount} customer{' '}
-            {engine.databaseCount === 1 ? 'database' : 'databases'}, so it cannot be removed.
-            Drop or move those first.
+            {t('database.adminDetail.cannotRemove', {count: engine.databaseCount})}
           </p>
         )}
       </Card>
 
-      <Card title="Facts">
+      <Card title={t('database.adminDetail.facts.title')}>
         <CardFacts>
-          <CardFact label="Address">
+          <CardFact label={t('database.adminDetail.facts.address')}>
             <span className="font-mono text-xs">
               {engine.host}:{engine.port}
             </span>
           </CardFact>
-          <CardFact label="Image">
+          <CardFact label={t('database.adminDetail.facts.image')}>
             <span className="font-mono text-xs break-all">{engine.image}</span>
           </CardFact>
-          <CardFact label="Version">{engine.engineVersion ?? 'not reported'}</CardFact>
-          <CardFact label="Data directory">
+          <CardFact label={t('database.adminDetail.facts.version')}>{engine.engineVersion ?? t('database.adminDetail.facts.notReported')}</CardFact>
+          <CardFact label={t('database.adminDetail.facts.dataPath')}>
             <span className="font-mono text-xs break-all">{engine.dataPath}</span>
           </CardFact>
-          <CardFact label="Node">
+          <CardFact label={t('database.adminDetail.facts.node')}>
             <Link
               href={`/admin/nodes/${engine.nodeId}`}
               className="text-accent-600 hover:underline dark:text-accent-400"
@@ -172,19 +165,19 @@ export default function AdminDatabaseEngineDetailPage() {
               {engine.nodeName}
             </Link>
             {engine.nodeReachable ? null : (
-              <span className="ml-1.5 text-ink-500 dark:text-ink-400">(out of touch)</span>
+              <span className="ml-1.5 text-ink-500 dark:text-ink-400">{t('database.detail.fact.outOfTouch')}</span>
             )}
           </CardFact>
-          <CardFact label="Customer databases">
+          <CardFact label={t('database.adminDetail.facts.customerDatabases')}>
             <span className="tabular-nums">{engine.databaseCount}</span>
           </CardFact>
-          <CardFact label="Disk used">
-            <ByteSize bytes={engine.diskBytesUsed} fallback="not measured" />
+          <CardFact label={t('database.adminDetail.facts.diskUsed')}>
+            <ByteSize bytes={engine.diskBytesUsed} fallback={t('database.list.notMeasured')} />
           </CardFact>
-          <CardFact label="Node last reported">
-            <RelativeTime at={engine.reportedAt} fallback="never" />
+          <CardFact label={t('database.adminDetail.facts.reported')}>
+            <RelativeTime at={engine.reportedAt} fallback={t('database.detail.fact.never')} />
           </CardFact>
-          <CardFact label="Created">
+          <CardFact label={t('database.adminDetail.facts.created')}>
             <RelativeTime at={engine.createdAt} />
           </CardFact>
         </CardFacts>

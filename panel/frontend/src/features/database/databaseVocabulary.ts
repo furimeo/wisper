@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import type {BadgeTone} from '@/shell'
 
 import type {
@@ -17,30 +18,10 @@ import type {
  * Java strings on purpose: a flash message written by the server and a dropdown written
  * here end up in the same sentence often enough that two names for one engine is a support
  * ticket.
- */
-
-const ENGINES: Record<EngineKind, string> = {
-  POSTGRES: 'PostgreSQL',
-  MYSQL: 'MySQL',
-}
-
 /** Mirrors `EngineKind.uriScheme()`. Used to build the URI the customer copies. */
 const SCHEMES: Record<EngineKind, string> = {
   POSTGRES: 'postgresql',
   MYSQL: 'mysql',
-}
-
-const MODES: Record<EngineMode, string> = {
-  SHARED: 'Shared',
-  DEDICATED: 'Dedicated',
-}
-
-const STATES: Record<ManagedDatabaseState, string> = {
-  PENDING: 'Being created',
-  READY: 'Ready',
-  SUSPENDED: 'Suspended',
-  FAILED: 'Failed',
-  DELETING: 'Being dropped',
 }
 
 const STATE_TONES: Record<ManagedDatabaseState, BadgeTone> = {
@@ -52,7 +33,12 @@ const STATE_TONES: Record<ManagedDatabaseState, BadgeTone> = {
 }
 
 export function engineLabel(engine: EngineKind): string {
-  return ENGINES[engine]
+  switch (engine) {
+    case 'POSTGRES':
+      return t('database.engine.postgres')
+    case 'MYSQL':
+      return t('database.engine.mysql')
+  }
 }
 
 export function engineScheme(engine: EngineKind): string {
@@ -60,11 +46,27 @@ export function engineScheme(engine: EngineKind): string {
 }
 
 export function modeLabel(mode: EngineMode): string {
-  return MODES[mode]
+  switch (mode) {
+    case 'SHARED':
+      return t('database.mode.shared')
+    case 'DEDICATED':
+      return t('database.mode.dedicated')
+  }
 }
 
 export function databaseStateLabel(state: ManagedDatabaseState): string {
-  return STATES[state]
+  switch (state) {
+    case 'PENDING':
+      return t('database.state.pending')
+    case 'READY':
+      return t('database.state.ready')
+    case 'SUSPENDED':
+      return t('database.state.suspended')
+    case 'FAILED':
+      return t('database.state.failed')
+    case 'DELETING':
+      return t('database.state.deleting')
+  }
 }
 
 export function databaseStateTone(state: ManagedDatabaseState): BadgeTone {
@@ -103,27 +105,27 @@ export function databaseAddress(database: ManagedDatabaseView): string {
  */
 export function databaseSentence(database: ManagedDatabaseView): string {
   if (database.state === 'PENDING') {
-    return 'Being created. The node picks the change up on its next reconcile, and the connection details appear as soon as it confirms.'
+    return t('database.sentence.pending')
   }
   if (database.state === 'DELETING') {
-    return 'Being dropped. The node removes what is not in its spec, so this finishes even if it is offline right now.'
+    return t('database.sentence.deleting')
   }
   if (database.state === 'FAILED') {
-    return database.lastError ?? 'The node could not create this database and did not say why.'
+    return database.lastError ?? t('database.sentence.failedDefault')
   }
   if (database.state === 'SUSPENDED') {
-    return 'Suspended. It still exists and still holds its data; nothing can connect to it until it is resumed.'
+    return t('database.sentence.suspended')
   }
   if (database.overQuota) {
-    return 'Over its size limit. Writes may start failing - raise the limit or free space in it.'
+    return t('database.sentence.overQuota')
   }
   if (!database.nodeReachable) {
-    return 'Serving normally. The panel has no control stream to its node at the moment, so rotating the password and dropping it are unavailable until that comes back.'
+    return t('database.sentence.nodeUnreachable')
   }
   if (database.usedBytes === null) {
-    return 'Ready. The node has not measured its size yet, which it does on its own schedule.'
+    return t('database.sentence.unmeasured')
   }
-  return 'Ready.'
+  return t('database.sentence.ready')
 }
 
 /** The same, for one engine container on the admin screen. */
@@ -132,15 +134,18 @@ export function engineSentence(engine: DatabaseEngineView): string {
     return engine.lastError
   }
   if (engine.reportedState === null) {
-    return 'The node has not reported on this container yet. That is a new engine, not a stopped one.'
+    return t('database.engineSentence.unreported')
   }
   if (!engine.converged) {
-    return `Asked to be ${engine.desiredState.toLowerCase()}, and the node reports ${engine.reportedState.toLowerCase()}. It reconciles every fifteen seconds.`
+    return t('database.engineSentence.notConverged', {
+      desired: engine.desiredState.toLowerCase(),
+      reported: engine.reportedState.toLowerCase(),
+    })
   }
   if (!engine.nodeReachable) {
-    return 'Running. The panel has no control stream to its node, so nothing can be published to it right now.'
+    return t('database.engineSentence.nodeUnreachable')
   }
   return engine.desiredState === 'RUNNING'
-    ? `Running and holding ${engine.databaseCount} customer ${engine.databaseCount === 1 ? 'database' : 'databases'}.`
-    : 'Stopped, with its data directory left where it is.'
+    ? t('database.engineSentence.running', {count: engine.databaseCount})
+    : t('database.engineSentence.stopped')
 }

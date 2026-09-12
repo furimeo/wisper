@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Tabs} from '@/shell'
 
 /**
@@ -13,11 +14,11 @@ import {Tabs} from '@/shell'
 export function BackupTabs({organizationId}: {organizationId: string}) {
   return (
     <Tabs
-      label="Backup sections"
+      label={t('backup.tabs.label')}
       items={[
-        {href: `/backups/${organizationId}`, label: 'Schedules'},
-        {href: `/backups/${organizationId}/snapshots`, label: 'Snapshots'},
-        {href: `/backups/${organizationId}/destinations`, label: 'Destinations'},
+        {href: `/backups/${organizationId}`, label: t('backup.tabs.schedules')},
+        {href: `/backups/${organizationId}/snapshots`, label: t('backup.tabs.snapshots')},
+        {href: `/backups/${organizationId}/destinations`, label: t('backup.tabs.destinations')},
       ]}
     />
   )

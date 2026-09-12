@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {useI18n} from '@/i18n'
 import {Button, Card, Checkbox, Input, Select, useFormFields} from '@/shell'
 
 import type {QuotaAllowance} from '@/features/org/orgTypes'
@@ -28,6 +29,7 @@ export function AddDomainForm({
   allowance: QuotaAllowance
   writable: boolean
 }) {
+  const {t} = useI18n()
   const form = useFormFields({
     hostname: '',
     tlsMode: 'ON_DEMAND',
@@ -42,8 +44,8 @@ export function AddDomainForm({
 
   return (
     <Card
-      title="Add a hostname"
-      description="Any name you control can point at this service. wisper checks DNS, then obtains a certificate for it."
+      title={t('domain.form.title')}
+      description={t('domain.form.description')}
     >
       <form
         onSubmit={(event) => {
@@ -54,8 +56,8 @@ export function AddDomainForm({
       >
         <Input
           {...form.bind('hostname')}
-          label="Hostname"
-          placeholder="app.example.com"
+          label={t('domain.form.hostname')}
+          placeholder={t('domain.form.hostnamePlaceholder')}
           type="text"
           inputMode="url"
           autoCapitalize="none"
@@ -64,7 +66,7 @@ export function AddDomainForm({
           enterKeyHint="done"
           required
           disabled={disabled}
-          hint="Without a scheme and without a path. Wildcards are not accepted: a certificate for one needs a DNS challenge, and wisper does not manage DNS."
+          hint={t('domain.form.hostnameHint')}
         />
 
         <button
@@ -73,67 +75,65 @@ export function AddDomainForm({
           aria-expanded={advanced}
           className="self-start text-sm font-medium text-accent-600 dark:text-accent-400"
         >
-          {advanced ? 'Hide the extra options' : 'Port, redirect and TLS options'}
+          {advanced ? t('domain.form.toggleAdvanced.hide') : t('domain.form.toggleAdvanced.show')}
         </button>
 
         {advanced ? (
           <div className="flex flex-col gap-3 rounded-lg border border-ink-200 p-3 dark:border-ink-800">
             <Select
               {...form.bind('tlsMode')}
-              label="TLS"
+              label={t('domain.form.tls')}
               disabled={disabled}
               options={[
-                {value: 'ON_DEMAND', label: 'Obtain a certificate automatically'},
-                {value: 'OFF', label: 'Plain HTTP, no certificate'},
+                {value: 'ON_DEMAND', label: t('domain.form.tls.onDemand')},
+                {value: 'OFF', label: t('domain.form.tls.off')},
               ]}
-              hint="Turn it off while the name still serves a live site elsewhere - the node will stop retrying a certificate it cannot get yet."
+              hint={t('domain.form.tlsHint')}
             />
 
             <Input
               {...form.bind('targetPort')}
-              label="Port on the container"
-              placeholder="Use the service’s own port"
+              label={t('domain.form.targetPort')}
+              placeholder={t('domain.form.targetPortPlaceholder')}
               type="text"
               inputMode="numeric"
               disabled={disabled}
-              hint="Only for a service listening on more than one port. Leave it empty otherwise."
+              hint={t('domain.form.targetPortHint')}
             />
 
             <Input
               {...form.bind('redirectToHostname')}
-              label="Redirect to another hostname"
-              placeholder="example.com"
+              label={t('domain.form.redirectTo')}
+              placeholder={t('domain.form.redirectToPlaceholder')}
               type="text"
               inputMode="url"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
               disabled={disabled}
-              hint="Serve a permanent redirect instead of the service. This is how www.example.com sends visitors to example.com."
+              hint={t('domain.form.redirectToHint')}
             />
 
             <Checkbox
               {...form.check('forceHttps')}
-              label="Redirect plain HTTP to HTTPS"
+              label={t('domain.form.forceHttps')}
               disabled={disabled}
-              hint="Only takes effect once the hostname is verified. Redirecting to a port whose handshake cannot succeed turns “not set up yet” into “broken”."
+              hint={t('domain.form.forceHttpsHint')}
             />
           </div>
         ) : null}
 
         <Button type="submit" block loading={form.processing} disabled={disabled}>
-          Add hostname
+          {t('domain.form.submit')}
         </Button>
 
         {!writable ? (
           <p className="text-sm text-ink-500 dark:text-ink-400">
-            You have read access to this organization, so hostnames cannot be added from
-            here.
+            {t('domain.form.readOnly')}
           </p>
         ) : spent ? (
           <p className="text-sm text-ink-500 dark:text-ink-400">
-            This organization is using all {allowance.limit} of the hostnames its plan
-            allows. Remove one, or ask an operator to raise the limit.
+            {t('domain.form.limitReached', {limit: allowance.limit})}
           </p>
         ) : null}
       </form>

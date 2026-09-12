@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, Modal, Select, useFormFields} from '@/shell'
 
 import type {DestinationView} from './backupTypes'
@@ -80,17 +81,16 @@ export function DestinationForm({
     <Modal
       open={open}
       onClose={onClose}
-      title={destination ? `Edit “${destination.name}”` : 'New destination'}
-      description="Snapshots are pushed here by the node itself. The panel never holds a copy, so
-        this is the only place they exist."
+      title={destination ? t('backup.destForm.titleEdit', {name: destination.name}) : t('backup.destForm.titleNew')}
+      description={t('backup.destForm.description')}
       size="lg"
       footer={
         <div className="flex flex-col gap-2 sm:flex-row-reverse">
           <Button block className="sm:w-auto" loading={form.processing} onClick={submit}>
-            {destination ? 'Save' : 'Add it'}
+            {destination ? t('backup.destForm.save') : t('backup.destForm.add')}
           </Button>
           <Button variant="ghost" block className="sm:w-auto" onClick={onClose}>
-            Cancel
+            {t('backup.destForm.cancel')}
           </Button>
         </div>
       }
@@ -104,108 +104,106 @@ export function DestinationForm({
       >
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('backup.destForm.name')}
           required
           maxLength={120}
           autoComplete="off"
-          placeholder="Offsite bucket"
+          placeholder={t('backup.destForm.namePlaceholder')}
         />
 
         <Select
           {...form.bind('kind')}
-          label="Kind"
+          label={t('backup.destForm.kind')}
           required
           options={[
-            {value: 'S3', label: 'S3-compatible bucket'},
-            {value: 'LOCAL', label: 'A path on the node'},
+            {value: 'S3', label: t('backup.destForm.kindS3')},
+            {value: 'LOCAL', label: t('backup.destForm.kindLocal')},
           ]}
           hint={
             local
-              ? 'On the node. It survives a container being lost and not the machine being lost, so it is a convenience rather than a backup strategy.'
-              : 'Anything speaking the S3 API: AWS, Backblaze B2, MinIO, Garage, Hetzner.'
+              ? t('backup.destForm.hintLocal')
+              : t('backup.destForm.hintS3')
           }
         />
 
         {local ? (
           <Input
             {...form.bind('localPath')}
-            label="Path on the node"
+            label={t('backup.destForm.localPath')}
             required
             autoComplete="off"
             spellCheck={false}
             className="font-mono text-xs"
-            hint={`Has to be under ${nodeBackupRoot}. The daemon can write nowhere else - its systemd unit restricts it.`}
+            hint={t('backup.destForm.localPathHint', {root: nodeBackupRoot})}
           />
         ) : (
           <>
             <Input
               {...form.bind('endpoint')}
-              label="Endpoint"
+              label={t('backup.destForm.endpoint')}
               required
               autoComplete="off"
               spellCheck={false}
               placeholder="https://s3.eu-central-1.amazonaws.com"
-              hint="The full URL, scheme included."
+              hint={t('backup.destForm.endpointHint')}
             />
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Input
                 {...form.bind('bucket')}
-                label="Bucket"
+                label={t('backup.destForm.bucket')}
                 required
                 autoComplete="off"
                 spellCheck={false}
               />
               <Input
                 {...form.bind('region')}
-                label="Region"
+                label={t('backup.destForm.region')}
                 autoComplete="off"
                 spellCheck={false}
                 placeholder="eu-central-1"
-                hint="Some providers do not care; the signature does."
+                hint={t('backup.destForm.regionHint')}
               />
             </div>
 
             <Input
               {...form.bind('pathPrefix')}
-              label="Path prefix"
+              label={t('backup.destForm.pathPrefix')}
               autoComplete="off"
               spellCheck={false}
               placeholder="wisper/"
-              hint="Optional. Keeps these snapshots in one folder of a bucket you use for other
-                things too."
+              hint={t('backup.destForm.pathPrefixHint')}
             />
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Input
                 {...form.bind('accessKeyId')}
-                label="Access key id"
+                label={t('backup.destForm.accessKeyId')}
                 autoComplete="off"
                 spellCheck={false}
                 className="font-mono text-xs"
               />
               <Input
                 {...form.bind('secretAccessKey')}
-                label="Secret access key"
+                label={t('backup.destForm.secretAccessKey')}
                 type="password"
                 autoComplete="new-password"
                 className="font-mono text-xs"
                 hint={
                   destination
-                    ? 'Leave empty to keep the one already stored. It is encrypted and never shown again.'
-                    : 'Stored encrypted. Nothing in the panel displays it afterwards.'
+                    ? t('backup.destForm.secretHintEdit')
+                    : t('backup.destForm.secretHintNew')
                 }
               />
             </div>
 
             <Input
               {...form.bind('storageClass')}
-              label="Storage class"
+              label={t('backup.destForm.storageClass')}
               autoComplete="off"
               spellCheck={false}
               placeholder="STANDARD"
-              hint="Optional. A cold class is cheaper to keep and slower - and sometimes dearer -
-                to restore from."
+              hint={t('backup.destForm.storageClassHint')}
             />
           </>
         )}
@@ -213,14 +211,13 @@ export function DestinationForm({
         {destination ? (
           <Checkbox
             {...form.check('enabled')}
-            label="Accept new snapshots"
-            hint="Off stops anything new being written here. What is already stored stays and is
-              still restorable."
+            label={t('backup.destForm.enabled')}
+            hint={t('backup.destForm.enabledHint')}
           />
         ) : null}
 
         <button type="submit" className="sr-only">
-          {destination ? 'Save destination' : 'Add destination'}
+          {destination ? t('backup.destForm.save') : t('backup.destForm.add')}
         </button>
       </form>
     </Modal>

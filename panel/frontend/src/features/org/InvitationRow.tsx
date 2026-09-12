@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, RelativeTime} from '@/shell'
 
 import type {OrganizationSummary} from './orgTypes'
@@ -33,7 +34,7 @@ export function InvitationRow({invitation}: {invitation: OrganizationSummary}) {
             {invitation.name}
           </p>
           <p className="mt-0.5 text-sm text-ink-600 dark:text-ink-400">
-            You have been invited as {roleLabel(invitation.role).toLowerCase()}
+            {t('org.invitation.invitedAs', {role: roleLabel(invitation.role).toLowerCase()})}
             {invitation.invitedAt ? (
               <>
                 {' '}
@@ -60,7 +61,7 @@ export function InvitationRow({invitation}: {invitation: OrganizationSummary}) {
             )
           }}
         >
-          Join
+          {t('org.invitation.join')}
         </Button>
       </div>
     </li>

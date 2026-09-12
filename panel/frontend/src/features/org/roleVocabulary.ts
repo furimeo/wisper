@@ -1,3 +1,5 @@
+import {t} from '@/i18n'
+
 import type {MemberRole} from './orgTypes'
 
 /**
@@ -14,28 +16,14 @@ import type {MemberRole} from './orgTypes'
 /** Descending authority, which is the order the pickers offer. */
 export const MEMBER_ROLES: readonly MemberRole[] = ['OWNER', 'ADMIN', 'DEVELOPER', 'VIEWER']
 
-const LABELS: Record<MemberRole, string> = {
-  OWNER: 'Owner',
-  ADMIN: 'Admin',
-  DEVELOPER: 'Developer',
-  VIEWER: 'Viewer',
-}
-
-const DESCRIPTIONS: Record<MemberRole, string> = {
-  OWNER: 'Everything, including deleting the organization and changing another owner.',
-  ADMIN: 'Everything except deleting the organization or touching an owner.',
-  DEVELOPER: 'Deploy, terminal, files, databases, backups. No membership or plan changes.',
-  VIEWER: 'Read only: overview, logs and metrics. No terminal and no file manager.',
-}
-
 /** "Developer", not "DEVELOPER". */
 export function roleLabel(role: MemberRole): string {
-  return LABELS[role] ?? role
+  return t(`org.roles.${role}`) || role
 }
 
 /** The sentence next to a role in a picker. */
 export function roleDescription(role: MemberRole): string {
-  return DESCRIPTIONS[role] ?? ''
+  return t(`org.roles.desc.${role}`) || ''
 }
 
 /** Whether this role may change membership, roles and organization settings. */

@@ -1,6 +1,7 @@
 import {Head, Link, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   Button,
@@ -45,25 +46,22 @@ export default function AdminDatabaseEngineListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Database engines" />
+      <Head title={t('database.admin.title')} />
 
       <PageHeader
-        title="Database engines"
-        description="One shared PostgreSQL and one shared MySQL per node, with a database and a
-          login inside them per customer. Hundreds of separate containers would cost 30-50MB each
-          sitting idle; a tenant who needs the isolation gets a dedicated instance."
+        title={t('database.admin.title')}
+        description={t('database.admin.description')}
         actions={
           <Button block className="sm:w-auto" onClick={() => setAdding(true)}>
-            Add an engine
+            {t('database.admin.addEngine')}
           </Button>
         }
       />
 
       {overQuota.length > 0 ? (
         <Card
-          title="Over their limit"
-          description="These are what fills a node's disk. On a node without XFS project quota
-            nothing stops them, so this list is the only warning there is."
+          title={t('database.admin.overQuotaTitle')}
+          description={t('database.admin.overQuotaDesc')}
           padded={false}
         >
           <ul className="divide-y divide-ink-200 dark:divide-ink-800">
@@ -95,22 +93,22 @@ export default function AdminDatabaseEngineListPage() {
         <DataList
           items={engines}
           keyOf={(engine) => engine.id}
-          label="database engines"
+          label={t('database.admin.enginesLabel')}
           href={(engine) => `/admin/databases/${engine.id}`}
           empty={
             <EmptyState
               icon={<Icon name="database" />}
-              title="No engine containers yet"
-              description="None have been created, and that is normal on a new platform: the first
-                customer who asks for a database gets one made for them on the node their services
-                run on. Add one here if you would rather it were already running."
-              action={<Button onClick={() => setAdding(true)}>Add an engine</Button>}
+              title={t('database.admin.empty.title')}
+              description={t('database.admin.empty.description')}
+              action={<Button onClick={() => setAdding(true)}>{t('database.admin.addEngine')}</Button>}
             />
           }
           primary={(engine) => (
             <span className="flex items-center gap-2">
               <span className="truncate">{engine.engineLabel}</span>
-              <span className="truncate text-ink-500 dark:text-ink-400">on {engine.nodeName}</span>
+              <span className="truncate text-ink-500 dark:text-ink-400">
+                {t('database.admin.onNode', {node: engine.nodeName})}
+              </span>
             </span>
           )}
           secondary={(engine) => <span className="line-clamp-2">{engineSentence(engine)}</span>}
@@ -125,7 +123,7 @@ export default function AdminDatabaseEngineListPage() {
           columns={[
             {
               key: 'engine',
-              header: 'Engine',
+              header: t('database.admin.col.engine'),
               cell: (engine) => (
                 <div className="flex flex-col gap-0.5">
                   <span>
@@ -138,10 +136,10 @@ export default function AdminDatabaseEngineListPage() {
                 </div>
               ),
             },
-            {key: 'node', header: 'Node', cell: (engine) => engine.nodeName},
+            {key: 'node', header: t('database.admin.col.node'), cell: (engine) => engine.nodeName},
             {
               key: 'mode',
-              header: 'Mode',
+              header: t('database.admin.col.mode'),
               cell: (engine) => (
                 <span>
                   <Badge>{modeLabel(engine.mode)}</Badge>
@@ -155,27 +153,27 @@ export default function AdminDatabaseEngineListPage() {
             },
             {
               key: 'databases',
-              header: 'Databases',
+              header: t('database.admin.col.databases'),
               align: 'right',
               cell: (engine) => <span className="tabular-nums">{engine.databaseCount}</span>,
             },
             {
               key: 'disk',
-              header: 'Disk',
+              header: t('database.admin.col.disk'),
               align: 'right',
-              cell: (engine) => <ByteSize bytes={engine.diskBytesUsed} fallback="not measured" />,
+              cell: (engine) => <ByteSize bytes={engine.diskBytesUsed} fallback={t('database.list.notMeasured')} />,
             },
             {
               key: 'reported',
-              header: 'Reported',
+              header: t('database.admin.col.reported'),
               align: 'right',
               cell: (engine) => (
-                <RelativeTime at={engine.reportedAt} fallback="never" className="text-xs" />
+                <RelativeTime at={engine.reportedAt} fallback={t('database.detail.fact.never')} className="text-xs" />
               ),
             },
             {
               key: 'state',
-              header: 'State',
+              header: t('database.admin.col.state'),
               align: 'right',
               cell: (engine) => <EngineStateBadge engine={engine} />,
             },

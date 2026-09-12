@@ -1,0 +1,41 @@
+{
+  "jobs.title": "Tác vụ nền",
+  "jobs.description": "Hàng đợi tác vụ nội bộ của bảng điều khiển. Triển khai, sao lưu, phát hành cấu hình và dọn dẹp hàng đêm đều chạy qua đây, vì vậy khi hàng đợi bị nghẽn trông như thể hàng tá thứ không liên quan bị hỏng.",
+  "jobs.unit": "tác vụ lỗi",
+
+  "jobs.health.title": "Hàng đợi",
+  "jobs.health.healthy": "Không có tác vụ nào bị lỗi.",
+  "jobs.health.failing": "{count} tác vụ đang bị lỗi liên tiếp.",
+  "jobs.health.queued": "Đang chờ",
+  "jobs.health.due": "Đến hạn",
+  "jobs.health.running": "Đang chạy",
+  "jobs.health.failingLabel": "Bị lỗi",
+  "jobs.health.stoppedWarning": "Có công việc đã đến hạn nhưng không có worker nào nhận xử lý. Đây không phải hàng đợi chạy chậm mà là đã dừng hẳn: hãy kiểm tra bảng điều khiển xem trình lập lịch có bật không và không có tiến trình nào khác đang giữ lock.",
+
+  "jobs.list.empty.title": "Không có tác vụ nào bị lỗi",
+  "jobs.list.empty.description": "Mọi tác vụ đã lên lịch đều thành công hoặc chưa gặp sự cố nào.",
+  "jobs.list.action.runNow": "Chạy ngay",
+  "jobs.list.action.discard": "Hủy bỏ",
+  "jobs.list.column.task": "Tác vụ",
+  "jobs.list.column.instance": "Phiên bản",
+  "jobs.list.column.failures": "Số lần lỗi",
+  "jobs.list.column.lastFailure": "Lỗi gần nhất",
+  "jobs.list.column.history": "Lịch sử",
+  "jobs.list.column.nextAttempt": "Lần thử tiếp",
+  "jobs.list.history.worked": "đã chạy",
+  "jobs.list.history.never": "chưa từng thành công",
+  "jobs.list.runningOn": "đang chạy trên {worker}",
+  "jobs.list.workerFallback": "một worker",
+  "jobs.list.streak": "{count} lần liên tiếp",
+
+  "jobs.action.retry.title": "Chạy {task} ngay?",
+  "jobs.action.retry.body": "Thời gian thử lại được dời xa hơn sau mỗi lần lỗi; thao tác này sẽ xóa thời gian chờ và chuỗi {failures} lần lỗi, gửi ngay tới worker. Nếu nguyên nhân chưa được khắc phục tác vụ sẽ lại lỗi, điều này vô hại.",
+  "jobs.action.retry.confirm": "Chạy ngay",
+  "jobs.action.retry.cancel": "Để trong hàng đợi",
+
+  "jobs.action.discard.title": "Hủy bỏ {task}?",
+  "jobs.action.discard.body": "Hàng tác vụ sẽ bị xóa và công việc không được thực hiện. Sẽ không có gì thử lại hay nhận biết: bất cứ thứ gì đang chờ tác vụ này - triển khai, sao lưu, cấu hình node chưa gửi - sẽ dở dang cho tới khi làm theo cách khác.",
+  "jobs.action.discard.confirm": "Hủy bỏ",
+  "jobs.action.discard.cancel": "Giữ lại",
+  "jobs.action.discard.requireTextLabel": "Gõ tên tác vụ để xác nhận"
+}

@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Card, PageHeader, mayWrite} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -13,20 +14,6 @@ import {StartDeployPanel} from './StartDeployPanel'
 import {WebhookCard} from './WebhookCard'
 import type {DeploymentSummary, DeploymentTarget} from './deployTypes'
 
-/**
- * `GET /services/{serviceId}/deployments` - what this service has deployed, and how to
- * deploy it again.
- *
- * The order is what somebody wants in the two situations they open this page in. Arriving
- * to ship a change, the deploy card is the first thing under the header. Arriving because
- * the site is broken, the history is one scroll away and the newest row carries the state
- * and a rollback action. Neither reading needs a tab or a menu.
- *
- * `deploymentAllowance` is passed so the button can be greyed out with the reason on it
- * rather than accepting the tap and answering with a refusal - the server checks the quota
- * again either way, but being told before is the difference between a limit and a
- * surprise.
- */
 type DeploymentListProps = {
   service: DeploymentTarget
   deployments: DeploymentSummary[]
@@ -41,15 +28,15 @@ export default function DeploymentListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`Deployments · ${service.name}`} />
+      <Head title={t('deploy.list.head_title', {name: service.name})} />
       <ServiceTabs serviceId={service.serviceId} />
 
       <PageHeader
-        title="Deployments"
+        title={t('deploy.list.title')}
         description={
           service.kind === 'SITE'
-            ? 'Every build of this site, newest first. Publishing is a symlink swap, so going live and going back are both instant.'
-            : 'Every deployment of this app, newest first. Each one replaces the container with a fresh one from the image it names.'
+            ? t('deploy.list.description_site')
+            : t('deploy.list.description_app')
         }
       />
 
@@ -63,7 +50,7 @@ export default function DeploymentListPage() {
 
       <ReleaseRetentionCard target={service} deployments={deployments} />
 
-      <Card title="History" padded={false}>
+      <Card title={t('deploy.list.history_card_title')} padded={false}>
         <DeploymentHistory
           serviceId={service.serviceId}
           deployments={deployments}
@@ -71,19 +58,16 @@ export default function DeploymentListPage() {
         />
       </Card>
 
-      <Card title="Today's deployments">
+      <Card title={t('deploy.list.today_card_title')}>
         <QuotaMeter allowance={deploymentAllowance} />
         <p className="text-sm text-ink-500 dark:text-ink-400">
-          Counted per organization across every service, and it is a rolling
-          twenty-four hours rather than a calendar day. A rollback counts too: it is a
-          deployment, it just does not build anything.
+          {t('deploy.list.today_hint')}
         </p>
       </Card>
 
       {writable ? null : (
         <p className="px-1 text-sm text-ink-500 dark:text-ink-400">
-          You have read access to this organization, so deploying, cancelling and rolling
-          back are off. The history and every build log are still open to you.
+          {t('deploy.list.read_only_notice')}
         </p>
       )}
     </div>

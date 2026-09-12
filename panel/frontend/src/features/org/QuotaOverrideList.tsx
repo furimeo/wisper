@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, Card, EmptyState, Icon, RelativeTime, askConfirmation} from '@/shell'
 
 import {GrantOverrideDialog} from './GrantOverrideDialog'
@@ -36,11 +37,9 @@ export function QuotaOverrideList({
 
   async function revoke(override: QuotaOverride) {
     const confirmed = await askConfirmation({
-      title: `Revoke the ${quotaLabel(override.resource).toLowerCase()} exception?`,
-      body:
-        'This organization goes back to whatever its plan allows on the next request it makes. ' +
-        'Nothing it has already created is removed.',
-      confirmLabel: 'Revoke',
+      title: t('org.overrides.confirmTitle', {resource: quotaLabel(override.resource).toLowerCase()}),
+      body: t('org.overrides.confirmBody'),
+      confirmLabel: t('org.overrides.confirmBtn'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -55,11 +54,11 @@ export function QuotaOverrideList({
 
   return (
     <Card
-      title="Exceptions"
-      description="Limits that apply to this organization instead of its plan's."
+      title={t('org.overrides.title')}
+      description={t('org.overrides.description')}
       action={
         <Button size="sm" onClick={() => setGranting(true)}>
-          Grant
+          {t('org.overrides.grantBtn')}
         </Button>
       }
       padded={false}
@@ -67,10 +66,9 @@ export function QuotaOverrideList({
       {overrides.length === 0 ? (
         <EmptyState
           icon={<Icon name="plan" />}
-          title="No exceptions"
-          description="Every limit comes from the plan. Grant one to raise - or lower - a single
-            resource for this tenant without moving them onto a different tier."
-          action={<Button onClick={() => setGranting(true)}>Grant an exception</Button>}
+          title={t('org.overrides.emptyTitle')}
+          description={t('org.overrides.emptyDesc')}
+          action={<Button onClick={() => setGranting(true)}>{t('org.overrides.emptyBtn')}</Button>}
         />
       ) : (
         <ul className="divide-y divide-ink-200 dark:divide-ink-800">
@@ -90,7 +88,7 @@ export function QuotaOverrideList({
                     <Badge tone={expired ? 'neutral' : 'accent'}>
                       {quotaFigure(override.resource, override.limitValue)}
                     </Badge>
-                    {expired ? <Badge tone="degraded">Expired</Badge> : null}
+                    {expired ? <Badge tone="degraded">{t('org.overrides.badgeExpired')}</Badge> : null}
                   </p>
 
                   <p className="mt-1 text-sm leading-relaxed text-ink-700 dark:text-ink-300">
@@ -98,14 +96,17 @@ export function QuotaOverrideList({
                   </p>
 
                   <p className="mt-1 text-xs text-ink-500 dark:text-ink-400">
-                    Granted <RelativeTime at={override.createdAt} />
+                    {t('org.overrides.granted', {time: ''})}
+                    <RelativeTime at={override.createdAt} />
                     {override.expiresAt ? (
                       <>
-                        {expired ? ', expired ' : ', expires '}
+                        {expired
+                          ? t('org.overrides.expired', {time: ''})
+                          : t('org.overrides.expires', {time: ''})}
                         <RelativeTime at={override.expiresAt} />
                       </>
                     ) : (
-                      ', no expiry'
+                      t('org.overrides.noExpiry')
                     )}
                   </p>
                 </div>
@@ -117,7 +118,7 @@ export function QuotaOverrideList({
                   loading={working === override.resource}
                   onClick={() => void revoke(override)}
                 >
-                  Revoke
+                  {t('org.overrides.revokeBtn')}
                 </Button>
               </li>
             )

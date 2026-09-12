@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Card, CardFact, CardFacts, PageHeader, RelativeTime, mayWrite} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -30,30 +31,30 @@ export default function ProjectSettingsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`${project.name} settings`} />
+      <Head title={t('project.settings.pageTitle', {name: project.name})} />
       <ProjectTabs projectId={project.id} />
 
       <PageHeader
-        title="Settings"
+        title={t('project.settings.title')}
         description={
           writable
-            ? 'What this project is called, and what happens to it.'
-            : 'You have read access to this organization, so these controls are off.'
+            ? t('project.settings.descWritable')
+            : t('project.settings.descReadOnly')
         }
       />
 
       <RenameProjectForm project={project} disabled={!writable} />
 
-      <Card title="About">
+      <Card title={t('project.settings.aboutTitle')}>
         <CardFacts>
-          <CardFact label="Address">
+          <CardFact label={t('project.settings.address')}>
             <code className="font-mono">/{project.slug}</code>
           </CardFact>
-          <CardFact label="Services">{serviceCount}</CardFact>
-          <CardFact label="Opened">
+          <CardFact label={t('project.settings.services')}>{serviceCount}</CardFact>
+          <CardFact label={t('project.settings.opened')}>
             <RelativeTime at={project.createdAt} />
           </CardFact>
-          <CardFact label="Last change">
+          <CardFact label={t('project.settings.lastChange')}>
             <RelativeTime at={project.updatedAt} />
           </CardFact>
         </CardFacts>

@@ -1,4 +1,5 @@
 import {Button, ByteSize, Checkbox, Field, Input, Modal, Select, useFormFields} from '@/shell'
+import {t} from '@/i18n'
 
 import type {NodeCapacity, PlacedServiceRow} from './placementTypes'
 import {headroomOf, isFull} from './placementTypes'
@@ -40,12 +41,12 @@ export function MigrateDialog({
     <Modal
       open
       onClose={onClose}
-      title={`Move ${row.serviceName}`}
-      description={`Currently on ${row.nodeName}, in ${row.organizationName}.`}
+      title={t('placement.migrate.title', {service: row.serviceName})}
+      description={t('placement.migrate.description', {node: row.nodeName, org: row.organizationName})}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {t('placement.migrate.action.cancel')}
           </Button>
           <Button
             disabled={!submittable}
@@ -55,18 +56,18 @@ export function MigrateDialog({
               })
             }
           >
-            Move it
+            {t('placement.migrate.action.move')}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
-        <Field label="Target node" error={form.error('nodeId')}>
+        <Field label={t('placement.migrate.field.targetNode')} error={form.error('nodeId')}>
           <Select
             {...form.bind('nodeId')}
             options={elsewhere.map((node) => ({
               value: node.nodeId,
-              label: isFull(node) ? `${node.name} - full` : node.name,
+              label: isFull(node) ? t('placement.migrate.nodeFull', {name: node.name}) : node.name,
               disabled: isFull(node),
             }))}
           />
@@ -77,25 +78,26 @@ export function MigrateDialog({
         {row.carryingData ? (
           <div className="rounded-xl border border-failed/50 bg-failed/10 px-4 py-3">
             <p className="text-sm leading-relaxed">
-              This service holds <ByteSize bytes={row.volumeBytes} /> on {row.nodeName}.{' '}
-              <strong>The data does not move with it.</strong> The new node starts with empty
-              volumes, and recovering the contents means restoring a backup onto it.
+              {t('placement.migrate.dataWarning.prefix')} <ByteSize bytes={row.volumeBytes} />{' '}
+              {t('placement.migrate.dataWarning.on', {node: row.nodeName})}{' '}
+              <strong>{t('placement.migrate.dataWarning.bold')}</strong>{' '}
+              {t('placement.migrate.dataWarning.suffix')}
             </p>
             <div className="mt-3">
               <Checkbox
                 {...form.check('moveDespiteVolumes')}
-                label="I accept that the data stays on the old node"
+                label={t('placement.migrate.checkbox')}
               />
             </div>
           </div>
         ) : null}
 
         <Field
-          label="Reason"
-          hint="Recorded in the audit trail and in the placement itself. Optional, and worth writing."
+          label={t('placement.migrate.field.reason')}
+          hint={t('placement.migrate.field.reasonHint')}
           error={form.error('reason')}
         >
-          <Input {...form.bind('reason')} placeholder="draining node-3 for a disk swap" />
+          <Input {...form.bind('reason')} placeholder={t('placement.migrate.field.reasonPlaceholder')} />
         </Field>
       </div>
     </Modal>
@@ -107,9 +109,9 @@ function Headroom({node}: {node: NodeCapacity}) {
   const free = headroomOf(node)
   return (
     <p className="text-sm text-ink-500 dark:text-ink-400">
-      {node.name} has {(free.cpuMillicores / 1000).toFixed(1)} vCPU,{' '}
-      <ByteSize bytes={free.memoryBytes} /> of memory and <ByteSize bytes={free.diskBytes} /> of
-      disk free, after the reserve the scheduler keeps back.
+      {node.name} {t('placement.migrate.headroom.text1', {cpu: (free.cpuMillicores / 1000).toFixed(1)})}{' '}
+      <ByteSize bytes={free.memoryBytes} /> {t('placement.migrate.headroom.text2')}{' '}
+      <ByteSize bytes={free.diskBytes} /> {t('placement.migrate.headroom.text3')}
     </p>
   )
 }

@@ -2,6 +2,7 @@ import {Head, Link, usePage} from '@inertiajs/react'
 
 import {QuotaMeter} from '@/features/org/QuotaMeter'
 import type {QuotaAllowance} from '@/features/org/orgTypes'
+import {t} from '@/i18n'
 import {Card, CardFact, CardFacts, PageHeader, RelativeTime} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -45,7 +46,7 @@ export default function DatabaseDetailPage() {
         <span className="text-sm text-ink-500 dark:text-ink-400">
           {database.engineLabel}
           {database.engineVersion ? ` ${database.engineVersion}` : ''} ·{' '}
-          {database.dedicated ? 'dedicated instance' : 'shared instance'}
+          {database.dedicated ? t('database.detail.dedicatedInstance') : t('database.detail.sharedInstance')}
         </span>
       </div>
 
@@ -53,7 +54,7 @@ export default function DatabaseDetailPage() {
 
       {database.lastError && database.state === 'FAILED' ? (
         <p className="rounded-xl border border-failed/50 bg-failed/10 px-4 py-3 text-sm leading-relaxed">
-          <span className="font-medium">The node refused this database: </span>
+          <span className="font-medium">{t('database.detail.nodeRefused')}</span>
           {database.lastError}
         </p>
       ) : null}
@@ -62,15 +63,15 @@ export default function DatabaseDetailPage() {
 
       <DatabaseQuotaForm database={database} viewerRole={viewerRole} />
 
-      <Card title="Where it lives">
+      <Card title={t('database.detail.where.title')}>
         <CardFacts>
-          <CardFact label="Address">
+          <CardFact label={t('database.detail.fact.address')}>
             <span className="font-mono text-xs break-all">{databaseAddress(database)}</span>
           </CardFact>
-          <CardFact label="User">
+          <CardFact label={t('database.detail.fact.user')}>
             <span className="font-mono text-xs">{database.username}</span>
           </CardFact>
-          <CardFact label="Project">
+          <CardFact label={t('database.detail.fact.project')}>
             <Link
               href={`/projects/${database.projectId}`}
               className="text-accent-600 hover:underline dark:text-accent-400"
@@ -78,28 +79,28 @@ export default function DatabaseDetailPage() {
               {database.projectName}
             </Link>
           </CardFact>
-          <CardFact label="Organization">{database.organizationName}</CardFact>
-          <CardFact label="Node">
+          <CardFact label={t('database.detail.fact.organization')}>{database.organizationName}</CardFact>
+          <CardFact label={t('database.detail.fact.node')}>
             {database.nodeName}
             {database.nodeReachable ? null : (
-              <span className="ml-1.5 text-ink-500 dark:text-ink-400">(out of touch)</span>
+              <span className="ml-1.5 text-ink-500 dark:text-ink-400">{t('database.detail.fact.outOfTouch')}</span>
             )}
           </CardFact>
-          <CardFact label="Created">
-            <RelativeTime at={database.provisionedAt} fallback="not yet" />
+          <CardFact label={t('database.detail.fact.created')}>
+            <RelativeTime at={database.provisionedAt} fallback={t('database.detail.fact.notYet')} />
           </CardFact>
-          <CardFact label="Password last changed">
-            <RelativeTime at={database.passwordRotatedAt} fallback="never" />
+          <CardFact label={t('database.detail.fact.passwordChanged')}>
+            <RelativeTime at={database.passwordRotatedAt} fallback={t('database.detail.fact.never')} />
           </CardFact>
-          <CardFact label="Size last measured">
-            <RelativeTime at={database.measuredAt} fallback="never" />
+          <CardFact label={t('database.detail.fact.sizeMeasured')}>
+            <RelativeTime at={database.measuredAt} fallback={t('database.detail.fact.never')} />
           </CardFact>
         </CardFacts>
       </Card>
 
       <Card
-        title="Your plan"
-        description="How many databases this organization may have, across every project."
+        title={t('database.detail.plan.title')}
+        description={t('database.detail.plan.description')}
       >
         <QuotaMeter allowance={databaseAllowance} />
       </Card>

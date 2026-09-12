@@ -1,26 +1,11 @@
 import {router} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, Modal, askConfirmation, formatBytes, useFormFields} from '@/shell'
 
 import {ByteAmountField} from './ByteAmountField'
 import type {ServiceView, Volume} from './serviceTypes'
 
-/**
- * Attaching a volume, and the two things that can be done to one that exists.
- *
- * Creating asks for four things; resizing asks for one. They share a dialog because they
- * share the size control and the sentence explaining what a quota on a disk means, and
- * because the second is reached by tapping the volume the first created.
- *
- * The name and the mount path are fixed once the volume exists. `ResizeVolume` takes the
- * name as its key and there is no use-case that moves a mount point - the data is on the
- * node under that path, and changing the label in the panel would not move it.
- *
- * Sizes are typed in MiB or GiB and submitted as `sizeMebibytes`, which is what
- * `VolumeController` binds; it converts to bytes in one place so a factor of 1024 cannot
- * be applied twice. Refusals come back on the same key, because `RequestRejected` carries
- * the name of the input at fault and the input is the one the customer typed into.
- */
 const MEBIBYTE = 1_048_576
 
 export function VolumeDialog({
@@ -56,14 +41,12 @@ export function VolumeDialog({
       return
     }
     const confirmed = await askConfirmation({
-      title: `Detach ${volume.name}?`,
-      body:
-        `Nothing is mounted at ${volume.mountPath} afterwards. The data stays on the node ` +
-        'until it is purged, but the service loses its way to it and is no longer pinned by it.',
-      confirmLabel: 'Detach volume',
+      title: t('service.volumes.detach_confirm_title', {name: volume.name}),
+      body: t('service.volumes.detach_confirm_body', {mountPath: volume.mountPath}),
+      confirmLabel: t('service.volumes.detach_confirm_button'),
       tone: 'danger',
       requireText: volume.name,
-      requireTextLabel: `Type ${volume.name} to confirm`,
+      requireTextLabel: t('service.volumes.type_to_confirm', {name: volume.name}),
     })
     if (confirmed) {
       router.post(
@@ -78,19 +61,19 @@ export function VolumeDialog({
     <Modal
       open
       onClose={onClose}
-      title={editing ? volume.name : 'Attach a volume'}
+      title={editing ? volume.name : t('service.volumes.dialog_attach_title')}
       description={
         editing
-          ? `Mounted at ${volume.mountPath}. The quota is what the node enforces on the directory.`
-          : 'A directory on the node that survives restarts, redeploys and image changes.'
+          ? t('service.volumes.dialog_edit_desc', {mountPath: volume.mountPath})
+          : t('service.volumes.dialog_new_desc')
       }
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.processing}>
-            Cancel
+            {t('service.variables.cancel')}
           </Button>
           <Button loading={form.processing} onClick={save}>
-            {editing ? 'Save size' : 'Attach volume'}
+            {editing ? t('service.volumes.save_size') : t('service.volumes.attach_volume')}
           </Button>
         </>
       }
@@ -104,39 +87,39 @@ export function VolumeDialog({
       >
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('service.volumes.name_label')}
           disabled={editing}
           maxLength={63}
           autoComplete="off"
           inputMode="url"
           spellCheck={false}
-          placeholder="data"
+          placeholder={t('service.volumes.name_placeholder')}
           hint={
             editing
-              ? 'A name cannot be changed: it is what identifies the directory on the node.'
-              : 'Lower-case letters, digits and dashes. Left empty it becomes "data".'
+              ? t('service.volumes.name_hint_edit')
+              : t('service.volumes.name_hint_new')
           }
         />
 
         <Input
           {...form.bind('mountPath')}
-          label="Mount path"
+          label={t('service.volumes.mount_path_label')}
           required={!editing}
           disabled={editing}
           maxLength={512}
           autoComplete="off"
           spellCheck={false}
           className="font-mono"
-          placeholder="/data"
+          placeholder={t('service.volumes.mount_path_placeholder')}
           hint={
             editing
-              ? 'A mount path cannot be moved. Detach this volume and attach a new one to change it.'
-              : 'An absolute Linux path inside the container. Not /, /etc, /usr or anywhere the image keeps its own files.'
+              ? t('service.volumes.mount_path_hint_edit')
+              : t('service.volumes.mount_path_hint_new')
           }
         />
 
         <ByteAmountField
-          label="Size"
+          label={t('service.volumes.size_label')}
           name="sizeMebibytes"
           bytes={toBytes(form.data.sizeMebibytes)}
           onBytes={(bytes) => form.set('sizeMebibytes', toMebibytes(bytes))}
@@ -147,28 +130,28 @@ export function VolumeDialog({
         <Checkbox
           {...form.check('readOnly')}
           disabled={editing}
-          label="Mount read-only"
+          label={t('service.volumes.mount_read_only')}
           hint={
             editing
-              ? 'Fixed once attached, because a workload that opened it for writing would have to be restarted anyway.'
-              : 'For a volume the container only reads - configuration, a shared asset bundle.'
+              ? t('service.volumes.read_only_hint_edit')
+              : t('service.volumes.read_only_hint_new')
           }
         />
 
         <Checkbox
           {...form.check('backupEnabled')}
           disabled={editing}
-          label="Include in scheduled backups"
+          label={t('service.volumes.include_backups')}
           hint={
             editing
-              ? 'Set when the volume is attached. Detach and attach again to change it.'
-              : 'On unless this holds a cache you would rather not pay to store twice.'
+              ? t('service.volumes.backups_hint_edit')
+              : t('service.volumes.backups_hint_new')
           }
         />
 
         {editing ? (
           <Button variant="danger" block onClick={() => void remove()} disabled={form.processing}>
-            Detach this volume
+            {t('service.volumes.detach_button')}
           </Button>
         ) : null}
 
@@ -178,13 +161,11 @@ export function VolumeDialog({
   )
 }
 
-/** What the customer is told about the range, and about what is already on the disk. */
 function sizeHint(volume: Volume | null): string {
-  const range = 'Between 1 MiB and 4 TiB, counted against your organization’s disk quota.'
   if (volume?.usedBytes == null) {
-    return range
+    return t('service.volumes.size_hint_range')
   }
-  return `${range} ${formatBytes(volume.usedBytes)} is already stored, so it cannot go below that.`
+  return t('service.volumes.size_hint_with_used', {used: formatBytes(volume.usedBytes)})
 }
 
 function toBytes(mebibytes: string): string {

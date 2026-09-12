@@ -1,23 +1,12 @@
 import type {ReactNode} from 'react'
 
+import {t} from '@/i18n'
 import {DataList, EmptyState, Icon, RelativeTime} from '@/shell'
 
 import {ServiceStatusBadge} from './ServiceStatusBadge'
 import type {ServiceSummary} from './serviceTypes'
 import {kindLabel, presetLabel} from './serviceVocabulary'
 
-/**
- * The services inside one project.
- *
- * Lives here rather than in `features/project` because the row is made of `ServiceSummary`
- * and of this package's vocabulary; the project overview imports it. A second copy of this
- * list living next to the page that happens to render it is how the pill on the dashboard
- * and the pill on the service screen end up disagreeing about what "degraded" looks like.
- *
- * A table above `md`, one row per service below it - `DataList` chooses. There are no
- * swipe actions: everything a customer can do to a service needs the service's own screen,
- * and a swipe that only navigates is a swipe that hides the tap.
- */
 export function ServiceList({
   services,
   emptyAction,
@@ -30,33 +19,33 @@ export function ServiceList({
     <DataList
       items={services}
       keyOf={(service) => service.id}
-      label="services"
+      label={t('service.list.label')}
       href={(service) => `/services/${service.id}`}
       primary={(service) => service.name}
       secondary={(service) => describe(service)}
       trailing={(service) => <ServiceStatusBadge status={service} />}
       columns={[
-        {key: 'name', header: 'Service', cell: (service) => service.name},
+        {key: 'name', header: t('service.list.col_service'), cell: (service) => service.name},
         {
           key: 'kind',
-          header: 'Kind',
+          header: t('service.list.col_kind'),
           cell: (service) => kindLabel(service.kind),
         },
         {
           key: 'source',
-          header: 'Runs',
+          header: t('service.list.col_runs'),
           cell: (service) => (
             <span className="font-mono text-xs break-all">{source(service)}</span>
           ),
         },
         {
           key: 'reported',
-          header: 'Last reported',
-          cell: (service) => <RelativeTime at={service.reportedAt} fallback="never" />,
+          header: t('service.list.col_last_reported'),
+          cell: (service) => <RelativeTime at={service.reportedAt} fallback={t('service.list.never')} />,
         },
         {
           key: 'status',
-          header: 'State',
+          header: t('service.list.col_state'),
           align: 'right',
           cell: (service) => <ServiceStatusBadge status={service} />,
         },
@@ -64,10 +53,8 @@ export function ServiceList({
       empty={
         <EmptyState
           icon={<Icon name="projects" />}
-          title="No services yet"
-          description="A service is either an app - a container the platform keeps running - or a
-            static site built from a repository. Add the first one and it will show up here with
-            whatever the node reports about it."
+          title={t('service.list.no_services_title')}
+          description={t('service.list.no_services_description')}
           action={emptyAction}
         />
       }
@@ -82,7 +69,7 @@ function describe(service: ServiceSummary): string {
 
 function source(service: ServiceSummary): string {
   if (service.kind === 'SITE') {
-    return service.buildPreset ? presetLabel(service.buildPreset) : 'no build preset'
+    return service.buildPreset ? presetLabel(service.buildPreset) : t('service.list.no_build_preset')
   }
-  return service.image ?? 'no image'
+  return service.image ?? t('service.list.no_image')
 }

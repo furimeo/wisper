@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   ByteSize,
@@ -48,14 +49,12 @@ export function BackupPolicyList({
 
   async function remove(policy: BackupView) {
     const confirmed = await askConfirmation({
-      title: `Delete “${policy.name}”?`,
-      body:
-        'Nothing is copied under this policy again. Every snapshot it has already taken stays ' +
-        'where it is and stays restorable.',
-      confirmLabel: 'Delete the policy',
+      title: t('backup.policy.deleteConfirm.title', {name: policy.name}),
+      body: t('backup.policy.deleteConfirm.body'),
+      confirmLabel: t('backup.policy.deleteConfirm.confirm'),
       tone: 'danger',
       requireText: policy.name,
-      requireTextLabel: `Type ${policy.name} to confirm`,
+      requireTextLabel: t('backup.policy.deleteConfirm.requireTextLabel', {name: policy.name}),
     })
     if (confirmed) {
       router.post(
@@ -71,25 +70,23 @@ export function BackupPolicyList({
       <DataList
         items={policies}
         keyOf={(policy) => policy.id}
-        label="backup schedules"
+        label={t('backup.policy.label')}
         empty={
           <EmptyState
             icon={<Icon name="backup" />}
-            title="Nothing is being backed up"
-            description="A schedule copies one volume or one database to a destination, keeps the
-              last few, and prunes the rest. Until there is one, nothing here is protected against
-              a mistake or a lost disk."
+            title={t('backup.policy.empty.title')}
+            description={t('backup.policy.empty.description')}
           />
         }
         actions={
           writable
             ? (policy) => [
                 {
-                  label: running === policy.id ? 'Starting…' : 'Run now',
+                  label: running === policy.id ? t('backup.policy.starting') : t('backup.policy.runNow'),
                   onSelect: () => run(policy),
                 },
-                {label: 'Edit', onSelect: () => onEdit(policy)},
-                {label: 'Delete', tone: 'danger', onSelect: () => void remove(policy)},
+                {label: t('backup.policy.edit'), onSelect: () => onEdit(policy)},
+                {label: t('backup.policy.delete'), tone: 'danger', onSelect: () => void remove(policy)},
               ]
             : undefined
         }
@@ -103,17 +100,17 @@ export function BackupPolicyList({
         trailing={(policy) => (
           <div className="flex flex-col items-end gap-1">
             <Badge tone={policyTone(policy)} dot pulse={policy.lastStatus === 'RUNNING'}>
-              {policy.snapshotCount === 0 ? 'Never run' : `${policy.snapshotCount} kept`}
+              {policy.snapshotCount === 0 ? t('backup.policy.neverRun') : t('backup.policy.kept', {count: policy.snapshotCount})}
             </Badge>
             <span className="text-xs text-ink-500 dark:text-ink-400">
-              <RelativeTime at={policy.latestSnapshotAt} fallback="no snapshot" />
+              <RelativeTime at={policy.latestSnapshotAt} fallback={t('backup.policy.noSnapshot')} />
             </span>
           </div>
         )}
         columns={[
           {
             key: 'name',
-            header: 'Schedule',
+            header: t('backup.policy.col.schedule'),
             cell: (policy) => (
               <div className="flex flex-col gap-0.5">
                 <span>{policy.name}</span>
@@ -125,20 +122,20 @@ export function BackupPolicyList({
           },
           {
             key: 'when',
-            header: 'When',
+            header: t('backup.policy.col.when'),
             cell: (policy) => (
               <span className="text-xs">
                 {scheduleSentence(policy.schedule, policy.timezone)}
                 {policy.enabled ? null : (
-                  <span className="ml-1 text-ink-500 dark:text-ink-400">(off)</span>
+                  <span className="ml-1 text-ink-500 dark:text-ink-400">{t('backup.policy.off')}</span>
                 )}
               </span>
             ),
           },
-          {key: 'destination', header: 'Destination', cell: (policy) => policy.destinationName},
+          {key: 'destination', header: t('backup.policy.col.destination'), cell: (policy) => policy.destinationName},
           {
             key: 'kept',
-            header: 'Kept',
+            header: t('backup.policy.col.kept'),
             align: 'right',
             cell: (policy) => (
               <span className="tabular-nums">
@@ -152,26 +149,26 @@ export function BackupPolicyList({
           },
           {
             key: 'stored',
-            header: 'Stored',
+            header: t('backup.policy.col.stored'),
             align: 'right',
             cell: (policy) => <ByteSize bytes={policy.storedBytes} />,
           },
           {
             key: 'last',
-            header: 'Last run',
+            header: t('backup.policy.col.lastRun'),
             align: 'right',
             cell: (policy) => (
               <span className="flex flex-col items-end gap-0.5">
-                <RelativeTime at={policy.lastRunAt} fallback="never" className="text-xs" />
+                <RelativeTime at={policy.lastRunAt} fallback={t('backup.snapshotList.never')} className="text-xs" />
                 <Badge tone={policyTone(policy)}>
-                  {policy.lastStatus === null ? 'never run' : policy.lastStatus.toLowerCase()}
+                  {policy.lastStatus === null ? t('backup.policy.neverRun').toLowerCase() : policy.lastStatus.toLowerCase()}
                 </Badge>
               </span>
             ),
           },
           {
             key: 'next',
-            header: 'Next',
+            header: t('backup.policy.col.next'),
             align: 'right',
             cell: (policy) => (
               <RelativeTime at={policy.nextRunAt} fallback="-" className="text-xs" />

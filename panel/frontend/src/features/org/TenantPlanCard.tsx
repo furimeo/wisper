@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Card, Select, useFormFields} from '@/shell'
 
 import type {Organization, Plan} from './orgTypes'
@@ -37,8 +38,12 @@ export function TenantPlanCard({
 
   return (
     <Card
-      title="Plan"
-      description={plan ? `${tenant.name} is on ${plan.name}.` : 'This tenant is not on a plan, so every limit is zero.'}
+      title={t('org.tenantPlan.title')}
+      description={
+        plan
+          ? t('org.tenantPlan.desc', {name: tenant.name, plan: plan.name})
+          : t('org.tenantPlan.descNoPlan')
+      }
       footer={
         <Button
           block
@@ -47,7 +52,7 @@ export function TenantPlanCard({
           disabled={form.data.planId === tenant.planId}
           onClick={() => form.submit(`/admin/organizations/${tenant.id}/plan`)}
         >
-          Move to this plan
+          {t('org.tenantPlan.btn')}
         </Button>
       }
     >
@@ -60,15 +65,13 @@ export function TenantPlanCard({
       >
         <Select
           {...form.bind('planId')}
-          label="Tier"
+          label={t('org.tenantPlan.tier')}
           required
           options={options}
-          hint="Only selectable tiers are offered, plus whichever one this tenant is on."
+          hint={t('org.tenantPlan.hint')}
         />
         <p className="text-sm leading-relaxed text-ink-600 dark:text-ink-400">
-          Moving changes what is allowed from now on. Nothing is deleted and nothing is stopped:
-          a tenant that ends up over a limit keeps what it has and cannot create more until it is
-          back under.
+          {t('org.tenantPlan.note')}
         </p>
         <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />
       </form>
@@ -77,7 +80,11 @@ export function TenantPlanCard({
 }
 
 function label(plan: Plan, current: boolean): string {
-  const marks = [plan.isDefault ? 'default' : null, plan.selectable ? null : 'retired', current ? 'current' : null]
+  const marks = [
+    plan.isDefault ? t('org.tenantPlan.tagDefault') : null,
+    plan.selectable ? null : t('org.tenantPlan.tagRetired'),
+    current ? t('org.tenantPlan.tagCurrent') : null,
+  ]
     .filter((mark): mark is string => mark !== null)
     .join(', ')
   return marks ? `${plan.name} (${marks})` : plan.name

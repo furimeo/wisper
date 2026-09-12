@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, Modal, toast} from '@/shell'
 
 import {movePaths} from './movePaths'
@@ -53,7 +54,7 @@ export function MoveDialog({
   const submit = async () => {
     const target = destination.trim().replace(/^\/+/, '').replace(/\/+$/, '')
     if (target === directory) {
-      setError('That is the folder they are already in.')
+      setError(t('files.move.same_folder_error'))
       return
     }
     setProcessing(true)
@@ -67,7 +68,7 @@ export function MoveDialog({
     setProcessing(false)
     if (moved === entries.length) {
       if (moved > 1) {
-        toast.success(`Moved ${moved} entries.`)
+        toast.success(t('files.move.moved_toast', {count: moved}))
       }
       onClose()
       return
@@ -76,8 +77,8 @@ export function MoveDialog({
     // open keeps the destination on screen so it can be corrected.
     setError(
       moved === 0
-        ? 'Nothing was moved. The message above says what the panel refused.'
-        : `${moved} of ${entries.length} moved. The rest were refused - the message above says why.`,
+        ? t('files.move.nothing_moved_error')
+        : t('files.move.partial_moved_error', {moved, count: entries.length}),
     )
   }
 
@@ -85,17 +86,21 @@ export function MoveDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title={entries.length === 1 ? 'Move' : `Move ${entries.length} entries`}
+      title={
+        entries.length === 1
+          ? t('files.move.title_one')
+          : t('files.move.title_many', {count: entries.length})
+      }
       description={entries.length === 1 ? entries[0]?.path : undefined}
       size="sm"
       dismissible={!processing}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={processing} block>
-            Cancel
+            {t('files.move.cancel')}
           </Button>
           <Button onClick={() => void submit()} loading={processing} block>
-            Move
+            {t('files.move.button')}
           </Button>
         </>
       }
@@ -108,7 +113,7 @@ export function MoveDialog({
         }}
       >
         <Input
-          label="Into which folder"
+          label={t('files.move.into_label')}
           name="destination"
           value={destination}
           onChange={(event) => {
@@ -119,18 +124,18 @@ export function MoveDialog({
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
-          placeholder="the top of this tree"
-          hint="Relative to the top of this tree. The folder has to exist already."
+          placeholder={t('files.move.into_placeholder')}
+          hint={t('files.move.into_hint')}
         />
         <Checkbox
-          label="Replace anything already there"
+          label={t('files.move.replace_label')}
           checked={overwrite}
           onChange={(event) => setOverwrite(event.target.checked)}
-          hint="Off by default, so a move cannot quietly overwrite a file of the same name."
+          hint={t('files.move.replace_hint')}
         />
         {entries.length > 1 ? (
           <p className="text-sm text-ink-600 dark:text-ink-400">
-            {entries.length} entries, keeping the names they have now.
+            {t('files.move.keeping_names', {count: entries.length})}
           </p>
         ) : null}
       </form>

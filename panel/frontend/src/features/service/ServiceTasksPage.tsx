@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, ButtonLink, Card, EmptyState, Icon, PageHeader, mayWrite} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -13,18 +14,6 @@ import {ServiceTabs} from './ServiceTabs'
 import {lastRunFailed} from './cronVocabulary'
 import type {ConcurrencyPolicy, CronTaskView, ServiceView} from './serviceTypes'
 
-/**
- * `GET /services/{serviceId}/tasks` - the commands this service runs on a schedule.
- *
- * The failures are counted at the top. A service with nine healthy crons and one that has
- * exited 1 every night for a fortnight is the case this screen exists for, and a list
- * sorted by name buries it in the middle - so the count is stated before the list, and the
- * row that caused it is coloured.
- *
- * A static site gets the same explanation it gets on the volumes screen: there is no
- * container for a command to run in, `CreateScheduledTask` refuses one, and offering the
- * button anyway would teach the customer that the panel's controls are decorative.
- */
 type ServiceTasksProps = {
   service: ServiceView
   tasks: CronTaskView[]
@@ -44,31 +33,29 @@ export default function ServiceTasksPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`${service.name} scheduled tasks`} />
+      <Head title={t('service.tasks.head_title', {name: service.name})} />
       <ServiceTabs serviceId={service.id} />
 
       <PageHeader
-        title="Scheduled tasks"
+        title={t('service.tasks.title')}
         description={
           service.site
-            ? 'A static site has no container, so there is nothing for a scheduled command to run inside.'
-            : 'Run by the node inside this container. They keep firing while the panel is unreachable.'
+            ? t('service.tasks.description_site')
+            : t('service.tasks.description_app')
         }
         actions={
           writable ? (
             <Button icon={<Icon name="jobs" />} onClick={() => setEditor({task: null})}>
-              Schedule a command
+              {t('service.tasks.schedule_button')}
             </Button>
           ) : null
         }
       />
 
       {service.site ? (
-        <Card title="Nothing to run">
+        <Card title={t('service.tasks.nothing_to_run_title')}>
           <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-            A static site is files on disk; there is no process to run a command in. If the site
-            needs something rebuilt on a schedule, the thing to schedule is a deployment - or put
-            the command on an app service in the same project, which does have a container.
+            {t('service.tasks.nothing_to_run_body')}
           </p>
           <div className="mt-3">
             <ButtonLink
@@ -77,7 +64,7 @@ export default function ServiceTasksPage() {
               className="sm:w-auto"
               href={`/services/${service.id}/deployments`}
             >
-              Deployments
+              {t('service.tasks.deployments_button')}
             </ButtonLink>
           </div>
         </Card>
@@ -87,12 +74,10 @@ export default function ServiceTasksPage() {
             <Card>
               <p className="text-sm leading-relaxed text-failed">
                 {failing.length === 1
-                  ? `${failing[0]?.name} ended badly on its last run.`
-                  : `${failing.length} of these ended badly on their last run.`}{' '}
+                  ? t('service.tasks.failing_single', {name: failing[0]?.name ?? ''})
+                  : t('service.tasks.failing_multi', {count: failing.length})}{' '}
                 <span className="text-ink-700 dark:text-ink-300">
-                  A schedule that fires correctly and a command that exits non-zero look the same
-                  from the outside - open the row for the exit code and whatever the node
-                  reported.
+                  {t('service.tasks.failing_explanation')}
                 </span>
               </p>
             </Card>
@@ -107,7 +92,7 @@ export default function ServiceTasksPage() {
           {mayWrite(viewerRole) || service.archived ? null : (
             <Card>
               <p className="text-sm text-ink-700 dark:text-ink-300">
-                You have read access to this organization, so the controls on this page are off.
+                {t('service.tasks.read_only_notice')}
               </p>
             </Card>
           )}
@@ -115,30 +100,33 @@ export default function ServiceTasksPage() {
           {service.archived ? (
             <Card>
               <p className="text-sm text-ink-700 dark:text-ink-300">
-                This service is archived, so nothing here is running. Restore the project from its
-                settings screen to schedule commands again.
+                {t('service.tasks.archived_notice')}
               </p>
             </Card>
           ) : null}
 
           <Card
-            title="Commands"
+            title={t('service.tasks.commands_card_title')}
             description={
               tasks.length === 0
                 ? undefined
-                : `${tasks.length} scheduled${off > 0 ? `, ${off} switched off` : ''}. ${allowance.used} of ${allowance.limit} allowed on your plan.`
+                : t('service.tasks.commands_card_desc', {
+                    count: tasks.length,
+                    off,
+                    used: allowance.used,
+                    limit: allowance.limit,
+                  })
             }
             padded={false}
           >
             {tasks.length === 0 ? (
               <EmptyState
                 icon={<Icon name="jobs" />}
-                title="Nothing scheduled"
-                description="A queue worker's nightly prune, a database vacuum, a report at 6am. The node
-                  keeps the schedule itself, so these keep running even when the panel is down."
+                title={t('service.tasks.empty_title')}
+                description={t('service.tasks.empty_desc')}
                 action={
                   writable ? (
-                    <Button onClick={() => setEditor({task: null})}>Schedule the first one</Button>
+                    <Button onClick={() => setEditor({task: null})}>{t('service.tasks.schedule_first')}</Button>
                   ) : null
                 }
               />
@@ -156,9 +144,7 @@ export default function ServiceTasksPage() {
           </Card>
 
           <p className="px-1 text-sm text-ink-500 dark:text-ink-400">
-            Commands run without a shell: the line is split into arguments and executed directly,
-            so a pipe or a redirect has to go inside a script the container already has. Output
-            goes to the container's logs.
+            {t('service.tasks.footer_hint')}
           </p>
         </>
       )}

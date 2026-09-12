@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, CardFact, CardFacts, Input, RelativeTime, useFormFields} from '@/shell'
 
 import type {ApiTokenView} from './authTypes'
@@ -33,15 +34,15 @@ export function ApiTokenRow({token, organizationName}: ApiTokenRowProps) {
         <span className="mr-auto text-sm font-medium break-all">{token.name}</span>
         {token.revokedAt ? (
           <Badge tone="failed" dot>
-            Revoked
+            {t('auth.tokens.badgeRevoked')}
           </Badge>
         ) : token.live ? (
           <Badge tone="running" dot>
-            Active
+            {t('auth.tokens.badgeActive')}
           </Badge>
         ) : (
           <Badge tone="degraded" dot>
-            Expired
+            {t('auth.tokens.badgeExpired')}
           </Badge>
         )}
       </div>
@@ -60,21 +61,21 @@ export function ApiTokenRow({token, organizationName}: ApiTokenRowProps) {
       </ul>
 
       <CardFacts>
-        <CardFact label="Organization">{organizationName ?? 'Platform-wide'}</CardFact>
-        <CardFact label="Created">
+        <CardFact label={t('auth.tokens.factOrg')}>{organizationName ?? t('auth.tokens.factPlatformWide')}</CardFact>
+        <CardFact label={t('auth.tokens.factCreated')}>
           <RelativeTime at={token.createdAt} />
         </CardFact>
-        <CardFact label="Expires">
-          <RelativeTime at={token.expiresAt} fallback="Never" />
+        <CardFact label={t('auth.tokens.factExpires')}>
+          <RelativeTime at={token.expiresAt} fallback={t('auth.tokens.factNever')} />
         </CardFact>
-        <CardFact label="Last used">
-          <RelativeTime at={token.lastUsedAt} fallback="Never used" />
+        <CardFact label={t('auth.tokens.factLastUsed')}>
+          <RelativeTime at={token.lastUsedAt} fallback={t('auth.tokens.factNeverUsed')} />
           {token.lastUsedAddress ? (
-            <span className="text-ink-500"> from {token.lastUsedAddress}</span>
+            <span className="text-ink-500">{t('auth.tokens.fromIp', {ip: token.lastUsedAddress})}</span>
           ) : null}
         </CardFact>
         {token.revokedAt ? (
-          <CardFact label="Revoked">
+          <CardFact label={t('auth.tokens.factRevoked')}>
             <RelativeTime at={token.revokedAt} />
             {token.revokedReason ? ` - ${token.revokedReason}` : ''}
           </CardFact>
@@ -91,11 +92,11 @@ export function ApiTokenRow({token, organizationName}: ApiTokenRowProps) {
         >
           <Input
             {...form.bind('reason')}
-            label="Why? (optional, kept with the record)"
+            label={t('auth.tokens.whyRevoke')}
             maxLength={200}
             autoComplete="off"
             enterKeyHint="done"
-            placeholder="Leaked in a build log"
+            placeholder={t('auth.tokens.whyPlaceholder')}
           />
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
@@ -104,19 +105,18 @@ export function ApiTokenRow({token, organizationName}: ApiTokenRowProps) {
               className="w-full sm:w-auto"
               loading={form.processing}
             >
-              {form.processing ? 'Revoking…' : 'Revoke it now'}
+              {form.processing ? t('auth.tokens.revoking') : t('auth.tokens.revokeNow')}
             </Button>
             <Button
               variant="ghost"
               className="w-full sm:w-auto"
               onClick={() => setConfirming(false)}
             >
-              Keep it
+              {t('auth.tokens.keepIt')}
             </Button>
           </div>
           <p className="text-xs leading-relaxed text-ink-500">
-            Anything using this token stops working straight away, and it cannot be brought
-            back.
+            {t('auth.tokens.revokeNotice')}
           </p>
         </form>
       ) : (
@@ -125,7 +125,7 @@ export function ApiTokenRow({token, organizationName}: ApiTokenRowProps) {
           className="mt-3 w-full sm:w-auto"
           onClick={() => setConfirming(true)}
         >
-          Revoke
+          {t('auth.tokens.revokeBtn')}
         </Button>
       )}
     </li>

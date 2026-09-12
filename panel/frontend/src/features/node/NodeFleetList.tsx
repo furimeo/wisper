@@ -1,5 +1,6 @@
 import type {ReactNode} from 'react'
 
+import {useI18n} from '@/i18n'
 import {Badge, DataList, EmptyState, Icon, RelativeTime} from '@/shell'
 
 import {formatMillicores, tightestShare} from './NodeCapacity'
@@ -28,6 +29,8 @@ export function NodeFleetList({
   label?: string
   empty?: ReactNode
 }) {
+  const {t} = useI18n()
+
   return (
     <DataList
       items={nodes}
@@ -38,9 +41,8 @@ export function NodeFleetList({
         empty ?? (
           <EmptyState
             icon={<Icon name="node" />}
-            title="No nodes yet"
-            description="A node is one machine running sasayaki. Add one and the panel gives you a
-              bootstrap token and a three-line install command to paste into its shell."
+            title={t('node.list.empty.title')}
+            description={t('node.list.empty.description')}
           />
         )
       }
@@ -48,8 +50,8 @@ export function NodeFleetList({
         <span className="flex items-center gap-2">
           <span className="truncate">{node.name}</span>
           {node.lessIsolated || node.quotaAdvisory ? (
-            <span className="text-failed" title="Weaker isolation than the platform claims">
-              <Icon name="shield" label="Weaker isolation" className="size-4" />
+            <span className="text-failed" title={t('node.fleet.isolationWarning')}>
+              <Icon name="shield" label={t('node.fleet.isolationLabel')} className="size-4" />
             </span>
           ) : null}
         </span>
@@ -59,7 +61,7 @@ export function NodeFleetList({
       columns={[
         {
           key: 'name',
-          header: 'Node',
+          header: t('node.fleet.col.node'),
           cell: (node) => (
             <div className="flex flex-col gap-0.5">
               <span>{node.name}</span>
@@ -71,7 +73,7 @@ export function NodeFleetList({
         },
         {
           key: 'state',
-          header: 'State',
+          header: t('node.fleet.col.state'),
           cell: (node) => (
             <div className="flex flex-col items-start gap-1">
               <NodeStateBadges node={node} />
@@ -81,7 +83,7 @@ export function NodeFleetList({
         },
         {
           key: 'workloads',
-          header: 'Workloads',
+          header: t('node.fleet.col.workloads'),
           align: 'right',
           cell: (node) => (
             <span className="tabular-nums">
@@ -92,13 +94,13 @@ export function NodeFleetList({
         },
         {
           key: 'capacity',
-          header: 'Fullest meter',
+          header: t('node.fleet.col.capacity'),
           align: 'right',
           cell: (node) => <ShareCell node={node} />,
         },
         {
           key: 'tags',
-          header: 'Tags',
+          header: t('node.fleet.col.tags'),
           cell: (node) =>
             node.tags.length === 0 ? (
               <span className="text-ink-400">-</span>
@@ -112,22 +114,22 @@ export function NodeFleetList({
         },
         {
           key: 'version',
-          header: 'Agent',
+          header: t('node.fleet.col.agent'),
           cell: (node) => (
             <span className="font-mono text-xs">
               {node.agentVersion ?? '-'}
               {node.needsUpgrade ? (
-                <span className="ml-1 font-sans text-degraded">update</span>
+                <span className="ml-1 font-sans text-degraded">{t('node.fleet.updateBadge')}</span>
               ) : null}
             </span>
           ),
         },
         {
           key: 'heartbeat',
-          header: 'Heartbeat',
+          header: t('node.fleet.col.heartbeat'),
           align: 'right',
           cell: (node) => (
-            <RelativeTime at={node.lastHeartbeatAt} fallback="never" className="text-xs" />
+            <RelativeTime at={node.lastHeartbeatAt} fallback={t('node.fleet.never')} className="text-xs" />
           ),
         },
       ]}
@@ -137,6 +139,7 @@ export function NodeFleetList({
 
 /** The right-hand side of a phone row: state, then how full the machine is. */
 function RowTrailing({node}: {node: NodeSummary}) {
+  const {t} = useI18n()
   const share = tightestShare(node)
   return (
     <div className="flex flex-col items-end gap-1">
@@ -158,7 +161,7 @@ function RowTrailing({node}: {node: NodeSummary}) {
       </Badge>
       {share === null ? null : (
         <span className="text-xs tabular-nums text-ink-500 dark:text-ink-400">
-          {Math.round(share * 100)}% full
+          {t('node.fleet.percentFull', {percent: Math.round(share * 100)})}
         </span>
       )}
     </div>
@@ -167,9 +170,10 @@ function RowTrailing({node}: {node: NodeSummary}) {
 
 /** The tightest of CPU, memory and disk, with the CPU figure for context. */
 function ShareCell({node}: {node: NodeSummary}) {
+  const {t} = useI18n()
   const share = tightestShare(node)
   if (share === null) {
-    return <span className="text-ink-400">not reported</span>
+    return <span className="text-ink-400">{t('node.fleet.notReported')}</span>
   }
   return (
     <span
@@ -180,7 +184,7 @@ function ShareCell({node}: {node: NodeSummary}) {
       {Math.round(share * 100)}%
       {node.cpuMillicoresCapacity === null ? null : (
         <span className="ml-1 text-xs text-ink-500 dark:text-ink-400">
-          of {formatMillicores(node.cpuMillicoresCapacity)}
+          {t('node.fleet.ofCapacity', {capacity: formatMillicores(node.cpuMillicoresCapacity)})}
         </span>
       )}
     </span>

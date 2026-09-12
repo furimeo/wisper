@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Button, ButtonLink, Card, Input, PageHeader, mayWrite, useFormFields} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -69,12 +70,11 @@ export default function NewServicePage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="New service" />
+      <Head title={t('project.newService.title')} />
 
       <PageHeader
-        title="New service"
-        description={`Adding to ${project.name}. The kind cannot be changed afterwards; everything
-          else can.`}
+        title={t('project.newService.title')}
+        description={t('project.newService.description', {name: project.name})}
       />
 
       {serviceAllowance && full ? (
@@ -87,8 +87,8 @@ export default function NewServicePage() {
         <Card>
           <p className="text-sm text-ink-700 dark:text-ink-300">
             {project.archived
-              ? 'This project is archived. Restore it from Settings before adding a service.'
-              : 'You have read access to this organization, so this form is off.'}
+              ? t('project.newService.archivedNotice')
+              : t('project.newService.readOnlyNotice')}
           </p>
         </Card>
       )}
@@ -100,7 +100,7 @@ export default function NewServicePage() {
           submit()
         }}
       >
-        <Card title="What it is">
+        <Card title={t('project.newService.whatItIsTitle')}>
           <div className="flex flex-col gap-4">
             <ServiceKindChooser
               kinds={kinds}
@@ -111,7 +111,7 @@ export default function NewServicePage() {
 
             <Input
               {...form.bind('name')}
-              label="Name"
+              label={t('project.newService.name')}
               required
               disabled={!writable}
               maxLength={120}
@@ -121,7 +121,7 @@ export default function NewServicePage() {
 
             <Input
               {...form.bind('slug')}
-              label="Address"
+              label={t('project.newService.slug')}
               disabled={!writable}
               maxLength={63}
               autoComplete="off"
@@ -129,7 +129,7 @@ export default function NewServicePage() {
               placeholder={derived || 'api'}
               hint={
                 derived
-                  ? `Leave it empty and the address becomes "${derived}". It cannot be changed later.`
+                  ? t('project.newService.slugDerivedHint', {slug: derived})
                   : slugRule(2)
               }
             />
@@ -137,7 +137,7 @@ export default function NewServicePage() {
         </Card>
 
         {kind === 'APP' ? (
-          <Card title="Container" description="What the node runs, and how it keeps it running.">
+          <Card title={t('project.newService.containerTitle')} description={t('project.newService.containerDesc')}>
             <RuntimeFields
               form={form}
               restartPolicies={restartPolicies}
@@ -148,11 +148,11 @@ export default function NewServicePage() {
 
         {kind === '' ? null : (
           <Card
-            title="Source"
+            title={t('project.newService.sourceTitle')}
             description={
               kind === 'SITE'
-                ? 'A site is built from a repository, and the build produces the directory the node serves.'
-                : 'Optional for an app: how your code gets into a language-runtime image.'
+                ? t('project.newService.sourceDescSite')
+                : t('project.newService.sourceDescApp')
             }
           >
             <div className="flex flex-col gap-4">
@@ -168,7 +168,7 @@ export default function NewServicePage() {
         )}
 
         {kind === '' ? null : (
-          <Card title="Limits" description="Enforced by the node through cgroups.">
+          <Card title={t('project.newService.limitsTitle')} description={t('project.newService.limitsDesc')}>
             <ResourceFields
               form={form}
               memoryAllowance={memoryAllowance}
@@ -179,7 +179,7 @@ export default function NewServicePage() {
         )}
 
         {kind === 'APP' ? (
-          <Card title="Isolation">
+          <Card title={t('project.newService.isolationTitle')}>
             <IsolationFields form={form} isolations={isolations} disabled={!writable} />
           </Card>
         ) : null}
@@ -192,7 +192,7 @@ export default function NewServicePage() {
             disabled={!writable || full || kind === ''}
             onClick={submit}
           >
-            Create service
+            {t('project.newService.submit')}
           </Button>
           <ButtonLink
             variant="secondary"
@@ -200,7 +200,7 @@ export default function NewServicePage() {
             className="sm:w-auto"
             href={`/projects/${project.id}`}
           >
-            Cancel
+            {t('project.newService.cancel')}
           </ButtonLink>
         </div>
         <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />

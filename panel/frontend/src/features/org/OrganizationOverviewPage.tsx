@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   ButtonLink,
@@ -54,7 +55,7 @@ export default function OrganizationOverviewPage() {
   // same variable, so this and `organization.id` are the same value; the URL is used
   // because it is the one that cannot be null.
   const organizationId = pathOf(page.url).split('/')[2] ?? ''
-  const name = organization?.name ?? 'Organization'
+  const name = organization?.name ?? t('org.overview.fallbackTitle')
 
   return (
     <div className="flex flex-col gap-4">
@@ -64,8 +65,11 @@ export default function OrganizationOverviewPage() {
         title={name}
         description={
           organization
-            ? `You are ${roleLabel(viewerRole).toLowerCase()} here. ${roleDescription(viewerRole)}`
-            : 'What this organization is allowed, and who is in it.'
+            ? t('org.overview.roleDescription', {
+                role: roleLabel(viewerRole).toLowerCase(),
+                description: roleDescription(viewerRole),
+              })
+            : t('org.overview.defaultDescription')
         }
         actions={
           <ButtonLink
@@ -73,7 +77,7 @@ export default function OrganizationOverviewPage() {
             variant="secondary"
             icon={<Icon name="account" />}
           >
-            Members
+            {t('org.overview.membersBtn')}
           </ButtonLink>
         }
       />
@@ -81,35 +85,33 @@ export default function OrganizationOverviewPage() {
       {organization?.suspended ? (
         <div className="rounded-xl border border-failed/40 bg-failed/10 px-4 py-3.5 md:px-5">
           <p className="text-sm font-semibold text-ink-900 dark:text-ink-100">
-            This organization is suspended
+            {t('org.overview.suspendedTitle')}
           </p>
           <p className="mt-1 text-sm leading-relaxed text-ink-800 dark:text-ink-200">
-            {organization.suspensionReason ||
-              'An operator suspended it. No reason was recorded on the record.'}
+            {organization.suspensionReason || t('org.overview.suspendedFallbackReason')}
           </p>
           <p className="mt-1 text-sm text-ink-600 dark:text-ink-400">
-            Everything already running keeps running. Nothing new can be created until an
-            operator resumes it.
+            {t('org.overview.suspendedNotice')}
           </p>
         </div>
       ) : null}
 
       <QuotaAlert allowances={allowances} />
 
-      <Card title="Plan" action={plan ? <Badge tone="accent">{plan.code}</Badge> : null}>
+      <Card title={t('org.overview.planCardTitle')} action={plan ? <Badge tone="accent">{plan.code}</Badge> : null}>
         {plan ? (
           <>
             <CardFacts>
-              <CardFact label="Tier">{plan.name}</CardFact>
-              <CardFact label="Members">
-                {memberCount} {memberCount === 1 ? 'person' : 'people'}
+              <CardFact label={t('org.overview.planTier')}>{plan.name}</CardFact>
+              <CardFact label={t('org.overview.planMembers')}>
+                {t('org.overview.memberCount', {count: memberCount})}
               </CardFact>
               {organization ? (
-                <CardFact label="Address">
+                <CardFact label={t('org.overview.planAddress')}>
                   <code className="font-mono">/{organization.slug}</code>
                 </CardFact>
               ) : null}
-              <CardFact label="Your role">{roleLabel(viewerRole)}</CardFact>
+              <CardFact label={t('org.overview.planYourRole')}>{roleLabel(viewerRole)}</CardFact>
             </CardFacts>
             {plan.description ? (
               <p className="mt-2 text-sm leading-relaxed text-ink-600 dark:text-ink-400">
@@ -119,20 +121,17 @@ export default function OrganizationOverviewPage() {
           </>
         ) : (
           <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-            This organization is not on a plan, which means every limit below is zero and
-            nothing new can be created. An operator has to assign one - it is not something
-            that can be fixed from here.
+            {t('org.overview.noPlan')}
           </p>
         )}
         <p className="mt-3 text-sm text-ink-500 dark:text-ink-400">
-          Changing tier is an operator decision. Ask, and they can move the organization or
-          grant an exception on a single limit without moving it.
+          {t('org.overview.planFooter')}
         </p>
       </Card>
 
       <Card
-        title="Limits"
-        description="What the plan allows, and what is used against it right now."
+        title={t('org.overview.limitsTitle')}
+        description={t('org.overview.limitsDescription')}
         padded={false}
       >
         <ul className="divide-y divide-ink-200 px-4 md:px-5 dark:divide-ink-800">
@@ -145,8 +144,8 @@ export default function OrganizationOverviewPage() {
       </Card>
 
       <Card
-        title="People"
-        description={`${memberCount} ${memberCount === 1 ? 'person has' : 'people have'} access to everything in this organization.`}
+        title={t('org.overview.peopleTitle')}
+        description={t('org.overview.peopleDesc', {count: memberCount})}
         footer={
           <ButtonLink
             href={`/orgs/${organizationId}/members`}
@@ -154,14 +153,12 @@ export default function OrganizationOverviewPage() {
             block
             className="sm:w-auto"
           >
-            Manage members
+            {t('org.overview.manageMembers')}
           </ButtonLink>
         }
       >
         <p className="text-sm leading-relaxed text-ink-600 dark:text-ink-400">
-          A member's role decides what they may do in every project here, not in one of them.
-          Fine-grained per-project access is deliberately not a thing: a permission model
-          nobody can hold in their head is a permission model that gets granted wide and left.
+          {t('org.overview.peopleNote')}
         </p>
       </Card>
     </div>

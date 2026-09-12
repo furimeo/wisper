@@ -1,20 +1,8 @@
+import {t} from '@/i18n'
 import {Badge, ByteSize, Icon, RelativeTime, cx} from '@/shell'
 
 import type {Volume} from './serviceTypes'
 
-/**
- * One disk attached to a service.
- *
- * Two numbers matter and they come from opposite directions: `sizeBytes` is the quota the
- * panel published, and `usedBytes` is what the node measured. The second is null until a
- * node has reported, and that is drawn as "not measured yet" rather than as zero - a bar
- * sitting empty because nothing has been counted looks exactly like a bar sitting empty
- * because the disk is free, and only one of those means the volume is fine.
- *
- * `lastError` is shown in full when there is one. A volume the node could not create is
- * the single most useful sentence on this screen, and hiding it behind a detail view is
- * how a customer concludes the platform silently did nothing.
- */
 export function VolumeRow({
   volume,
   onOpen,
@@ -36,8 +24,8 @@ export function VolumeRow({
           <code className="truncate font-mono text-sm font-medium text-ink-900 dark:text-ink-100">
             {volume.mountPath}
           </code>
-          {volume.readOnly ? <Badge tone="neutral">Read-only</Badge> : null}
-          {volume.backupEnabled ? null : <Badge tone="degraded">No backups</Badge>}
+          {volume.readOnly ? <Badge tone="neutral">{t('service.volumes.read_only_badge')}</Badge> : null}
+          {volume.backupEnabled ? null : <Badge tone="degraded">{t('service.volumes.no_backups_badge')}</Badge>}
         </span>
 
         <span className="mt-0.5 block truncate text-xs text-ink-500 dark:text-ink-400">
@@ -46,11 +34,11 @@ export function VolumeRow({
             <>
               {' · '}
               <span className={full ? 'text-degraded' : undefined}>
-                <ByteSize bytes={used} /> used
+                <ByteSize bytes={used} /> {t('service.shortcuts.set') === 'set' ? 'used' : 'đã dùng'}
               </span>
             </>
           ) : (
-            ' · not measured yet'
+            ` · ${t('service.volumes.not_measured_yet')}`
           )}
         </span>
 
@@ -59,8 +47,8 @@ export function VolumeRow({
           role="img"
           aria-label={
             measured
-              ? `${volume.name} is ${percent}% full`
-              : `${volume.name} has not been measured by a node yet`
+              ? t('service.volumes.measured_full_aria', {name: volume.name, percent})
+              : t('service.volumes.not_measured_aria', {name: volume.name})
           }
         >
           <span
@@ -74,8 +62,11 @@ export function VolumeRow({
 
         {volume.usedBytesMeasuredAt ? (
           <span className="mt-1 block text-xs text-ink-500 dark:text-ink-400">
-            Measured <RelativeTime at={volume.usedBytesMeasuredAt} />
-            {volume.inodeCount === null ? null : ` · ${volume.inodeCount.toLocaleString()} files`}
+            {t('service.volumes.measured_at', {time: ''})}
+            <RelativeTime at={volume.usedBytesMeasuredAt} />
+            {volume.inodeCount === null
+              ? null
+              : ` · ${t('service.volumes.files_count', {count: volume.inodeCount.toLocaleString()})}`}
           </span>
         ) : null}
 
@@ -101,7 +92,9 @@ export function VolumeRow({
           {body}
         </button>
       ) : (
-        <div className="flex w-full touch-target items-start gap-3 px-4 py-3 md:px-5">{body}</div>
+        <div className="flex w-full touch-target items-start gap-3 px-4 py-3 md:px-5">
+          {body}
+        </div>
       )}
     </li>
   )

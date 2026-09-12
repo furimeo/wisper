@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, ButtonLink, Card, EmptyState, Icon, PageHeader, mayWrite} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -12,22 +13,6 @@ import {VolumeDialog} from './VolumeDialog'
 import {VolumeRow} from './VolumeRow'
 import type {ServiceView, Volume} from './serviceTypes'
 
-/**
- * `GET /services/{serviceId}/volumes` - the disks attached to one service.
- *
- * A static site reaches this page too, from the same tab strip, and it renders the reason
- * it has no volumes rather than an empty list above an "attach" button that is refused
- * every time. `CreateVolume` throws for a site; a screen that offers the action anyway is
- * a screen teaching customers that the panel's buttons are decorative.
- *
- * The quota bar is at the top rather than beside the button, because the number that
- * decides whether the next volume can exist is worth reading before the form is opened -
- * and on a phone anything beside a button is below it.
- *
- * Attaching a volume pins the service to whichever node holds it. That sentence is on the
- * page, not only in the flash message afterwards: it is the one consequence of this screen
- * that reaches beyond it.
- */
 type ServiceVolumesProps = {
   service: ServiceView
   volumes: Volume[]
@@ -45,36 +30,33 @@ export default function ServiceVolumesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`${service.name} volumes`} />
+      <Head title={t('service.volumes.head_title', {name: service.name})} />
       <ServiceTabs serviceId={service.id} />
 
       <PageHeader
-        title="Volumes"
+        title={t('service.volumes.title')}
         description={
           service.site
-            ? 'A static site is files on disk already, so there is nothing to mount into it.'
-            : 'Directories on the node that outlive the container. Attaching one pins this service to its node.'
+            ? t('service.volumes.description_site')
+            : t('service.volumes.description_app')
         }
         actions={
           writable ? (
             <Button icon={<Icon name="database" />} onClick={() => setEditor({volume: null})}>
-              Attach a volume
+              {t('service.volumes.attach_button')}
             </Button>
           ) : null
         }
       />
 
       {service.site ? (
-        <Card title="Nothing to mount">
+        <Card title={t('service.volumes.nothing_to_mount_title')}>
           <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-            A static site has no running container, so there is nothing for a volume to appear
-            inside. The files this site publishes are on the node already - open the file
-            manager to browse, edit or upload them, and the deployment history to roll a release
-            back.
+            {t('service.volumes.nothing_to_mount_body')}
           </p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <ButtonLink variant="secondary" block className="sm:w-auto" href={`/services/${service.id}/files`}>
-              Open the file manager
+              {t('service.volumes.open_file_manager')}
             </ButtonLink>
             <ButtonLink
               variant="secondary"
@@ -82,7 +64,7 @@ export default function ServiceVolumesPage() {
               className="sm:w-auto"
               href={`/services/${service.id}/deployments`}
             >
-              Deployments
+              {t('service.volumes.deployments_button')}
             </ButtonLink>
           </div>
         </Card>
@@ -95,7 +77,7 @@ export default function ServiceVolumesPage() {
           {mayWrite(viewerRole) || service.archived ? null : (
             <Card>
               <p className="text-sm text-ink-700 dark:text-ink-300">
-                You have read access to this organization, so the controls on this page are off.
+                {t('service.volumes.read_only_notice')}
               </p>
             </Card>
           )}
@@ -103,31 +85,28 @@ export default function ServiceVolumesPage() {
           {service.archived ? (
             <Card>
               <p className="text-sm text-ink-700 dark:text-ink-300">
-                This service is archived. Its volumes are intact and nothing was deleted - restore
-                the project from its settings screen to change them again.
+                {t('service.volumes.archived_notice')}
               </p>
             </Card>
           ) : null}
 
           <Card
-            title="Attached"
+            title={t('service.volumes.attached_card_title')}
             description={
               volumes.length === 0
                 ? undefined
-                : `${volumes.length} ${volumes.length === 1 ? 'volume' : 'volumes'} on this service.`
+                : t('service.volumes.attached_card_desc', {count: volumes.length})
             }
             padded={false}
           >
             {volumes.length === 0 ? (
               <EmptyState
                 icon={<Icon name="database" />}
-                title="No volumes attached"
-                description="Everything the container writes outside a volume is lost the next time it
-                  is recreated - on a redeploy, an image change, a node reboot. Anything you want to
-                  keep goes on a volume."
+                title={t('service.volumes.empty_title')}
+                description={t('service.volumes.empty_desc')}
                 action={
                   writable ? (
-                    <Button onClick={() => setEditor({volume: null})}>Attach the first one</Button>
+                    <Button onClick={() => setEditor({volume: null})}>{t('service.volumes.attach_first')}</Button>
                   ) : null
                 }
               />
@@ -146,10 +125,13 @@ export default function ServiceVolumesPage() {
 
           {volumes.length > 0 ? (
             <p className="px-1 text-sm text-ink-500 dark:text-ink-400">
-              {volumes.length === 1 ? 'This volume counts' : 'These volumes count'} for{' '}
-              {Math.round((attached / Math.max(1, allowance.limit)) * 100)}% of your disk quota.
-              Detaching one leaves its data on the node until an operator purges it, so the space
-              is freed against the plan but the files are still recoverable.
+              {volumes.length === 1
+                ? t('service.volumes.quota_foot_single', {
+                    percent: Math.round((attached / Math.max(1, allowance.limit)) * 100),
+                  })
+                : t('service.volumes.quota_foot_multi', {
+                    percent: Math.round((attached / Math.max(1, allowance.limit)) * 100),
+                  })}
             </p>
           ) : null}
         </>

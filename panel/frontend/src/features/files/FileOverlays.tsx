@@ -1,5 +1,6 @@
 import {Suspense, lazy} from 'react'
 
+import {t} from '@/i18n'
 import {Spinner} from '@/shell'
 
 import {ArchiveDialog} from './ArchiveDialog'
@@ -122,7 +123,7 @@ export function FileOverlays({
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/40">
               <span className="flex items-center gap-2 rounded-lg bg-white px-4 py-3 text-sm shadow-lg dark:bg-ink-900">
                 <Spinner />
-                Opening the editor
+                {t('files.overlays.opening_editor')}
               </span>
             </div>
           }

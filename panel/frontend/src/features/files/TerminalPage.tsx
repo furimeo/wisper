@@ -3,6 +3,7 @@ import type {ReactNode} from 'react'
 import {Suspense, lazy, useCallback, useRef, useState} from 'react'
 
 import {Badge, Button, ButtonLink, Card, PageHeader, Spinner, useTheme} from '@/shell'
+import {t} from '@/i18n'
 
 import {ServiceTabs} from '@/features/service/ServiceTabs'
 import type {ServiceLocation} from '@/features/service/serviceTypes'
@@ -139,15 +140,13 @@ export default function TerminalPage() {
   if (!placed) {
     return (
       <Frame service={service}>
-        <Card title="Nothing is running this service yet">
+        <Card title={t('terminal.page.not_placed_title')}>
           <p className="text-sm text-ink-700 dark:text-ink-300">
-            A shell runs inside the container, so there has to be one. Start {service.name} and
-            this page will open a shell in it - the platform places it on a node, pulls the
-            image and reports back, which usually takes a few seconds.
+            {t('terminal.page.not_placed_desc', {name: service.name})}
           </p>
           <div className="mt-3">
             <ButtonLink href={`/services/${service.serviceId}`} variant="secondary">
-              Go to the service
+              {t('terminal.page.go_to_service')}
             </ButtonLink>
           </div>
         </Card>
@@ -158,18 +157,16 @@ export default function TerminalPage() {
   if (!canOpen) {
     return (
       <Frame service={service}>
-        <Card title="You have read access to this organization">
+        <Card title={t('terminal.page.readonly_title')}>
           <p className="text-sm text-ink-700 dark:text-ink-300">
-            A shell inside a container can do anything the application can, so opening one
-            counts as changing things. Somebody with a developer role or above can open it,
-            and logs and metrics are still available to you.
+            {t('terminal.page.readonly_desc')}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <ButtonLink href={`/services/${service.serviceId}/logs`} variant="secondary">
-              Logs
+              {t('terminal.page.logs_button')}
             </ButtonLink>
             <ButtonLink href={`/services/${service.serviceId}/metrics`} variant="secondary">
-              Metrics
+              {t('terminal.page.metrics_button')}
             </ButtonLink>
           </div>
         </Card>
@@ -180,18 +177,21 @@ export default function TerminalPage() {
   return (
     <Frame service={service}>
       <PageHeader
-        title="Terminal"
-        description={`/bin/sh inside the container. It ends by itself after ${minutes(idleTimeoutSeconds)} idle, and after ${hours(maxDurationSeconds)} whatever happens.`}
+        title={t('terminal.page.header_title')}
+        description={t('terminal.page.header_desc', {
+          idle: minutes(idleTimeoutSeconds),
+          max: hours(maxDurationSeconds),
+        })}
         actions={
           shell.phase === 'live' ? (
             <Button variant="danger" onClick={shell.close}>
-              End session
+              {t('terminal.page.end_session')}
             </Button>
           ) : (
             <Button onClick={start} loading={shell.phase === 'opening'}>
               {shell.phase === 'ended' || shell.phase === 'failed'
-                ? 'Start another shell'
-                : 'Start a shell'}
+                ? t('terminal.page.start_another_shell')
+                : t('terminal.page.start_shell')}
             </Button>
           )
         }
@@ -200,7 +200,9 @@ export default function TerminalPage() {
       <div className="flex flex-wrap items-center gap-2">
         {shell.phase === 'live' ? (
           <Badge tone={shell.reconnecting ? 'degraded' : 'running'} dot pulse={shell.reconnecting}>
-            {shell.reconnecting ? 'Reconnecting' : 'Connected'}
+            {shell.reconnecting
+              ? t('terminal.page.badge_reconnecting')
+              : t('terminal.page.badge_connected')}
           </Badge>
         ) : null}
         {shell.ready ? (
@@ -210,17 +212,16 @@ export default function TerminalPage() {
         ) : null}
         {shell.session ? (
           <span className="font-mono text-xs text-ink-500 dark:text-ink-400">
-            container {shell.session.containerId.slice(0, 12)}
+            {t('terminal.page.container_label', {id: shell.session.containerId.slice(0, 12)})}
           </span>
         ) : null}
       </div>
 
       {shell.reconnecting ? (
         <p className="rounded-lg bg-degraded/15 px-3 py-2 text-sm text-ink-800 dark:text-ink-100">
-          The connection to the shell dropped and is being re-established. Anything typed in
-          the meantime is held and sent when it comes back.{' '}
+          {t('terminal.page.reconnecting_banner')}
           <button type="button" onClick={shell.reconnect} className="underline underline-offset-2">
-            Reconnect now
+            {t('terminal.page.reconnect_now')}
           </button>
         </p>
       ) : null}
@@ -233,9 +234,10 @@ export default function TerminalPage() {
 
       {shell.exit ? (
         <p className="rounded-lg bg-ink-100 px-3 py-2 text-sm text-ink-800 dark:bg-ink-800 dark:text-ink-100">
-          The shell ended with exit code {shell.exit.code}
-          {shell.exit.reason ? `: ${shell.exit.reason}` : '.'} Nothing in the container was
-          stopped - only the shell.
+          {t('terminal.page.exit_banner', {
+            code: shell.exit.code,
+            reason: shell.exit.reason ? `: ${shell.exit.reason}` : '.',
+          })}
         </p>
       ) : null}
 
@@ -246,7 +248,7 @@ export default function TerminalPage() {
               fallback={
                 <div className="flex h-full items-center justify-center gap-2 text-sm text-ink-500">
                   <Spinner />
-                  Loading the terminal
+                  {t('terminal.page.loading_terminal')}
                 </div>
               }
             >
@@ -271,7 +273,7 @@ export default function TerminalPage() {
                 onClick={() => void paste()}
                 className="flex h-11 items-center rounded-lg bg-accent-600 px-3 text-sm font-medium text-white"
               >
-                Paste
+                {t('terminal.page.paste_button')}
               </button>
             }
           />
@@ -279,9 +281,7 @@ export default function TerminalPage() {
       ) : (
         <Card>
           <p className="text-sm text-ink-700 dark:text-ink-300">
-            No shell is running. Opening this page does not start one - a terminal left open
-            in a background tab is a process inside your container, so it is always something
-            you ask for.
+            {t('terminal.page.no_shell_running')}
           </p>
         </Card>
       )}
@@ -307,7 +307,7 @@ function Frame({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`Terminal · ${service.name}`} />
+      <Head title={t('terminal.page.head_title', {service: service.name})} />
       <ServiceTabs serviceId={service.serviceId} />
       {children}
     </div>
@@ -316,10 +316,10 @@ function Frame({
 
 function minutes(seconds: number): string {
   const value = Math.max(1, Math.round(seconds / 60))
-  return `${value} minute${value === 1 ? '' : 's'}`
+  return t('terminal.page.duration_minutes', {count: value})
 }
 
 function hours(seconds: number): string {
   const value = Math.max(1, Math.round(seconds / 3600))
-  return `${value} hour${value === 1 ? '' : 's'}`
+  return t('terminal.page.duration_hours', {count: value})
 }

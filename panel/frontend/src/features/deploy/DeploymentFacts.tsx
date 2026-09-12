@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Card, CardFact, CardFacts, CopyButton, RelativeTime} from '@/shell'
 
 import type {DeploymentSummary, DeploymentTarget} from './deployTypes'
@@ -9,16 +10,6 @@ import {
   triggerLabel,
 } from './deployVocabulary'
 
-/**
- * What was deployed, by whom, from where, and onto what.
- *
- * Every value here is a fact from the row rather than a summary of several: a customer
- * comparing "the deploy that worked" with "the deploy that did not" is comparing commits,
- * branches and nodes one at a time, and a paragraph would make them read all of it to find
- * the one that differs. A missing value says so in words - a webhook has no person behind
- * it, an app has no release directory - because an em dash with no explanation reads as a
- * bug.
- */
 export function DeploymentFacts({
   deployment,
   target,
@@ -29,73 +20,73 @@ export function DeploymentFacts({
   const commit = shortCommit(deployment.commitSha)
 
   return (
-    <Card title="Details">
+    <Card title={t('deploy.facts.title')}>
       <CardFacts>
-        <CardFact label="Source">{sourceLabel(deployment.source)}</CardFact>
+        <CardFact label={t('deploy.facts.source')}>{sourceLabel(deployment.source)}</CardFact>
 
-        <CardFact label="Started by">
+        <CardFact label={t('deploy.facts.started_by')}>
           {deployment.triggeredBy ?? triggerLabel(deployment.trigger)}
         </CardFact>
 
-        <CardFact label="Branch or tag">
-          {deployment.gitRef ?? 'Not from a repository'}
+        <CardFact label={t('deploy.facts.branch_or_tag')}>
+          {deployment.gitRef ?? t('deploy.facts.not_from_repo')}
         </CardFact>
 
-        <CardFact label="Commit">
+        <CardFact label={t('deploy.facts.commit')}>
           {commit === null ? (
-            'Not from a repository'
+            t('deploy.facts.not_from_repo')
           ) : (
             <span className="flex flex-wrap items-center gap-2">
               <code className="font-mono">{commit}</code>
               <CopyButton
                 value={deployment.commitSha ?? commit}
-                describedAs="Copy the full commit hash"
+                describedAs={t('deploy.facts.copy_hash')}
               />
             </span>
           )}
         </CardFact>
 
         {deployment.commitSubject ? (
-          <CardFact label="Commit message">{deployment.commitSubject}</CardFact>
+          <CardFact label={t('deploy.facts.commit_message')}>{deployment.commitSubject}</CardFact>
         ) : null}
 
         {deployment.commitAuthor ? (
-          <CardFact label="Author">{deployment.commitAuthor}</CardFact>
+          <CardFact label={t('deploy.facts.author')}>{deployment.commitAuthor}</CardFact>
         ) : null}
 
         {deployment.rolledBackFromSequence === null ? null : (
-          <CardFact label="Restored">
-            Deployment #{deployment.rolledBackFromSequence}
+          <CardFact label={t('deploy.facts.restored')}>
+            {t('deploy.facts.restored_value', {sequence: deployment.rolledBackFromSequence})}
           </CardFact>
         )}
 
-        <CardFact label="Queued">
+        <CardFact label={t('deploy.facts.queued')}>
           <RelativeTime at={deployment.queuedAt} />
         </CardFact>
 
-        <CardFact label="Finished">
+        <CardFact label={t('deploy.facts.finished')}>
           {deployment.finishedAt === null ? (
-            'Still running'
+            t('deploy.facts.still_running')
           ) : (
             <RelativeTime at={deployment.finishedAt} />
           )}
         </CardFact>
 
-        <CardFact label="Took">{formatDuration(durationOf(deployment))}</CardFact>
+        <CardFact label={t('deploy.facts.took')}>{formatDuration(durationOf(deployment))}</CardFact>
 
-        <CardFact label="Node">
+        <CardFact label={t('deploy.facts.node')}>
           {deployment.nodeId === null ? (
-            'No node has taken it yet'
+            t('deploy.facts.no_node_yet')
           ) : (
             <code className="font-mono text-xs break-all">{deployment.nodeId}</code>
           )}
         </CardFact>
 
-        <CardFact label="Release">
+        <CardFact label={t('deploy.facts.release')}>
           {deployment.releasePath === null ? (
             target.kind === 'APP'
-              ? 'An app has no release directory - it runs an image'
-              : 'Nothing has been published for this deployment'
+              ? t('deploy.facts.app_no_release_dir')
+              : t('deploy.facts.nothing_published')
           ) : (
             <code className="font-mono text-xs break-all">{deployment.releasePath}</code>
           )}

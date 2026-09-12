@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, Card, EmptyState, askConfirmation, useFormFields} from '@/shell'
 
 import type {SessionView} from './authTypes'
@@ -29,11 +30,12 @@ export function SessionList({sessions}: SessionListProps) {
 
   async function endEverythingElse() {
     const confirmed = await askConfirmation({
-      title: 'Sign out every other browser?',
+      title: t('auth.sessions.confirmTitle'),
       body:
-        `${others} other session${others === 1 ? '' : 's'} will end on its next request. ` +
-        'This browser stays signed in.',
-      confirmLabel: 'Sign them out',
+        others === 1
+          ? t('auth.sessions.confirmBody', {count: others})
+          : t('auth.sessions.confirmBodyPlural', {count: others}),
+      confirmLabel: t('auth.sessions.confirmBtn'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -43,16 +45,14 @@ export function SessionList({sessions}: SessionListProps) {
 
   return (
     <Card
-      title="Signed-in browsers"
-      description="Anything you do not recognise should be signed out, and then your password
-        changed."
+      title={t('auth.sessions.title')}
+      description={t('auth.sessions.description')}
       action={<Badge>{sessions.length}</Badge>}
     >
       {sessions.length === 0 ? (
         <EmptyState
-          title="No live sessions"
-          description="Nothing is signed in to this account right now, including this page - which
-            means the session behind it has just expired. Reload to sign in again."
+          title={t('auth.sessions.emptyTitle')}
+          description={t('auth.sessions.emptyDesc')}
         />
       ) : (
         <>
@@ -81,11 +81,11 @@ export function SessionList({sessions}: SessionListProps) {
               onClick={() => void endEverythingElse()}
             >
               {others === 0
-                ? 'No other browsers to sign out'
-                : `Sign out the other ${others === 1 ? 'browser' : `${others} browsers`}`}
+                ? t('auth.sessions.btnNoOther')
+                : t('auth.sessions.btnSignOutOthers', {count: others})}
             </Button>
             <p className="mt-2 text-xs leading-relaxed text-ink-500">
-              This browser is left alone. The others are signed out on their next request.
+              {t('auth.sessions.note')}
             </p>
           </div>
         </>

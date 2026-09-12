@@ -1,23 +1,9 @@
+import {t} from '@/i18n'
 import {Card, Icon, RelativeTime, Spinner, cx} from '@/shell'
 
 import type {DeploymentStatus, DeploymentSummary} from './deployTypes'
 import {statusLabel, statusSentence} from './deployVocabulary'
 
-/**
- * Where this deployment got to, drawn as the state machine it actually is.
- *
- * `DeploymentStatus` is one value, and one value cannot answer the question somebody has
- * when a deploy is slow: is it waiting for a machine, or is it compiling, or has it
- * finished compiling and got stuck going live. Those are three different problems with
- * three different answers, so the path is drawn whole and the current position is marked
- * on it.
- *
- * Where a step is not knowable, it is not claimed. A failed deployment does not record
- * which step it failed at, so how far it got is inferred from the two facts that are
- * recorded - a node id means it was assigned, a start time means work began - and
- * everything past that is drawn as "did not get here" rather than as a guess dressed up
- * with a tick.
- */
 type StepState = 'done' | 'active' | 'stopped' | 'pending'
 
 interface Step {
@@ -28,7 +14,6 @@ interface Step {
   state: StepState
 }
 
-/** The order the state machine runs in. The outcome is rank 4, whatever it turns out to be. */
 const RANK: Record<DeploymentStatus, number> = {
   QUEUED: 0,
   ASSIGNED: 1,
@@ -46,7 +31,7 @@ export function DeploymentTimeline({deployment}: {deployment: DeploymentSummary}
   const steps = stepsFor(deployment)
 
   return (
-    <Card title="Progress" description={statusSentence(deployment.status)}>
+    <Card title={t('deploy.timeline.title')} description={statusSentence(deployment.status)}>
       <ol className="flex flex-col">
         {steps.map((step, index) => (
           <li key={step.rank} className="flex gap-3">
@@ -155,18 +140,18 @@ function stepsFor(deployment: DeploymentSummary): Step[] {
   const steps: Step[] = [
     {
       rank: 0,
-      label: 'Queued',
-      detail: 'Accepted and written down, waiting for a worker to pick it up.',
+      label: t('deploy.timeline.queued_label'),
+      detail: t('deploy.timeline.queued_detail'),
       at: deployment.queuedAt,
       state: state(0),
     },
     {
       rank: 1,
-      label: 'Handed to a node',
+      label: t('deploy.timeline.assigned_label'),
       detail:
         deployment.nodeId === null
-          ? 'Waiting for a node with room for it.'
-          : 'A node was chosen and the work was sent to it.',
+          ? t('deploy.timeline.assigned_detail_waiting')
+          : t('deploy.timeline.assigned_detail_done'),
       at: null,
       state: state(1),
     },
@@ -175,8 +160,8 @@ function stepsFor(deployment: DeploymentSummary): Step[] {
   if (!app && !restored) {
     steps.push({
       rank: 2,
-      label: 'Building',
-      detail: 'Cloning, installing and compiling on the node, in a throwaway container.',
+      label: t('deploy.timeline.building_label'),
+      detail: t('deploy.timeline.building_detail'),
       at: deployment.startedAt,
       state: state(2),
     })
@@ -184,12 +169,12 @@ function stepsFor(deployment: DeploymentSummary): Step[] {
 
   steps.push({
     rank: 3,
-    label: 'Publishing',
+    label: t('deploy.timeline.publishing_label'),
     detail: app
-      ? 'Starting a container from the new image and retiring the old one.'
+      ? t('deploy.timeline.publishing_detail_app')
       : restored
-        ? 'Pointing the live symlink back at the release that is already on disk.'
-        : 'Swapping the live symlink onto the new release directory. No downtime, and not cancellable.',
+        ? t('deploy.timeline.publishing_detail_rollback')
+        : t('deploy.timeline.publishing_detail_site'),
     at: app ? deployment.startedAt : null,
     state: state(3),
   })
@@ -205,12 +190,6 @@ function stepsFor(deployment: DeploymentSummary): Step[] {
   return steps
 }
 
-/**
- * The last rank the record proves it got to.
- *
- * A superseded deployment never left the queue by definition. Otherwise: a node id means
- * it was assigned, and a start time means the node began work on it.
- */
 function furthestReached(deployment: DeploymentSummary): number {
   if (deployment.status === 'SUPERSEDED') {
     return 0
@@ -223,12 +202,12 @@ function furthestReached(deployment: DeploymentSummary): number {
 
 function outcomeLabel(deployment: DeploymentSummary): string {
   if (deployment.status === 'SUCCEEDED') {
-    return deployment.current ? 'Live' : 'Succeeded'
+    return deployment.current ? t('deploy.timeline.live_label') : statusLabel('SUCCEEDED')
   }
   if (STOPPED_EARLY.includes(deployment.status)) {
     return statusLabel(deployment.status)
   }
-  return 'Finished'
+  return t('deploy.timeline.finished_label')
 }
 
 function outcomeDetail(deployment: DeploymentSummary): string {
@@ -237,11 +216,11 @@ function outcomeDetail(deployment: DeploymentSummary): string {
   }
   if (deployment.status === 'SUCCEEDED') {
     return deployment.current
-      ? 'This is what visitors are being served.'
-      : 'It was published and something newer has taken over since. It can be rolled back to.'
+      ? t('deploy.timeline.detail_live')
+      : t('deploy.timeline.detail_superseded_past')
   }
   if (STOPPED_EARLY.includes(deployment.status)) {
     return statusSentence(deployment.status)
   }
-  return 'Not finished yet.'
+  return t('deploy.timeline.detail_not_finished')
 }

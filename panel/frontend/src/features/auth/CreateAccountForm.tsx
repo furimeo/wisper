@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Card, Checkbox, CopyButton, Input, Select, useFormFields} from '@/shell'
 
 import type {PlatformRole} from './authTypes'
@@ -21,11 +22,6 @@ type CreateAccountFormProps = {
 /** `PasswordPolicy.MINIMUM_CHARACTERS` on the Java side. */
 const MINIMUM = 12
 
-const ROLE_LABELS: Record<PlatformRole, string> = {
-  CUSTOMER: 'Customer',
-  ADMIN: 'Platform operator - every tenant, every node',
-}
-
 export function CreateAccountForm({roles}: CreateAccountFormProps) {
   const [revealed, setRevealed] = useState(false)
   const form = useFormFields({
@@ -35,11 +31,15 @@ export function CreateAccountForm({roles}: CreateAccountFormProps) {
     platformRole: (roles[0] ?? 'CUSTOMER') as string,
   })
 
+  const roleLabels: Record<PlatformRole, string> = {
+    CUSTOMER: t('auth.admin.roleCustomer'),
+    ADMIN: t('auth.admin.roleAdmin'),
+  }
+
   return (
     <Card
-      title="Create an account"
-      description="Tell them the password over something that is not this panel, and ask them to
-        change it on their first sign-in."
+      title={t('auth.admin.createTitle')}
+      description={t('auth.admin.createDesc')}
     >
       <form
         className="flex flex-col gap-5"
@@ -56,7 +56,7 @@ export function CreateAccountForm({roles}: CreateAccountFormProps) {
       >
         <Input
           {...form.bind('email')}
-          label="Email address"
+          label={t('auth.admin.createEmail')}
           type="email"
           required
           inputMode="email"
@@ -66,12 +66,12 @@ export function CreateAccountForm({roles}: CreateAccountFormProps) {
           spellCheck={false}
           enterKeyHint="next"
           placeholder="them@example.com"
-          hint="Also their sign-in name."
+          hint={t('auth.admin.createEmailHint')}
         />
 
         <Input
           {...form.bind('displayName')}
-          label="Name"
+          label={t('auth.admin.createName')}
           required
           maxLength={120}
           autoComplete="off"
@@ -81,14 +81,14 @@ export function CreateAccountForm({roles}: CreateAccountFormProps) {
         <div className="flex flex-col gap-2">
           <Input
             {...form.bind('password')}
-            label="First password"
+            label={t('auth.admin.firstPassword')}
             type={revealed ? 'text' : 'password'}
             required
             minLength={MINIMUM}
             autoComplete="new-password"
             enterKeyHint="next"
             className="font-mono"
-            hint={`At least ${MINIMUM} characters, and at most 72 bytes - past that, BCrypt stops reading.`}
+            hint={t('auth.admin.firstPasswordHint', {min: MINIMUM})}
           />
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -98,18 +98,18 @@ export function CreateAccountForm({roles}: CreateAccountFormProps) {
                 setRevealed(true)
               }}
             >
-              Generate one
+              {t('auth.admin.generatePassword')}
             </Button>
             {form.data.password ? (
               <CopyButton
                 value={form.data.password}
-                label="Copy password"
-                describedAs="Copy the first password for this account"
+                label={t('auth.admin.copyPassword')}
+                describedAs={t('auth.admin.copyPasswordDesc')}
               />
             ) : null}
           </div>
           <Checkbox
-            label="Show password"
+            label={t('auth.admin.showPassword')}
             checked={revealed}
             onChange={(event) => setRevealed(event.target.checked)}
           />
@@ -117,14 +117,13 @@ export function CreateAccountForm({roles}: CreateAccountFormProps) {
 
         <Select
           {...form.bind('platformRole')}
-          label="Role"
-          options={roles.map((role) => ({value: role, label: ROLE_LABELS[role]}))}
-          hint="An operator can reach every organization, every node and the audit log. Give it to
-            as few people as the platform can be run with."
+          label={t('auth.admin.role')}
+          options={roles.map((role) => ({value: role, label: roleLabels[role]}))}
+          hint={t('auth.admin.roleHint')}
         />
 
         <Button type="submit" className="w-full sm:w-auto" loading={form.processing}>
-          {form.processing ? 'Creating…' : 'Create account'}
+          {form.processing ? t('auth.admin.creating') : t('auth.admin.createBtn')}
         </Button>
       </form>
     </Card>

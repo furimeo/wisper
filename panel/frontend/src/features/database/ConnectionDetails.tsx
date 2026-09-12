@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, CopyButton, Icon} from '@/shell'
 
 import type {ConnectionString} from './databaseTypes'
@@ -34,32 +35,30 @@ export function ConnectionDetails({connection}: {connection: ConnectionString}) 
     >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 shrink-0 text-degraded">
-          <Icon name="key" label="Credentials" />
+          <Icon name="key" label={t('database.conn.title')} />
         </span>
         <div className="min-w-0 flex-1">
           <h2 id="connection-heading" className="text-base font-semibold">
-            Connection details
+            {t('database.conn.title')}
           </h2>
           <p className="mt-1.5 text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-            Shown on this screen only. Reloading the page loses them, and the panel keeps the
-            password encrypted - ask again and it is a fresh audit entry, not a fresh
-            password.
+            {t('database.conn.description')}
           </p>
 
           <div className="mt-3 flex flex-col gap-3">
-            <Line label="Connection URI" value={uri} masked={!shown} shownValue={redactedUri(connection)} />
-            <Line label="JDBC URL" value={jdbcUrl(connection)} />
+            <Line label={t('database.conn.uri')} value={uri} masked={!shown} shownValue={redactedUri(connection)} />
+            <Line label={t('database.conn.jdbc')} value={jdbcUrl(connection)} />
 
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <Fact label="Host" value={connection.host} />
-              <Fact label="Port" value={String(connection.port)} />
-              <Fact label="Database" value={connection.database} />
-              <Fact label="User" value={connection.username} />
-              {connection.charset ? <Fact label="Encoding" value={connection.charset} /> : null}
+              <Fact label={t('database.conn.host')} value={connection.host} />
+              <Fact label={t('database.conn.port')} value={String(connection.port)} />
+              <Fact label={t('database.conn.database')} value={connection.database} />
+              <Fact label={t('database.conn.user')} value={connection.username} />
+              {connection.charset ? <Fact label={t('database.conn.encoding')} value={connection.charset} /> : null}
             </dl>
 
             <Line
-              label="Password"
+              label={t('database.conn.password')}
               value={connection.password}
               masked={!shown}
               shownValue={'•'.repeat(Math.min(connection.password.length, 24))}
@@ -72,20 +71,19 @@ export function ConnectionDetails({connection}: {connection: ConnectionString}) 
                 className="sm:w-auto"
                 onClick={() => setShown((current) => !current)}
               >
-                {shown ? 'Hide the password' : 'Show the password'}
+                {shown ? t('database.conn.hidePassword') : t('database.conn.showPassword')}
               </Button>
               <CopyButton
                 value={uri}
-                label="Copy the URI"
-                describedAs="Copy the full connection URI including the password"
+                label={t('database.conn.copyUri')}
+                describedAs={t('database.conn.copyUriAria')}
                 className="w-full sm:w-auto"
               />
             </div>
           </div>
 
           <p className="mt-3 text-xs leading-relaxed text-ink-600 dark:text-ink-400">
-            Put it in your service&apos;s secrets, not in a repository. A secret set on a
-            service is not shown again either.
+            {t('database.conn.secretNotice')}
           </p>
         </div>
       </div>

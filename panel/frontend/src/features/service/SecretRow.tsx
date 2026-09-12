@@ -1,20 +1,8 @@
+import {t} from '@/i18n'
 import {Badge, Icon, RelativeTime} from '@/shell'
 
 import type {SecretView} from './serviceTypes'
 
-/**
- * One secret.
- *
- * There is no value on this row and no control that could produce one. `ListSecrets` does
- * not select the column, so the value is not in the page's props, not in a props dump and
- * not in a stack trace - the panel cannot show it back because it was never sent. The row
- * says when it was last changed instead, which is the question somebody actually has:
- * "did the rotation last Tuesday go through?"
- *
- * That is also why there is no copy button here and there is one on a plain variable. A
- * secret you can copy out of a panel is a secret stored somewhere it can be copied out
- * of.
- */
 export function SecretRow({
   secret,
   onOpen,
@@ -30,16 +18,17 @@ export function SecretRow({
           <code className="truncate font-mono text-sm font-medium text-ink-900 dark:text-ink-100">
             {secret.name}
           </code>
-          {secret.buildTime ? <Badge tone="accent">Build</Badge> : null}
+          {secret.buildTime ? <Badge tone="accent">{t('service.variables.build_badge')}</Badge> : null}
         </span>
         <span className="mt-0.5 block truncate text-xs text-ink-500 dark:text-ink-400">
           {secret.lastChangedAt ? (
             <>
-              Last changed <RelativeTime at={secret.lastChangedAt} />
+              {t('service.secrets.last_changed')} <RelativeTime at={secret.lastChangedAt} />
             </>
           ) : (
             <>
-              Set <RelativeTime at={secret.createdAt} /> and unchanged since
+              {t('service.secrets.set_prefix')} <RelativeTime at={secret.createdAt} />{' '}
+              {t('service.secrets.unchanged_suffix')}
             </>
           )}
         </span>

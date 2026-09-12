@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Badge} from '@/shell'
 
 import type {NodeSummary} from './nodeTypes'
@@ -34,14 +35,17 @@ export function NodeStateBadges({node}: {node: NodeSummary}) {
 
       {!node.converged && node.lifecycle !== 'CREATED' ? (
         <Badge tone="degraded" dot pulse>
-          Generation {node.appliedGeneration}/{node.desiredGeneration}
+          {t('node.badge.generation', {
+            applied: node.appliedGeneration,
+            desired: node.desiredGeneration,
+          })}
         </Badge>
       ) : null}
 
-      {node.needsUpgrade ? <Badge tone="degraded">Update available</Badge> : null}
+      {node.needsUpgrade ? <Badge tone="degraded">{t('node.badge.updateAvailable')}</Badge> : null}
 
       {!node.schedulable && node.lifecycle === 'ENROLLED' ? (
-        <Badge tone="neutral">Unschedulable</Badge>
+        <Badge tone="neutral">{t('node.badge.unschedulable')}</Badge>
       ) : null}
     </div>
   )
@@ -60,8 +64,8 @@ export function NodeIsolationBadges({node}: {node: NodeSummary}) {
   }
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      {node.lessIsolated ? <Badge tone="failed" dot>No gVisor</Badge> : null}
-      {node.quotaAdvisory ? <Badge tone="failed" dot>Disk quota unenforced</Badge> : null}
+      {node.lessIsolated ? <Badge tone="failed" dot>{t('node.badge.noGvisor')}</Badge> : null}
+      {node.quotaAdvisory ? <Badge tone="failed" dot>{t('node.badge.quotaUnenforced')}</Badge> : null}
     </div>
   )
 }

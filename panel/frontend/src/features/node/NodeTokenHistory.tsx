@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, Card, EmptyState, Icon, RelativeTime, askConfirmation} from '@/shell'
 
 import type {EnrolmentTokenView} from './nodeTypes'
@@ -28,11 +29,9 @@ export function NodeTokenHistory({
 
   async function revoke(token: EnrolmentTokenView) {
     const confirmed = await askConfirmation({
-      title: 'Revoke this token?',
-      body:
-        'It can no longer enrol anything. If a machine is part-way through installing, its ' +
-        'enrolment will be refused and you will need to issue another.',
-      confirmLabel: 'Revoke it',
+      title: t('node.tokens.revokeConfirm.title'),
+      body: t('node.tokens.revokeConfirm.body'),
+      confirmLabel: t('node.tokens.revokeConfirm.confirm'),
       tone: 'danger',
     })
     if (!confirmed) {
@@ -48,17 +47,15 @@ export function NodeTokenHistory({
 
   return (
     <Card
-      title="Bootstrap tokens"
-      description="Single use, fifteen minutes, one machine. Only a SHA-256 is stored, so the text
-        of a token cannot be shown again."
+      title={t('node.tokens.title')}
+      description={t('node.tokens.description')}
       padded={tokens.length === 0}
     >
       {tokens.length === 0 ? (
         <EmptyState
           icon={<Icon name="key" />}
-          title="No tokens issued"
-          description="Nothing has ever been able to enrol against this record. Issue one when you
-            are at the machine and ready to paste the install command."
+          title={t('node.tokens.empty.title')}
+          description={t('node.tokens.empty.description')}
         />
       ) : (
         <ul className="divide-y divide-ink-200 dark:divide-ink-800">
@@ -70,7 +67,7 @@ export function NodeTokenHistory({
                     {tokenStateLabel(token.state)}
                   </Badge>
                   <span className="text-sm text-ink-500 dark:text-ink-400">
-                    issued <RelativeTime at={token.createdAt} />
+                    {t('node.tokens.issuedAt')}<RelativeTime at={token.createdAt} />
                   </span>
                 </div>
 
@@ -87,7 +84,7 @@ export function NodeTokenHistory({
                   loading={revoking === token.id}
                   onClick={() => void revoke(token)}
                 >
-                  Revoke
+                  {t('node.tokens.revokeButton')}
                 </Button>
               ) : null}
             </li>
@@ -102,17 +99,17 @@ export function NodeTokenHistory({
 function describe(token: EnrolmentTokenView): string {
   switch (token.state) {
     case 'LIVE':
-      return `Usable until ${localTime(token.expiresAt)}. It is the only thing that can enrol this node right now.`
+      return t('node.tokens.desc.live', {time: localTime(token.expiresAt)})
     case 'USED':
       return token.usedFromAddress
-        ? `Spent from ${token.usedFromAddress}. If that address is not the machine you installed on, treat this node as compromised and re-enrol it.`
-        : 'Spent, from an address that was not recorded.'
+        ? t('node.tokens.desc.usedFrom', {address: token.usedFromAddress})
+        : t('node.tokens.desc.usedUnknown')
     case 'REVOKED':
       return token.revokedAt
-        ? `Withdrawn at ${localTime(token.revokedAt)} before anybody used it.`
-        : 'Withdrawn before anybody used it.'
+        ? t('node.tokens.desc.revokedAt', {time: localTime(token.revokedAt)})
+        : t('node.tokens.desc.revoked')
     default:
-      return `Its fifteen minutes ran out at ${localTime(token.expiresAt)}. Issuing another is one press.`
+      return t('node.tokens.desc.expired', {time: localTime(token.expiresAt)})
   }
 }
 

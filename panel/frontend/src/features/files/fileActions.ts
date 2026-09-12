@@ -1,3 +1,5 @@
+import {t} from '@/i18n'
+
 import {isArchiveName, isEditable} from './fileKinds'
 import type {FileEntryView} from './fileTypes'
 
@@ -56,10 +58,10 @@ export interface FileActionContext {
 /** Why a whole group of actions is off, or null when they are available. */
 function blocked(context: FileActionContext, needsWrite: boolean): string | null {
   if (context.unavailable) {
-    return 'The machine holding these files cannot be reached right now.'
+    return t('files.reasons.unavailable')
   }
   if (needsWrite && !context.canWrite) {
-    return 'This tree is read-only for you.'
+    return t('files.reasons.read_only')
   }
   return null
 }
@@ -67,16 +69,16 @@ function blocked(context: FileActionContext, needsWrite: boolean): string | null
 /** Exactly one entry has to be picked, and here is which sentence says so. */
 function one(selected: FileEntryView[]): string | null {
   if (selected.length === 0) {
-    return 'Pick one entry first.'
+    return t('files.reasons.pick_one')
   }
   if (selected.length > 1) {
-    return 'This works on one entry at a time.'
+    return t('files.reasons.one_at_a_time')
   }
   return null
 }
 
 function some(selected: FileEntryView[]): string | null {
-  return selected.length === 0 ? 'Pick something first.' : null
+  return selected.length === 0 ? t('files.reasons.pick_something') : null
 }
 
 /**
@@ -97,79 +99,79 @@ export function actionStates(
   return [
     {
       kind: 'newFolder',
-      label: 'New folder',
+      label: t('files.actions.new_folder'),
       disabledReason: write,
       tone: 'neutral',
     },
     {
       kind: 'upload',
-      label: 'Upload',
+      label: t('files.actions.upload'),
       disabledReason: write,
       tone: 'neutral',
     },
     {
       kind: 'open',
-      label: 'Open',
+      label: t('files.actions.open'),
       disabledReason: read ?? one(selected),
       tone: 'neutral',
     },
     {
       kind: 'edit',
-      label: 'Edit',
+      label: t('files.actions.edit'),
       disabledReason: read ?? one(selected) ?? editReason(only, context),
       tone: 'neutral',
     },
     {
       kind: 'download',
-      label: 'Download',
+      label: t('files.actions.download'),
       disabledReason: read ?? one(selected) ?? downloadReason(only),
       tone: 'neutral',
     },
     {
       kind: 'rename',
-      label: 'Rename',
+      label: t('files.actions.rename'),
       disabledReason: write ?? one(selected),
       tone: 'neutral',
     },
     {
       kind: 'move',
-      label: 'Move',
+      label: t('files.actions.move'),
       disabledReason: write ?? some(selected),
       tone: 'neutral',
     },
     {
       kind: 'compress',
-      label: 'Compress',
+      label: t('files.actions.compress'),
       disabledReason: write ?? some(selected),
       tone: 'neutral',
     },
     {
       kind: 'extract',
-      label: 'Extract',
+      label: t('files.actions.extract'),
       disabledReason: write ?? one(selected) ?? extractReason(only),
       tone: 'neutral',
     },
     {
       kind: 'chmod',
-      label: 'Permissions',
+      label: t('files.actions.chmod'),
       disabledReason: write ?? one(selected),
       tone: 'neutral',
     },
     {
       kind: 'measure',
-      label: 'Folder size',
+      label: t('files.actions.measure'),
       disabledReason: read ?? measureReason(selected),
       tone: 'neutral',
     },
     {
       kind: 'delete',
-      label: 'Delete',
+      label: t('files.actions.delete'),
       disabledReason: write ?? some(selected),
       tone: 'danger',
     },
     {
       kind: 'refresh',
-      label: 'Refresh',
+      label: t('files.actions.refresh'),
       disabledReason: null,
       tone: 'neutral',
     },
@@ -192,13 +194,13 @@ function editReason(
     return null
   }
   if (entry.directory) {
-    return 'A folder has nothing to edit. Open it instead.'
+    return t('files.reasons.folder_nothing_to_edit')
   }
   if (entry.symlink) {
-    return 'This is a link. The panel reports links and never follows them, so open what it points at directly.'
+    return t('files.reasons.symlink_edit')
   }
   if (!isEditable(entry, context.maxEditableBytes)) {
-    return 'This file is larger than the panel will open. Download it instead.'
+    return t('files.reasons.file_too_large_to_open')
   }
   return null
 }
@@ -208,10 +210,10 @@ function downloadReason(entry: FileEntryView | undefined): string | null {
     return null
   }
   if (entry.directory) {
-    return 'A folder cannot be downloaded as it is. Compress it first, then take the archive.'
+    return t('files.reasons.folder_cannot_download')
   }
   if (entry.symlink) {
-    return 'This is a link, and following it could leave this tree. Download what it points at instead.'
+    return t('files.reasons.symlink_download')
   }
   return null
 }
@@ -221,7 +223,7 @@ function extractReason(entry: FileEntryView | undefined): string | null {
     return null
   }
   if (entry.directory || !isArchiveName(entry.name)) {
-    return 'That is not an archive this panel can unpack.'
+    return t('files.reasons.not_an_archive')
   }
   return null
 }
@@ -238,7 +240,7 @@ function measureReason(selected: FileEntryView[]): string | null {
     return null
   }
   if (selected.length > 1) {
-    return 'This measures one folder at a time.'
+    return t('files.reasons.measure_one')
   }
-  return selected[0]?.directory ? null : 'A file already shows its size in the list.'
+  return selected[0]?.directory ? null : t('files.reasons.file_shows_size')
 }

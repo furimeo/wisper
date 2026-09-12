@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, Modal, Select, useFormFields} from '@/shell'
 
 import type {BackupTargetOption, BackupView, DestinationView} from './backupTypes'
@@ -33,14 +34,6 @@ interface ScheduleValues {
   [key: string]: string | boolean
 }
 
-const PRESETS: Array<{value: string; label: string}> = [
-  {value: '', label: 'No schedule - only when I press the button'},
-  {value: '0 3 * * *', label: 'Every night at 03:00'},
-  {value: '0 3 * * 0', label: 'Every Sunday at 03:00'},
-  {value: '0 3 1 * *', label: 'On the 1st of each month at 03:00'},
-  {value: 'custom', label: 'A cron expression of my own'},
-]
-
 export function BackupScheduleForm({
   open,
   onClose,
@@ -57,6 +50,14 @@ export function BackupScheduleForm({
   destinations: DestinationView[]
   targets: BackupTargetOption[]
 }) {
+  const presets = [
+    {value: '', label: t('backup.scheduleForm.presetNone')},
+    {value: '0 3 * * *', label: t('backup.scheduleForm.presetNightly')},
+    {value: '0 3 * * 0', label: t('backup.scheduleForm.presetSunday')},
+    {value: '0 3 1 * *', label: t('backup.scheduleForm.presetMonthly')},
+    {value: 'custom', label: t('backup.scheduleForm.presetCustom')},
+  ]
+
   const usable = destinations.filter((destination) => destination.enabled)
   const first = targets.find((option) => option.eligible) ?? targets[0]
   const form = useFormFields<ScheduleValues>({
@@ -71,7 +72,7 @@ export function BackupScheduleForm({
     enabled: policy?.enabled ?? true,
   })
 
-  const preset = PRESETS.some((option) => option.value === form.data.schedule)
+  const preset = presets.some((option) => option.value === form.data.schedule)
     ? form.data.schedule
     : 'custom'
 
@@ -98,11 +99,11 @@ export function BackupScheduleForm({
     <Modal
       open={open}
       onClose={onClose}
-      title={policy ? `Edit “${policy.name}”` : 'New backup schedule'}
+      title={policy ? t('backup.scheduleForm.titleEdit', {name: policy.name}) : t('backup.scheduleForm.titleNew')}
       description={
         policy
-          ? 'What it copies cannot be changed - the snapshots it has already taken belong to that. Everything else can.'
-          : 'Pick what to copy, where to put it, and how often. The node does the work and pushes straight to the destination; nothing passes through the panel.'
+          ? t('backup.scheduleForm.descEdit')
+          : t('backup.scheduleForm.descNew')
       }
       size="lg"
       footer={
@@ -114,10 +115,10 @@ export function BackupScheduleForm({
             disabled={usable.length === 0}
             onClick={submit}
           >
-            {policy ? 'Save' : 'Create it'}
+            {policy ? t('backup.scheduleForm.save') : t('backup.scheduleForm.create')}
           </Button>
           <Button variant="ghost" block className="sm:w-auto" onClick={onClose}>
-            Cancel
+            {t('backup.scheduleForm.cancel')}
           </Button>
         </div>
       }
@@ -131,17 +132,17 @@ export function BackupScheduleForm({
       >
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('backup.scheduleForm.name')}
           required
           maxLength={120}
           autoComplete="off"
           placeholder="Nightly database"
-          hint="You type this back to delete the policy, so make it one you would recognise."
+          hint={t('backup.scheduleForm.nameHint')}
         />
 
         {policy ? null : (
           <Select
-            label="What to copy"
+            label={t('backup.scheduleForm.whatToCopy')}
             name="subjectId"
             required
             error={form.error('subjectId') ?? form.error('targetKind')}
@@ -150,11 +151,11 @@ export function BackupScheduleForm({
               const [kind = '', id = ''] = event.target.value.split(':')
               form.patch({targetKind: kind, subjectId: id})
             }}
-            hint="A volume is copied with a short pause on writes; a database is dumped logically."
+            hint={t('backup.scheduleForm.whatToCopyHint')}
             options={targets.map((option) => ({
               value: `${option.kind}:${option.id}`,
               label: `${targetKindLabel(option.kind)} · ${option.label}${
-                option.eligible ? '' : ' (cannot be backed up right now)'
+                option.eligible ? '' : t('backup.scheduleForm.cannotBackup')
               }`,
               disabled: !option.eligible,
             }))}
@@ -163,50 +164,50 @@ export function BackupScheduleForm({
 
         <Select
           {...form.bind('destinationId')}
-          label="Where to put it"
+          label={t('backup.scheduleForm.whereToPut')}
           required
           options={usable.map((destination) => ({
             value: destination.id,
-            label: `${destination.name}${destination.platformWide ? ' (platform)' : ''}${
-              destination.provenReachable ? '' : ' - never checked'
+            label: `${destination.name}${destination.platformWide ? t('backup.scheduleForm.platformSuffix') : ''}${
+              destination.provenReachable ? '' : t('backup.scheduleForm.neverCheckedSuffix')
             }`,
           }))}
           hint={
             usable.length === 0
-              ? 'There is no enabled destination to write to. Add one under Destinations first.'
-              : 'Check a destination before you rely on it - an unwritable bucket fails at three in the morning.'
+              ? t('backup.scheduleForm.noDestHint')
+              : t('backup.scheduleForm.destHint')
           }
         />
 
         <Select
-          label="How often"
+          label={t('backup.scheduleForm.howOften')}
           value={preset}
           onChange={(event) =>
             form.set('schedule', event.target.value === 'custom' ? '0 3 * * *' : event.target.value)
           }
-          options={PRESETS}
+          options={presets}
           hint={scheduleSentence(form.data.schedule || null, form.data.timezone)}
         />
 
         {preset === 'custom' ? (
           <Input
             {...form.bind('schedule')}
-            label="Cron expression"
+            label={t('backup.scheduleForm.cronExpr')}
             className="font-mono"
             autoComplete="off"
             spellCheck={false}
             placeholder="0 3 * * *"
-            hint="Five fields: minute, hour, day of month, month, day of week."
+            hint={t('backup.scheduleForm.cronHint')}
           />
         ) : null}
 
         <Input
           {...form.bind('timezone')}
-          label="Time zone"
+          label={t('backup.scheduleForm.timezone')}
           autoComplete="off"
           spellCheck={false}
           placeholder="UTC"
-          hint="An IANA name, such as Europe/Berlin. The schedule above is read in it."
+          hint={t('backup.scheduleForm.timezoneHint')}
         />
 
         <div className="grid grid-cols-2 gap-3">
@@ -215,29 +216,29 @@ export function BackupScheduleForm({
             type="number"
             inputMode="numeric"
             min={1}
-            label="Keep this many"
-            hint="Newest first."
+            label={t('backup.scheduleForm.keepCount')}
+            hint={t('backup.scheduleForm.keepCountHint')}
           />
           <Input
             {...form.bind('retentionDays')}
             type="number"
             inputMode="numeric"
             min={1}
-            label="Keep for days"
-            hint="Whichever runs out first."
+            label={t('backup.scheduleForm.keepDays')}
+            hint={t('backup.scheduleForm.keepDaysHint')}
           />
         </div>
 
         {policy ? (
           <Checkbox
             {...form.check('enabled')}
-            label="Run on the schedule"
-            hint="Off stops new snapshots. The ones already taken stay and are still restorable."
+            label={t('backup.scheduleForm.enabled')}
+            hint={t('backup.scheduleForm.enabledHint')}
           />
         ) : null}
 
         <button type="submit" className="sr-only">
-          {policy ? 'Save policy' : 'Create policy'}
+          {policy ? t('backup.scheduleForm.save') : t('backup.scheduleForm.create')}
         </button>
       </form>
     </Modal>

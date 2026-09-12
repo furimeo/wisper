@@ -1,4 +1,5 @@
 import type {BadgeTone} from '@/shell'
+import {t} from '@/i18n'
 
 import type {AuditActorKind, AuditLogEntry, AuditOutcome} from './auditTypes'
 
@@ -13,27 +14,21 @@ import type {AuditActorKind, AuditLogEntry, AuditOutcome} from './auditTypes'
  * here correctly on the day it is added.
  */
 
-const OUTCOMES: Record<AuditOutcome, string> = {
-  SUCCEEDED: 'Succeeded',
-  FAILED: 'Failed',
-  DENIED: 'Refused',
-}
-
 const OUTCOME_TONES: Record<AuditOutcome, BadgeTone> = {
   SUCCEEDED: 'running',
   FAILED: 'failed',
   DENIED: 'degraded',
 }
 
-const ACTORS: Record<AuditActorKind, string> = {
-  ACCOUNT: 'Person',
-  API_TOKEN: 'API token',
-  NODE: 'Node',
-  SYSTEM: 'The platform',
-}
-
 export function outcomeLabel(outcome: AuditOutcome): string {
-  return OUTCOMES[outcome]
+  switch (outcome) {
+    case 'SUCCEEDED':
+      return t('audit.outcome.succeeded')
+    case 'FAILED':
+      return t('audit.outcome.failed')
+    case 'DENIED':
+      return t('audit.outcome.denied')
+  }
 }
 
 export function outcomeTone(outcome: AuditOutcome): BadgeTone {
@@ -41,7 +36,16 @@ export function outcomeTone(outcome: AuditOutcome): BadgeTone {
 }
 
 export function actorKindLabel(kind: AuditActorKind): string {
-  return ACTORS[kind]
+  switch (kind) {
+    case 'ACCOUNT':
+      return t('audit.actor.account')
+    case 'API_TOKEN':
+      return t('audit.actor.apiToken')
+    case 'NODE':
+      return t('audit.actor.node')
+    case 'SYSTEM':
+      return t('audit.actor.system')
+  }
 }
 
 /** `service` out of `service.stop`. Empty for anything without a dot. */
@@ -89,11 +93,11 @@ export function entrySentence(entry: AuditLogEntry): string {
   const what = entry.targetKind === null ? verb : `${verb} ${targetOf(entry)}`
   switch (entry.outcome) {
     case 'DENIED':
-      return `${entry.actorLabel} was refused permission to ${what}.`
+      return t('audit.sentence.denied', {actor: entry.actorLabel, what})
     case 'FAILED':
-      return `${entry.actorLabel} tried to ${what} and it failed.`
+      return t('audit.sentence.failed', {actor: entry.actorLabel, what})
     default:
-      return `${entry.actorLabel} did ${what}.`
+      return t('audit.sentence.default', {actor: entry.actorLabel, what})
   }
 }
 

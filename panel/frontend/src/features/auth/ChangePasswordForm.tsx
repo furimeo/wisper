@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Card, Checkbox, Input, useFormFields} from '@/shell'
 
 /**
@@ -29,8 +30,8 @@ export function ChangePasswordForm() {
 
   return (
     <Card
-      title="Password"
-      description="Changing it signs out every other browser you are signed in to. This one stays."
+      title={t('auth.password.title')}
+      description={t('auth.password.description')}
     >
       <form
         className="flex flex-col gap-5"
@@ -47,7 +48,7 @@ export function ChangePasswordForm() {
       >
         <Input
           {...form.bind('currentPassword')}
-          label="Current password"
+          label={t('auth.password.current')}
           type="password"
           required
           autoComplete="current-password"
@@ -56,18 +57,18 @@ export function ChangePasswordForm() {
 
         <Input
           {...form.bind('newPassword')}
-          label="New password"
+          label={t('auth.password.new')}
           type={revealed ? 'text' : 'password'}
           required
           minLength={MINIMUM}
           autoComplete="new-password"
           enterKeyHint="next"
-          hint={`At least ${MINIMUM} characters. A few unrelated words is easier to remember and harder to guess than a short one with symbols in it.`}
+          hint={t('auth.password.hint', {min: MINIMUM})}
         />
 
         <Input
           {...form.bind('confirmPassword')}
-          label="New password again"
+          label={t('auth.password.confirm')}
           type={revealed ? 'text' : 'password'}
           required
           autoComplete="new-password"
@@ -79,13 +80,13 @@ export function ChangePasswordForm() {
           on a phone keyboard is where "the two passwords do not match" comes from.
         */}
         <Checkbox
-          label="Show the new password"
+          label={t('auth.password.show')}
           checked={revealed}
           onChange={(event) => setRevealed(event.target.checked)}
         />
 
         <Button type="submit" className="w-full sm:w-auto" loading={form.processing}>
-          {form.processing ? 'Changing…' : 'Change password'}
+          {form.processing ? t('auth.password.changing') : t('auth.password.change')}
         </Button>
       </form>
     </Card>

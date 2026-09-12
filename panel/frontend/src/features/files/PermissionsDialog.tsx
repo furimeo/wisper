@@ -1,5 +1,6 @@
 import {useEffect} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, Modal, useFormFields} from '@/shell'
 
 import {filesBase} from './fileRequests'
@@ -47,7 +48,7 @@ export function PermissionsDialog({
 
   const submit = () => {
     if (parsed === null) {
-      form.setError('mode', 'Three or four octal digits, like 755.')
+      form.setError('mode', t('files.permissions.invalid_mode_error'))
       return
     }
     form.submit(`${filesBase(serviceId)}/chmod`, {onSuccess: onClose})
@@ -57,16 +58,16 @@ export function PermissionsDialog({
     <Modal
       open={entry !== null}
       onClose={onClose}
-      title="Permissions"
+      title={t('files.permissions.title')}
       description={entry?.path}
       size="sm"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} block>
-            Cancel
+            {t('files.permissions.cancel')}
           </Button>
           <Button onClick={submit} loading={form.processing} disabled={parsed === null} block>
-            Apply
+            {t('files.permissions.apply')}
           </Button>
         </>
       }
@@ -80,7 +81,7 @@ export function PermissionsDialog({
       >
         <Input
           {...form.bind('mode')}
-          label="Mode"
+          label={t('files.permissions.mode_label')}
           inputMode="numeric"
           autoFocus
           autoCapitalize="off"
@@ -92,13 +93,13 @@ export function PermissionsDialog({
               {parsed === null ? '-' : permissionText(parsed)}
             </span>
           }
-          hint="Only owner, group and other read/write/execute are applied. setuid, setgid and the sticky bit are dropped."
+          hint={t('files.permissions.mode_hint')}
         />
         {entry?.directory ? (
           <Checkbox
             {...form.check('recursive')}
-            label="Apply to everything inside"
-            hint="The node keeps directories enterable, so a recursive 644 does not lock you out of the tree."
+            label={t('files.permissions.recursive_label')}
+            hint={t('files.permissions.recursive_hint')}
           />
         ) : null}
       </form>

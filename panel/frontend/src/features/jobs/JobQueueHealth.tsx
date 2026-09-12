@@ -1,4 +1,5 @@
 import {Badge, Card, CardFact, CardFacts} from '@/shell'
+import {t} from '@/i18n'
 
 import type {JobQueueSummary} from './jobTypes'
 
@@ -17,24 +18,24 @@ export function JobQueueHealth({summary}: {summary: JobQueueSummary}) {
 
   return (
     <Card
-      title="Queue"
+      title={t('jobs.health.title')}
       description={
         summary.healthy
-          ? 'Nothing is failing.'
-          : `${summary.failing} ${summary.failing === 1 ? 'job has' : 'jobs have'} a current failure streak.`
+          ? t('jobs.health.healthy')
+          : t('jobs.health.failing', {count: summary.failing})
       }
     >
       <CardFacts>
-        <CardFact label="Queued">{summary.queued.toLocaleString()}</CardFact>
-        <CardFact label="Due">
+        <CardFact label={t('jobs.health.queued')}>{summary.queued.toLocaleString()}</CardFact>
+        <CardFact label={t('jobs.health.due')}>
           {summary.due > 0 ? (
             <Badge tone="degraded">{summary.due.toLocaleString()}</Badge>
           ) : (
             '0'
           )}
         </CardFact>
-        <CardFact label="Running">{summary.running.toLocaleString()}</CardFact>
-        <CardFact label="Failing">
+        <CardFact label={t('jobs.health.running')}>{summary.running.toLocaleString()}</CardFact>
+        <CardFact label={t('jobs.health.failingLabel')}>
           {summary.failing > 0 ? (
             <Badge tone="failed">{summary.failing.toLocaleString()}</Badge>
           ) : (
@@ -45,9 +46,7 @@ export function JobQueueHealth({summary}: {summary: JobQueueSummary}) {
 
       {stopped ? (
         <p className="mt-3 rounded-xl border border-degraded/50 bg-degraded/10 px-4 py-3 text-sm leading-relaxed">
-          Work is due and no worker has picked any of it up. That is not a slow queue, it is
-          a stopped one: check that this panel is running with its scheduler enabled, and
-          that nothing else is holding the lock.
+          {t('jobs.health.stoppedWarning')}
         </p>
       ) : null}
     </Card>

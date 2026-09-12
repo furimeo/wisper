@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {useI18n} from '@/i18n'
 import {Button, Input, Select} from '@/shell'
 
 import type {AuditFilter, AuditOutcome} from './auditTypes'
@@ -40,6 +41,7 @@ export function AuditFilterForm({
   /** Called after a submit, so a drawer can close itself. */
   onDone?: () => void
 }) {
+  const {t} = useI18n()
   const [draft, setDraft] = useState(() => ({
     action: filter.action ?? '',
     targetKind: filter.targetKind ?? '',
@@ -89,11 +91,11 @@ export function AuditFilterForm({
       }}
     >
       <Select
-        label="Action"
+        label={t('audit.filter.action')}
         value={draft.action}
         onChange={(event) => set('action', event.target.value)}
       >
-        <option value="">Every action</option>
+        <option value="">{t('audit.filter.everyAction')}</option>
         {Object.entries(actions).map(([domain, group]) => (
           <optgroup key={domain} label={domainLabel(domain)}>
             {group.map((action) => (
@@ -107,85 +109,85 @@ export function AuditFilterForm({
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Select
-          label="Kind of object"
+          label={t('audit.filter.kindOfObject')}
           value={draft.targetKind}
           onChange={(event) => set('targetKind', event.target.value)}
           options={[
-            {value: '', label: 'Anything'},
+            {value: '', label: t('audit.filter.anything')},
             ...targetKinds.map((kind) => ({value: kind, label: domainLabel(kind)})),
           ]}
         />
 
         <Select
-          label="Outcome"
+          label={t('audit.filter.outcome')}
           value={draft.outcome}
           onChange={(event) => set('outcome', event.target.value)}
           options={[
-            {value: '', label: 'However it ended'},
+            {value: '', label: t('audit.filter.howeverEnded')},
             ...outcomes.map((outcome) => ({value: outcome, label: outcomeLabel(outcome)})),
           ]}
-          hint="Refused is the one an incident is usually reconstructed from."
+          hint={t('audit.filter.outcomeHint')}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
-          label="From"
+          label={t('audit.filter.from')}
           type="datetime-local"
           value={draft.from}
           onChange={(event) => set('from', event.target.value)}
         />
         <Input
-          label="To"
+          label={t('audit.filter.to')}
           type="datetime-local"
           value={draft.to}
           onChange={(event) => set('to', event.target.value)}
-          hint="Exclusive, so consecutive pages of one day do not overlap."
+          hint={t('audit.filter.toHint')}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
-          label="Organization id"
+          label={t('audit.filter.orgId')}
           value={draft.organizationId}
           onChange={(event) => set('organizationId', event.target.value)}
           autoComplete="off"
           spellCheck={false}
           className="font-mono text-xs"
-          placeholder="paste a UUID"
+          placeholder={t('audit.filter.uuidPlaceholder')}
         />
         <Input
-          label="Account id"
+          label={t('audit.filter.accountId')}
           value={draft.accountId}
           onChange={(event) => set('accountId', event.target.value)}
           autoComplete="off"
           spellCheck={false}
           className="font-mono text-xs"
-          placeholder="paste a UUID"
+          placeholder={t('audit.filter.uuidPlaceholder')}
         />
         <Input
-          label="Node id"
+          label={t('audit.filter.nodeId')}
           value={draft.nodeId}
           onChange={(event) => set('nodeId', event.target.value)}
           autoComplete="off"
           spellCheck={false}
           className="font-mono text-xs"
-          placeholder="paste a UUID"
+          placeholder={t('audit.filter.uuidPlaceholder')}
         />
         <Input
-          label="Object id"
+          label={t('audit.filter.targetId')}
           value={draft.targetId}
           onChange={(event) => set('targetId', event.target.value)}
           autoComplete="off"
           spellCheck={false}
           className="font-mono text-xs"
-          placeholder="paste a UUID"
-          hint="Only meaningful together with a kind."
+          placeholder={t('audit.filter.uuidPlaceholder')}
+          hint={t('audit.filter.targetIdHint')}
         />
       </div>
 
       <Select
-        label="Rows per page"
+        label={t('audit.filter.rowsPerPage')}
         value={draft.limit}
         onChange={(event) => set('limit', event.target.value)}
         options={[
@@ -198,7 +200,7 @@ export function AuditFilterForm({
 
       <div className="flex flex-col gap-2 sm:flex-row-reverse">
         <Button type="submit" block className="sm:w-auto">
-          Apply
+          {t('audit.filter.apply')}
         </Button>
         <Button
           type="button"
@@ -210,7 +212,7 @@ export function AuditFilterForm({
             onDone?.()
           }}
         >
-          Clear everything
+          {t('audit.filter.clearEverything')}
         </Button>
       </div>
     </form>

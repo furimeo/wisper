@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Modal, useFormFields} from '@/shell'
 
 import {QuotaLimitField} from './QuotaLimitField'
@@ -42,16 +43,16 @@ export function PlanLimitDialog({
       title={quotaLabel(limit.resource)}
       description={
         limit.explicit
-          ? `Currently ${quotaFigure(limit.resource, limit.limit)} on this plan.`
-          : 'Never set on this plan, so it is zero: nothing of this kind is allowed at all.'
+          ? t('org.planLimit.descExplicit', {limit: quotaFigure(limit.resource, limit.limit)})
+          : t('org.planLimit.descUnset')
       }
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.processing}>
-            Cancel
+            {t('org.planLimit.cancel')}
           </Button>
           <Button loading={form.processing} onClick={save}>
-            Save limit
+            {t('org.planLimit.save')}
           </Button>
         </>
       }
@@ -72,13 +73,11 @@ export function PlanLimitDialog({
         />
 
         <p className="text-sm leading-relaxed text-ink-600 dark:text-ink-400">
-          At zero: {quotaConsequence(limit.resource).toLowerCase()} A tenant already over the new
-          number keeps what it has and cannot add more.
+          {t('org.planLimit.atZero', {consequence: quotaConsequence(limit.resource).toLowerCase()})}
         </p>
 
         <p className="text-sm text-ink-500 dark:text-ink-400">
-          This applies to every organization on the tier, except the ones holding an exception
-          for this resource.
+          {t('org.planLimit.scopeNote')}
         </p>
 
         <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />

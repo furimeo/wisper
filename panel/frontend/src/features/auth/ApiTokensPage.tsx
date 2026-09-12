@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {PageHeader} from '@/shell'
 
 import type {AccountOrganization, ApiScope, ApiTokenView} from './authTypes'
@@ -32,20 +33,15 @@ export default function ApiTokensPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="API tokens" />
+      <Head title={t('auth.tokens.title')} />
       <SettingsTabs />
       <PageHeader
-        title="API tokens"
-        description={
-          <>
-            A bearer token for <code className="font-mono">/api/v1</code>. It acts as you,
-            inside the permissions you give it.
-          </>
-        }
+        title={t('auth.tokens.title')}
+        description={t('auth.tokens.description')}
       />
 
       {issuedToken ? (
-        <IssuedTokenBanner token={issuedToken} name={issuedTokenName ?? 'Your new token'} />
+        <IssuedTokenBanner token={issuedToken} name={issuedTokenName ?? t('auth.tokens.bannerReady', {name: 'Token'})} />
       ) : null}
 
       <IssueTokenForm

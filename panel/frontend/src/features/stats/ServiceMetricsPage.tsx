@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Card, PageHeader} from '@/shell'
 
 import {ServiceTabs} from '@/features/service/ServiceTabs'
@@ -33,24 +34,22 @@ export default function ServiceMetricsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`Metrics · ${service.name}`} />
+      <Head title={t('stats.serviceMetrics.title', {name: service.name})} />
       <ServiceTabs serviceId={service.serviceId} />
 
       <PageHeader
-        title="Metrics"
+        title={t('stats.serviceMetrics.header')}
         description={
           service.placed
-            ? 'Pushed by the node holding this service, every fifteen seconds while it runs.'
-            : 'Nothing is running this service, so nothing is being measured right now. Anything already recorded is still here.'
+            ? t('stats.serviceMetrics.descPlaced')
+            : t('stats.serviceMetrics.descUnplaced')
         }
       />
 
       {series.empty && !service.placed ? (
-        <Card title="No readings yet">
+        <Card title={t('stats.serviceMetrics.emptyTitle')}>
           <p className="text-sm text-ink-700 dark:text-ink-300">
-            A node measures a workload while it is running and pushes the readings to the
-            panel. This service has not been placed on one yet, so there is nothing to draw -
-            start it and the first points arrive within a few seconds.
+            {t('stats.serviceMetrics.emptyDesc')}
           </p>
         </Card>
       ) : (
@@ -62,9 +61,10 @@ export default function ServiceMetricsPage() {
       )}
 
       <p className="px-1 text-xs text-ink-500 dark:text-ink-400">
-        Raw samples are kept for two days and rolled into hourly and daily buckets after
-        that, so a long window is drawn from averages. The window this page opened on ran
-        from {new Date(span.from).toLocaleString()} to {new Date(span.to).toLocaleString()}.
+        {t('stats.serviceMetrics.footer', {
+          from: new Date(span.from).toLocaleString(),
+          to: new Date(span.to).toLocaleString(),
+        })}
       </p>
     </div>
   )

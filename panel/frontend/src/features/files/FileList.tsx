@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, EmptyState, ErrorState, Spinner, useIsWide} from '@/shell'
 
 import {FileRow} from './FileRow'
@@ -88,11 +89,11 @@ export function FileList({
   if (entries.length === 0) {
     return (
       <EmptyState
-        title="This folder is empty"
+        title={t('files.list.empty_title')}
         description={
           showingHidden
-            ? 'Nothing here at all, including dotfiles. Upload something, or create a folder to put it in.'
-            : 'Nothing here, though dotfiles are hidden - turn them on if you are looking for one. Otherwise, upload a file or create a folder.'
+            ? t('files.list.empty_desc_all')
+            : t('files.list.empty_desc_hidden')
         }
       />
     )
@@ -144,26 +145,29 @@ export function FileList({
 
       {loadError ? (
         <ErrorState
-          title="The rest of this folder did not arrive"
+          title={t('files.list.load_error_title')}
           description={loadError}
           onRetry={onLoadMore}
-          retryLabel="Try again"
+          retryLabel={t('files.list.load_error_retry')}
         />
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-200 px-4 py-3 text-xs text-ink-500 dark:border-ink-800 dark:text-ink-400">
         <span className="tabular-nums">
           {total > entries.length
-            ? `Showing ${entries.length.toLocaleString()} of ${total.toLocaleString()}`
-            : `${entries.length.toLocaleString()} ${entries.length === 1 ? 'entry' : 'entries'}`}
+            ? t('files.list.showing_of', {
+                shown: entries.length.toLocaleString(),
+                total: total.toLocaleString(),
+              })
+            : t('files.list.count_entries', {count: entries.length.toLocaleString()})}
           {hasMore && !isDefaultOrder(order)
-            ? ' · sorted within what has loaded so far'
+            ? t('files.list.sorted_note')
             : ''}
         </span>
         {hasMore ? (
           <Button variant="secondary" size="sm" onClick={onLoadMore} disabled={loadingMore}>
             {loadingMore ? <Spinner /> : null}
-            Load more
+            {t('files.list.load_more')}
           </Button>
         ) : null}
       </div>

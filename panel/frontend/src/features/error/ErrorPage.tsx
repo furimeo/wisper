@@ -1,4 +1,5 @@
 import {Link, usePage} from '@inertiajs/react'
+import {t} from '@/i18n'
 
 /**
  * Rendered by ErrorPageController for every failure that reaches /error - a bad URL, a
@@ -39,7 +40,7 @@ export default function ErrorPage() {
         href="/"
         className="inline-flex touch-target items-center rounded-lg bg-accent-600 px-5 font-medium text-white"
       >
-        Back to the dashboard
+        {t('error.page.backToDashboard')}
       </Link>
     </main>
   )

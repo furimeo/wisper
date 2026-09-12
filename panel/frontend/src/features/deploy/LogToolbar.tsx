@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Icon, Spinner, useClipboard} from '@/shell'
 import type {SseStatus} from '@/shell'
 
@@ -38,23 +39,23 @@ export function LogToolbar({
         {!ended && status === 'open' ? <Spinner /> : null}
         <span className="truncate">
           {ended
-            ? 'Log complete'
+            ? t('deploy.toolbar.log_complete')
             : status === 'open'
               ? following
-                ? 'Streaming, following the tail'
-                : 'Streaming, scrolled back'
+                ? t('deploy.toolbar.streaming_tail')
+                : t('deploy.toolbar.streaming_scrolled')
               : status === 'connecting'
-                ? 'Reconnecting…'
-                : 'Stream closed'}
+                ? t('deploy.toolbar.reconnecting')
+                : t('deploy.toolbar.stream_closed')}
         </span>
         <span className="shrink-0 tabular-nums text-ink-500 dark:text-ink-400">
-          {lines.length.toLocaleString()} lines
+          {t('deploy.toolbar.lines_count', {count: lines.length.toLocaleString()})}
         </span>
       </span>
 
       {!ended && status === 'closed' ? (
         <Button variant="secondary" onClick={onReopen}>
-          Reconnect
+          {t('deploy.toolbar.reconnect')}
         </Button>
       ) : null}
 
@@ -77,7 +78,11 @@ function CopyLogButton({lines}: {lines: DeploymentLog[]}) {
       onClick={() => void copy(lines.map((line) => line.message).join('\n'))}
       icon={<Icon name={state === 'copied' ? 'check' : 'copy'} className="size-4" />}
     >
-      {state === 'copied' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy'}
+      {state === 'copied'
+        ? t('deploy.toolbar.copied')
+        : state === 'failed'
+          ? t('deploy.toolbar.copy_failed')
+          : t('deploy.toolbar.copy')}
     </Button>
   )
 }

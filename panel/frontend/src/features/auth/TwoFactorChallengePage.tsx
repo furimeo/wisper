@@ -1,6 +1,7 @@
 import {Head, router, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Input, useFormFields} from '@/shell'
 
 /**
@@ -42,17 +43,17 @@ export default function TwoFactorChallengePage() {
 
   return (
     <main className="flex min-h-dvh flex-col justify-center px-5 py-10">
-      <Head title="Confirm it is you" />
+      <Head title={t('auth.challenge.title')} />
 
       <div className="mx-auto w-full max-w-sm">
         <p className="font-mono text-sm text-accent-600 dark:text-accent-400">wisper</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">Confirm it is you</h1>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{t('auth.challenge.title')}</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-600 dark:text-ink-400">
-          Signed in as{' '}
+          {t('auth.challenge.signedInAs')}{' '}
           <span className="font-medium break-all text-ink-900 dark:text-ink-100">{email}</span>.{' '}
           {authenticator
-            ? 'Open your authenticator app and enter the current six-digit code.'
-            : 'Enter one of the recovery codes you saved when you turned this on.'}
+            ? t('auth.challenge.promptAuthenticator')
+            : t('auth.challenge.promptRecovery')}
         </p>
 
         <form
@@ -70,7 +71,7 @@ export default function TwoFactorChallengePage() {
         >
           <Input
             {...form.bind('code')}
-            label={authenticator ? 'Six-digit code' : 'Recovery code'}
+            label={authenticator ? t('auth.challenge.labelAuthenticator') : t('auth.challenge.labelRecovery')}
             required
             autoFocus
             enterKeyHint="go"
@@ -89,13 +90,13 @@ export default function TwoFactorChallengePage() {
             className="text-center font-mono text-lg tracking-[0.3em]"
             hint={
               authenticator
-                ? 'Codes change every 30 seconds. If yours keeps being rejected, check that your phone’s clock is set automatically.'
-                : 'Ten characters, written with a hyphen in the middle. Each one works once.'
+                ? t('auth.challenge.hintAuthenticator')
+                : t('auth.challenge.hintRecovery')
             }
           />
 
           <Button type="submit" block loading={form.processing}>
-            {form.processing ? 'Checking…' : 'Continue'}
+            {form.processing ? t('auth.challenge.submitting') : t('auth.challenge.submit')}
           </Button>
         </form>
 
@@ -105,13 +106,13 @@ export default function TwoFactorChallengePage() {
             block
             onClick={() => switchTo(authenticator ? 'recovery' : 'authenticator')}
           >
-            {authenticator ? 'Use a recovery code instead' : 'Back to the authenticator code'}
+            {authenticator ? t('auth.challenge.useRecovery') : t('auth.challenge.useAuthenticator')}
           </Button>
 
           <p className="text-xs leading-relaxed text-ink-500">
             {recoveryCodesRemaining === 0
-              ? 'You have no recovery codes left. If you cannot reach your authenticator, the platform operator has to turn the second factor off for you.'
-              : `${recoveryCodesRemaining} recovery code${recoveryCodesRemaining === 1 ? '' : 's'} left.`}
+              ? t('auth.challenge.noRecoveryLeft')
+              : t('auth.challenge.recoveryRemaining', {count: recoveryCodesRemaining})}
           </p>
 
           {/*
@@ -120,7 +121,7 @@ export default function TwoFactorChallengePage() {
             visit rather than the hand-built form the sign-in page needs.
           */}
           <Button variant="ghost" block onClick={() => router.post('/logout')}>
-            Sign out and start again
+            {t('auth.challenge.signOut')}
           </Button>
         </div>
       </div>

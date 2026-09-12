@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 
 import {askConfirmation} from '@/shell'
+import {t} from '@/i18n'
 
 import type {FailedJob} from './jobTypes'
 
@@ -23,14 +24,10 @@ import type {FailedJob} from './jobTypes'
  */
 export async function retryJob(job: FailedJob): Promise<void> {
   const confirmed = await askConfirmation({
-    title: `Run ${job.taskName} now?`,
-    body:
-      `Its next attempt is scheduled further out after every failure; this clears that ` +
-      `wait and the streak of ${job.consecutiveFailures}, and hands it to a worker ` +
-      'immediately. If the cause has not been fixed it will simply fail again, which is ' +
-      'harmless.',
-    confirmLabel: 'Run it now',
-    cancelLabel: 'Leave it queued',
+    title: t('jobs.action.retry.title', {task: job.taskName}),
+    body: t('jobs.action.retry.body', {failures: job.consecutiveFailures}),
+    confirmLabel: t('jobs.action.retry.confirm'),
+    cancelLabel: t('jobs.action.retry.cancel'),
   })
   if (!confirmed) {
     return
@@ -51,16 +48,13 @@ export async function retryJob(job: FailedJob): Promise<void> {
  */
 export async function discardJob(job: FailedJob): Promise<void> {
   const confirmed = await askConfirmation({
-    title: `Discard ${job.taskName}?`,
-    body:
-      'The row is deleted and the work is not done. Nothing retries it and nothing else ' +
-      'notices: whatever was waiting on it - a deployment, a backup, a spec the node has ' +
-      'not been sent - stays unfinished until somebody does it another way.',
-    confirmLabel: 'Discard it',
-    cancelLabel: 'Keep it',
+    title: t('jobs.action.discard.title', {task: job.taskName}),
+    body: t('jobs.action.discard.body'),
+    confirmLabel: t('jobs.action.discard.confirm'),
+    cancelLabel: t('jobs.action.discard.cancel'),
     tone: 'danger',
     requireText: job.taskName,
-    requireTextLabel: 'Type the task name to confirm',
+    requireTextLabel: t('jobs.action.discard.requireTextLabel'),
   })
   if (!confirmed) {
     return

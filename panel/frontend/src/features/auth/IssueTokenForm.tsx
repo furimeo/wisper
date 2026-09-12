@@ -1,5 +1,6 @@
 import {useForm} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Button, Card, Input, Select} from '@/shell'
 
 import type {AccountOrganization, ApiScope} from './authTypes'
@@ -45,10 +46,9 @@ export function IssueTokenForm({organizations, scopes, mayIssueUnscoped}: IssueT
 
   if (noOrganizations) {
     return (
-      <Card title="New token">
+      <Card title={t('auth.tokens.newCardTitle')}>
         <p className="rounded-lg border border-degraded/40 bg-degraded/10 px-4 py-3 text-sm leading-relaxed">
-          You are not a member of any organization yet, and a token has to act in one.
-          Accept an invitation first, and this form will work.
+          {t('auth.tokens.noOrgMessage')}
         </p>
       </Card>
     )
@@ -56,9 +56,8 @@ export function IssueTokenForm({organizations, scopes, mayIssueUnscoped}: IssueT
 
   return (
     <Card
-      title="New token"
-      description="A token acts as you, limited to the permissions and the organization you give
-        it here. Every call it makes is recorded in the audit log against its name."
+      title={t('auth.tokens.newCardTitle')}
+      description={t('auth.tokens.newCardDesc')}
     >
       <form
         className="flex flex-col gap-5"
@@ -84,33 +83,33 @@ export function IssueTokenForm({organizations, scopes, mayIssueUnscoped}: IssueT
       >
         <Input
           name="name"
-          label="Name"
+          label={t('auth.tokens.name')}
           required
           maxLength={80}
           autoComplete="off"
-          placeholder="CI deploys"
+          placeholder={t('auth.tokens.namePlaceholder')}
           enterKeyHint="next"
           value={form.data.name}
           onChange={(event) => form.setData('name', event.target.value)}
           error={errors.name}
-          hint="What you will recognise it by in this list a year from now."
+          hint={t('auth.tokens.nameHint')}
         />
 
         <Select
           name="organizationId"
-          label="Organization"
+          label={t('auth.tokens.organization')}
           required={!mayIssueUnscoped}
           value={form.data.organizationId}
           onChange={(event) => form.setData('organizationId', event.target.value)}
           error={errors.organizationId}
           hint={
             mayIssueUnscoped
-              ? 'Leave it blank for a token that is not tied to one tenant. Only a platform operator may do that.'
-              : 'The token can only act inside this organization.'
+              ? t('auth.tokens.orgHintUnscoped')
+              : t('auth.tokens.orgHintScoped')
           }
         >
           <option value="">
-            {mayIssueUnscoped ? 'Platform-wide (no organization)' : 'Choose one…'}
+            {mayIssueUnscoped ? t('auth.tokens.platformWide') : t('auth.tokens.chooseOne')}
           </option>
           {organizations.map((organization) => (
             <option key={organization.id} value={organization.id}>
@@ -140,7 +139,7 @@ export function IssueTokenForm({organizations, scopes, mayIssueUnscoped}: IssueT
         */}
         <Input
           name="expiresInDays"
-          label="Expires after (days)"
+          label={t('auth.tokens.expiresDays')}
           type="number"
           inputMode="numeric"
           min={1}
@@ -150,12 +149,11 @@ export function IssueTokenForm({organizations, scopes, mayIssueUnscoped}: IssueT
           value={form.data.expiresInDays}
           onChange={(event) => form.setData('expiresInDays', event.target.value)}
           error={errors.expiresInDays ?? errors.expiresAt}
-          hint={`Up to ${MAX_EXPIRY_DAYS}. Leave it blank for a token that never expires - a
-            short life is one fewer secret to have left lying around.`}
+          hint={t('auth.tokens.expiresDaysHint', {max: MAX_EXPIRY_DAYS})}
         />
 
         <Button type="submit" className="w-full sm:w-auto" loading={form.processing}>
-          {form.processing ? 'Creating…' : 'Create token'}
+          {form.processing ? t('auth.tokens.creating') : t('auth.tokens.create')}
         </Button>
       </form>
     </Card>

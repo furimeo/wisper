@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Input, Modal, Select, useFormFields} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -54,15 +55,15 @@ export function InviteMemberDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title="Invite somebody"
-      description="They keep their own account and appear here as invited until they accept."
+      title={t('org.invite.title')}
+      description={t('org.invite.description')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.processing}>
-            Cancel
+            {t('org.invite.cancel')}
           </Button>
           <Button loading={form.processing} disabled={full} onClick={invite}>
-            Send invitation
+            {t('org.invite.submit')}
           </Button>
         </>
       }
@@ -76,19 +77,17 @@ export function InviteMemberDialog({
       >
         {full ? (
           <p className="rounded-lg border border-degraded/40 bg-degraded/10 px-3 py-2 text-sm leading-relaxed text-ink-800 dark:text-ink-100">
-            Every seat on the plan is taken: {quotaSentence('MEMBER', seats.used, seats.limit)}.
-            Remove somebody, or ask an operator for a larger plan or an exception.
+            {t('org.invite.seatsFull', {quota: quotaSentence('MEMBER', seats.used, seats.limit)})}
           </p>
         ) : (
           <p className="text-sm text-ink-500 dark:text-ink-400">
-            {quotaSentence('MEMBER', seats.used, seats.limit)} used, including invitations that
-            have not been answered.
+            {t('org.invite.seatsRemaining', {quota: quotaSentence('MEMBER', seats.used, seats.limit)})}
           </p>
         )}
 
         <Input
           {...form.bind('email')}
-          label="Email address"
+          label={t('org.invite.email')}
           type="email"
           required
           autoFocus
@@ -100,18 +99,20 @@ export function InviteMemberDialog({
           inputMode="email"
           enterKeyHint="send"
           placeholder="colleague@example.com"
-          hint="They need an account on this installation already - there is no public sign-up, so an operator creates it."
+          hint={t('org.invite.emailHint')}
         />
 
         <Select
           {...form.bind('role')}
-          label="Role"
+          label={t('org.invite.role')}
           required
           disabled={full}
           options={roles.map((role) => ({
             value: role,
             label:
-              role === 'OWNER' && !viewer.owner ? `${roleLabel(role)} (owners only)` : roleLabel(role),
+              role === 'OWNER' && !viewer.owner
+                ? t('org.invite.roleOwnersOnly', {role: roleLabel(role)})
+                : roleLabel(role),
             disabled: role === 'OWNER' && !viewer.owner,
           }))}
           hint={roleDescription(chosen)}

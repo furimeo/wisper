@@ -1,3 +1,5 @@
+import {t} from '@/i18n'
+
 import type {LogEvent} from './statsTypes'
 
 /**
@@ -60,7 +62,7 @@ export function acceptEvent(tail: LogTail, event: LogEvent, limit: number): LogT
       ...lines,
       {
         id: id++,
-        text: `--- ${event.droppedBytes.toLocaleString()} bytes of output were dropped: the container wrote faster than this could be read ---`,
+        text: t('stats.logNotice.dropped', {count: event.droppedBytes.toLocaleString()}),
         stderr: false,
         at: event.at,
         notice: true,
@@ -106,7 +108,7 @@ export function acceptEvent(tail: LogTail, event: LogEvent, limit: number): LogT
       ...lines,
       {
         id: id++,
-        text: '--- the source ended: the container exited, or the run finished ---',
+        text: t('stats.logNotice.ended'),
         stderr: false,
         at: event.at,
         notice: true,

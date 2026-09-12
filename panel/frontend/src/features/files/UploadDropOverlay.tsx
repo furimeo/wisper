@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from 'react'
 
+import {t} from '@/i18n'
 import {cx} from '@/shell'
 
 /**
@@ -120,12 +121,14 @@ export function UploadDropOverlay({
         )}
       >
         <p className="text-base font-semibold text-ink-900 dark:text-ink-100">
-          {disabled ? 'These cannot be uploaded here' : 'Drop to upload'}
+          {disabled ? t('files.drop.refused_title') : t('files.drop.ready_title')}
         </p>
         <p className="text-sm text-ink-600 dark:text-ink-400">
           {disabled
             ? disabledReason
-            : `They go into ${destination === '' ? 'the top of this tree' : destination}, and carry on by themselves if the connection drops.`}
+            : t('files.drop.ready_desc', {
+                destination: destination === '' ? t('files.drop.top_of_tree') : destination,
+              })}
         </p>
       </div>
     </div>

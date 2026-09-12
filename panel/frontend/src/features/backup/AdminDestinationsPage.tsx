@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, PageHeader} from '@/shell'
 
 import {DestinationForm} from './DestinationForm'
@@ -38,26 +39,21 @@ export default function AdminDestinationsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Backup destinations" />
+      <Head title={t('backup.adminDest.title')} />
 
       <PageHeader
-        title="Backup destinations"
-        description="Shared by every organization on this platform. A tenant sees them on their
-          own destinations page and can point a schedule at one, but cannot change or delete it."
+        title={t('backup.adminDest.title')}
+        description={t('backup.adminDest.description')}
         actions={
           <Button block className="sm:w-auto" onClick={() => setAdding(true)}>
-            Add a destination
+            {t('backup.destinations.add')}
           </Button>
         }
       />
 
       {unchecked > 0 ? (
         <p className="rounded-xl border border-degraded/50 bg-degraded/10 px-4 py-3 text-sm leading-relaxed">
-          {unchecked === 1
-            ? 'One enabled destination has never been checked.'
-            : `${unchecked} enabled destinations have never been checked.`}{' '}
-          Every tenant on the platform can point a schedule at these, so a bucket with the wrong
-          credentials fails for all of them at once - and quietly.
+          {t('backup.adminDest.unchecked', {count: unchecked})}
         </p>
       ) : null}
 

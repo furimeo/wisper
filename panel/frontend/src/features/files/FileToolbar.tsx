@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, cx} from '@/shell'
 
 import {FileActionIcon} from './FileActionIcon'
@@ -36,7 +37,7 @@ export function FileToolbar({
   return (
     <div
       role="toolbar"
-      aria-label="Folder actions"
+      aria-label={t('files.actions.toolbar_label')}
       className={cx('flex items-center gap-2', className)}
     >
       {refresh ? (
@@ -45,8 +46,8 @@ export function FileToolbar({
           size="sm"
           onClick={() => onAction('refresh')}
           loading={refreshing}
-          title="Refresh this folder"
-          aria-label="Refresh this folder"
+          title={t('files.actions.refresh_title')}
+          aria-label={t('files.actions.refresh_title')}
         >
           {refreshing ? null : <FileActionIcon kind="refresh" />}
         </Button>

@@ -1,5 +1,6 @@
 import {useEffect} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, Modal, useFormFields} from '@/shell'
 
 import {filesBase} from './fileRequests'
@@ -54,16 +55,16 @@ export function ExtractDialog({
     <Modal
       open={archive !== null}
       onClose={onClose}
-      title="Unzip"
-      description={archive ? `Unpacking ${archive.name}` : undefined}
+      title={t('files.extract.title')}
+      description={archive ? t('files.extract.description', {name: archive.name}) : undefined}
       size="sm"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} block>
-            Cancel
+            {t('files.extract.cancel')}
           </Button>
           <Button onClick={submit} loading={form.processing} block>
-            Unzip
+            {t('files.extract.unzip')}
           </Button>
         </>
       }
@@ -77,17 +78,17 @@ export function ExtractDialog({
       >
         <Input
           {...form.bind('destination')}
-          label="Unpack into"
+          label={t('files.extract.into_label')}
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
-          placeholder="the top of this tree"
-          hint="Relative to the top of this tree. Leave it as it is to unpack here."
+          placeholder={t('files.extract.into_placeholder')}
+          hint={t('files.extract.into_hint')}
         />
         <Checkbox
           {...form.check('overwrite')}
-          label="Replace files that are already there"
-          hint="Off by default, so an archive cannot quietly overwrite work that is not in it."
+          label={t('files.extract.overwrite_label')}
+          hint={t('files.extract.overwrite_hint')}
         />
       </form>
     </Modal>

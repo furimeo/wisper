@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {useI18n} from '@/i18n'
 import {ButtonLink, Card, PageHeader, Tabs} from '@/shell'
 
 import {NodeCapacity} from './NodeCapacity'
@@ -42,6 +43,7 @@ type AdminNodeDetailProps = {
 type Section = 'overview' | 'preflight' | 'operations'
 
 export default function AdminNodeDetailPage() {
+  const {t} = useI18n()
   const {node, bootstrapToken, bootstrapTokenExpiresAt, installCommand, installChecksum} =
     usePage<AdminNodeDetailProps>().props
   const [section, setSection] = useState<Section>('overview')
@@ -73,7 +75,7 @@ export default function AdminNodeDetailPage() {
             block
             className="sm:w-auto"
           >
-            Metrics
+            {t('node.detail.action.metrics')}
           </ButtonLink>
         }
       />
@@ -92,28 +94,26 @@ export default function AdminNodeDetailPage() {
       />
 
       <Tabs
-        label="Node sections"
+        label={t('node.detail.tab.label')}
         value={section}
         onSelect={(value) => setSection(value as Section)}
         items={[
-          {value: 'overview', label: 'Overview'},
+          {value: 'overview', label: t('node.detail.tab.overview')},
           {
             value: 'preflight',
-            label: 'Preflight',
+            label: t('node.detail.tab.preflight'),
             badge: failing ? <span className="text-failed">!</span> : undefined,
           },
-          {value: 'operations', label: 'Operations'},
+          {value: 'operations', label: t('node.detail.tab.operations')},
         ]}
       />
 
       {section === 'overview' ? (
         <>
           <Card
-            title="Capacity"
+            title={t('node.detail.capacity.title')}
             description={
-              summary.description ??
-              'What the node last reported. Placement keeps headroom, so a machine much past ' +
-                'eighty per cent starts refusing work before it is actually full.'
+              summary.description ?? t('node.detail.capacity.defaultDescription')
             }
           >
             <NodeCapacity node={summary} />

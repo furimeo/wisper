@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {cx} from '@/shell'
 
 import type {ApiScope} from './authTypes'
@@ -32,7 +33,7 @@ export function ScopePicker({available, chosen, onToggle, error}: ScopePickerPro
   return (
     <fieldset className="flex flex-col gap-1.5">
       <legend className="text-sm font-medium text-ink-700 dark:text-ink-300">
-        Permissions ({chosen.length} chosen)
+        {t('auth.tokens.permissionsLegend', {count: chosen.length})}
       </legend>
 
       <ul className="flex flex-col gap-2">
@@ -79,7 +80,7 @@ export function ScopePicker({available, chosen, onToggle, error}: ScopePickerPro
         </p>
       ) : (
         <p className="text-sm text-ink-500 dark:text-ink-400">
-          Give it the least it needs. Read and write are separate on purpose.
+          {t('auth.tokens.permissionsHint')}
         </p>
       )}
     </fieldset>

@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Card, Checkbox, Input, Textarea, useFormFields} from '@/shell'
 
 import type {NodeSummary} from './nodeTypes'
@@ -32,9 +33,8 @@ export function NodeSettingsForm({node}: {node: NodeSummary}) {
 
   return (
     <Card
-      title="Settings"
-      description="Placement reads the tags; a domain's A record has to point at the public
-        address."
+      title={t('node.settings.title')}
+      description={t('node.settings.description')}
       footer={
         <div className="flex flex-col gap-2 sm:flex-row-reverse">
           <Button
@@ -44,11 +44,11 @@ export function NodeSettingsForm({node}: {node: NodeSummary}) {
             disabled={!form.dirty}
             onClick={() => form.submit(`/admin/nodes/${node.id}/settings`)}
           >
-            Save
+            {t('node.settings.save')}
           </Button>
           {form.dirty ? (
             <Button variant="ghost" block className="sm:w-auto" onClick={form.reset}>
-              Discard changes
+              {t('node.settings.discard')}
             </Button>
           ) : null}
         </div>
@@ -63,41 +63,39 @@ export function NodeSettingsForm({node}: {node: NodeSummary}) {
       >
         <Input
           {...form.bind('publicAddress')}
-          label="Public address"
+          label={t('node.form.create.publicAddress')}
           maxLength={255}
           autoComplete="off"
-          placeholder="203.0.113.10"
-          hint="Where customers' traffic arrives. The panel never dials this - the node dials out."
+          placeholder={t('node.form.create.publicAddressPlaceholder')}
+          hint={t('node.form.create.publicAddressHint')}
         />
 
         <Input
           {...form.bind('tags')}
-          label="Tags"
+          label={t('node.form.create.tags')}
           maxLength={500}
           autoComplete="off"
-          placeholder="eu, ssd, general"
-          hint="Comma separated. A service that requires a tag will only be placed on a node
-            carrying it."
+          placeholder={t('node.form.create.tagsPlaceholder')}
+          hint={t('node.form.create.tagsHint')}
         />
 
         <Textarea
           {...form.bind('description')}
-          label="Notes"
+          label={t('node.form.create.notes')}
           rows={2}
           autoGrow
           maxLength={500}
-          hint="For whoever reads this page next."
+          hint={t('node.settings.notesHint')}
         />
 
         <Checkbox
           {...form.check('schedulable')}
-          label="Accept new placements"
-          hint="Off means the scheduler stops choosing this machine. Nothing already running on it
-            is moved or stopped - that is what draining is for."
+          label={t('node.settings.schedulable')}
+          hint={t('node.settings.schedulableHint')}
         />
 
         <button type="submit" className="sr-only">
-          Save settings
+          {t('node.settings.save')}
         </button>
       </form>
     </Card>

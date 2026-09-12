@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Input, Select} from '@/shell'
 import type {FormFields} from '@/shell'
 
@@ -5,17 +6,6 @@ import type {ServiceFormValues} from './serviceFormValues'
 import type {BuildPreset} from './serviceTypes'
 import {presetLabel, presetNeedsCommand, presetOutputDir} from './serviceVocabulary'
 
-/**
- * How a repository becomes something to serve.
- *
- * Required for a static site, optional for an app - that is how a language-runtime image
- * gets the customer's code into it - so the group takes `required` rather than being two
- * components that would drift apart.
- *
- * Choosing a preset fills the output directory in with the one that preset usually
- * produces, and only while the box has not been touched. Overwriting something the
- * customer typed because they changed a dropdown is the kind of help nobody asked for.
- */
 export function BuildFields({
   form,
   presets,
@@ -34,10 +24,10 @@ export function BuildFields({
     <div className="flex flex-col gap-4">
       <Select
         {...form.bind('buildPreset')}
-        label="Build"
+        label={t('service.build.build_label')}
         required={required}
         disabled={disabled}
-        placeholder={required ? 'Choose how the site is built' : undefined}
+        placeholder={required ? t('service.build.choose_preset_placeholder') : undefined}
         onChange={(event) => {
           const chosen = event.target.value as BuildPreset | ''
           const suggested = chosen === '' ? '' : presetOutputDir(chosen)
@@ -51,9 +41,7 @@ export function BuildFields({
           )
         }}
         options={[
-          // An app may drop its build again; a site may not, so a site gets the disabled
-          // placeholder above and no way back to "nothing".
-          ...(required ? [] : [{value: '', label: 'No build - the image is the app'}]),
+          ...(required ? [] : [{value: '', label: t('service.build.no_build_option')}]),
           ...presets.map((value) => ({value, label: presetLabel(value)})),
         ]}
       />
@@ -62,41 +50,43 @@ export function BuildFields({
         <>
           <Input
             {...form.bind('buildCommand')}
-            label="Build command"
+            label={t('service.build.command_label')}
             required={custom}
             disabled={disabled}
             maxLength={2000}
             autoComplete="off"
-            placeholder={custom ? 'npm ci && npm run build' : 'Leave empty for the preset default'}
+            placeholder={
+              custom
+                ? t('service.build.command_placeholder_custom')
+                : t('service.build.command_placeholder_preset')
+            }
             hint={
               custom
-                ? 'A custom build needs the command that produces the site.'
-                : 'Optional. The preset already knows how to build this.'
+                ? t('service.build.command_hint_custom')
+                : t('service.build.command_hint_preset')
             }
           />
 
           <Input
             {...form.bind('buildOutputDir')}
-            label="Output directory"
+            label={t('service.build.output_dir_label')}
             required={required}
             disabled={disabled}
             maxLength={500}
             autoComplete="off"
-            placeholder="dist"
-            hint="Relative to the repository. It cannot start with a slash or contain
-              &quot;..&quot; - the node resolves it under the build's own tree."
+            placeholder={t('service.build.output_dir_placeholder')}
+            hint={t('service.build.output_dir_hint')}
           />
 
           <Input
             {...form.bind('keepReleases')}
-            label="Releases kept"
+            label={t('service.build.keep_releases_label')}
             type="number"
             inputMode="numeric"
             min={1}
             max={50}
             disabled={disabled}
-            hint="Older builds stay on the node so a rollback is a symlink swap rather than a
-              rebuild. Between 1 and 50."
+            hint={t('service.build.keep_releases_hint')}
           />
         </>
       )}

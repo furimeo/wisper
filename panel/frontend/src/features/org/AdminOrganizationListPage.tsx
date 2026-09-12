@@ -1,6 +1,7 @@
 import {Head, Link, usePage} from '@inertiajs/react'
 import {useMemo, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Card, DataList, EmptyState, Icon, Input, PageHeader, RelativeTime} from '@/shell'
 
 import type {Organization, Plan} from './orgTypes'
@@ -54,18 +55,18 @@ export default function AdminOrganizationListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Tenants" />
+      <Head title={t('org.adminTenants.title')} />
 
       <PageHeader
-        title="Tenants"
-        description="Every organization on this installation, which plan it is on and whether it is suspended."
+        title={t('org.adminTenants.title')}
+        description={t('org.adminTenants.description')}
       />
 
-      <Card title="Organizations" action={<Badge>{tenants.length}</Badge>} padded={false}>
+      <Card title={t('org.adminTenants.cardTitle')} action={<Badge>{tenants.length}</Badge>} padded={false}>
         <div className="flex flex-col gap-3 px-4 py-3 md:px-5">
           {suspended > 0 ? (
             <Badge tone="failed" dot>
-              {suspended} suspended
+              {t('org.adminTenants.suspendedBadge', {count: suspended})}
             </Badge>
           ) : null}
 
@@ -76,8 +77,8 @@ export default function AdminOrganizationListPage() {
             autoCapitalize="none"
             spellCheck={false}
             enterKeyHint="search"
-            placeholder="Filter by name or address"
-            aria-label="Filter tenants"
+            placeholder={t('org.adminTenants.filterPlaceholder')}
+            aria-label={t('org.adminTenants.filterAria')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
@@ -86,17 +87,21 @@ export default function AdminOrganizationListPage() {
         <DataList
           items={matching}
           keyOf={(tenant) => tenant.id}
-          label="tenants"
+          label={t('org.adminTenants.dataListLabel')}
           href={(tenant) => `/admin/organizations/${tenant.id}`}
           primary={(tenant) => tenant.name}
-          secondary={(tenant) => `/${tenant.slug} · ${planNames.get(tenant.planId) ?? 'no plan'}`}
+          secondary={(tenant) => `/${tenant.slug} · ${planNames.get(tenant.planId) ?? t('org.adminTenants.noPlan')}`}
           trailing={(tenant) =>
-            tenant.suspended ? <Badge tone="failed">Suspended</Badge> : <Badge tone="running" dot>Active</Badge>
+            tenant.suspended ? (
+              <Badge tone="failed">{t('org.adminTenants.badgeSuspended')}</Badge>
+            ) : (
+              <Badge tone="running" dot>{t('org.adminTenants.badgeActive')}</Badge>
+            )
           }
           columns={[
             {
               key: 'name',
-              header: 'Organization',
+              header: t('org.adminTenants.colOrg'),
               cell: (tenant) => (
                 <Link href={`/admin/organizations/${tenant.id}`} className="font-medium">
                   {tenant.name}
@@ -105,29 +110,29 @@ export default function AdminOrganizationListPage() {
             },
             {
               key: 'slug',
-              header: 'Address',
+              header: t('org.adminTenants.colAddress'),
               cell: (tenant) => <code className="font-mono text-xs">/{tenant.slug}</code>,
             },
             {
               key: 'plan',
-              header: 'Plan',
-              cell: (tenant) => planNames.get(tenant.planId) ?? 'no plan',
+              header: t('org.adminTenants.colPlan'),
+              cell: (tenant) => planNames.get(tenant.planId) ?? t('org.adminTenants.noPlan'),
             },
             {
               key: 'created',
-              header: 'Opened',
+              header: t('org.adminTenants.colOpened'),
               cell: (tenant) => <RelativeTime at={tenant.createdAt} />,
             },
             {
               key: 'status',
-              header: 'State',
+              header: t('org.adminTenants.colState'),
               align: 'right',
               cell: (tenant) =>
                 tenant.suspended ? (
-                  <Badge tone="failed">Suspended</Badge>
+                  <Badge tone="failed">{t('org.adminTenants.badgeSuspended')}</Badge>
                 ) : (
                   <Badge tone="running" dot>
-                    Active
+                    {t('org.adminTenants.badgeActive')}
                   </Badge>
                 ),
             },
@@ -135,11 +140,11 @@ export default function AdminOrganizationListPage() {
           empty={
             <EmptyState
               icon={<Icon name="organization" />}
-              title={query ? 'Nothing matches' : 'No organizations yet'}
+              title={query ? t('org.adminTenants.emptyQueryTitle') : t('org.adminTenants.emptyTitle')}
               description={
                 query
-                  ? `No tenant's name or address contains “${query}”. Clear the filter to see all ${tenants.length}.`
-                  : 'Nobody has opened one. A customer creates their own from the Organizations screen; there is no operator form for it, because the person who opens a tenant has to end up owning it.'
+                  ? t('org.adminTenants.emptyQueryDesc', {query, total: tenants.length})
+                  : t('org.adminTenants.emptyDesc')
               }
             />
           }

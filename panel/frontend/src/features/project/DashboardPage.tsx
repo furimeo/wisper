@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, EmptyState, Icon, PageHeader} from '@/shell'
 
 import {CreateProjectDialog} from './CreateProjectDialog'
@@ -36,14 +37,14 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Projects" />
+      <Head title={t('project.dashboard.title')} />
 
       <PageHeader
-        title="Projects"
-        description="Everything you host, grouped by the organization that owns it."
+        title={t('project.dashboard.title')}
+        description={t('project.dashboard.description')}
         actions={
           <Button icon={<Icon name="projects" />} onClick={() => setCreating(true)}>
-            New project
+            {t('project.dashboard.newProject')}
           </Button>
         }
       />
@@ -52,10 +53,9 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-ink-200 bg-white dark:border-ink-800 dark:bg-ink-900">
           <EmptyState
             icon={<Icon name="projects" />}
-            title="No projects yet"
-            description="A project holds the services that ship together - an app and the static site
-              in front of it, say. Open one and you can add the first service straight after."
-            action={<Button onClick={() => setCreating(true)}>Open your first project</Button>}
+            title={t('project.dashboard.emptyTitle')}
+            description={t('project.dashboard.emptyDesc')}
+            action={<Button onClick={() => setCreating(true)}>{t('project.dashboard.openFirst')}</Button>}
           />
         </div>
       ) : (

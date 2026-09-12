@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Input, useFormFields} from '@/shell'
 
 import type {DeploymentTarget} from './deployTypes'
@@ -38,27 +39,25 @@ export function DeployFromGitForm({
     >
       <Input
         {...form.bind('ref')}
-        label="Branch, tag or commit"
+        label={t('deploy.git_form.ref_label')}
         placeholder={branch}
         autoCapitalize="none"
         autoCorrect="off"
         spellCheck={false}
         enterKeyHint="go"
         disabled={disabled}
-        hint={`Leave this empty to build ${branch}, the branch this service is set to.`}
+        hint={t('deploy.git_form.ref_hint', {branch})}
       />
 
       <Button type="submit" block loading={form.processing} disabled={disabled}>
-        Deploy now
+        {t('deploy.git_form.deploy_now')}
       </Button>
 
       {disabled && disabledReason ? (
         <p className="text-sm text-ink-500 dark:text-ink-400">{disabledReason}</p>
       ) : (
         <p className="text-sm text-ink-500 dark:text-ink-400">
-          wisper clones {target.repositoryUrl}, builds it on the node holding this service
-          and swaps the release directory over when the build succeeds. Nothing goes down
-          while it runs.
+          {t('deploy.git_form.explanation', {url: target.repositoryUrl ?? ''})}
         </p>
       )}
     </form>

@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Card, EmptyState, Icon, PageHeader} from '@/shell'
 
 import {CreateOrganizationDialog} from './CreateOrganizationDialog'
@@ -33,14 +34,14 @@ export default function OrganizationListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Organizations" />
+      <Head title={t('org.list.title')} />
 
       <PageHeader
-        title="Organizations"
-        description="Each one has its own members, its own plan and its own limits. Projects live inside them."
+        title={t('org.list.title')}
+        description={t('org.list.description')}
         actions={
           <Button icon={<Icon name="organization" />} onClick={() => setCreating(true)}>
-            New organization
+            {t('org.list.newOrg')}
           </Button>
         }
       />
@@ -48,7 +49,7 @@ export default function OrganizationListPage() {
       {invitations.length > 0 ? (
         <section className="flex flex-col gap-2">
           <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-ink-400">
-            Waiting for you
+            {t('org.list.waitingForYou')}
           </h2>
           <ul className="flex flex-col gap-2">
             {invitations.map((invitation) => (
@@ -62,20 +63,20 @@ export default function OrganizationListPage() {
         <Card padded={false}>
           <EmptyState
             icon={<Icon name="organization" />}
-            title={invitations.length > 0 ? 'Not a member of anything yet' : 'No organizations yet'}
+            title={invitations.length > 0 ? t('org.list.emptyInvitedTitle') : t('org.list.emptyTitle')}
             description={
               invitations.length > 0
-                ? 'Join one of the invitations above, or open an organization of your own - a project has to live inside one.'
-                : 'An organization owns the projects, the members and the plan. Open one and the first project can go straight in it.'
+                ? t('org.list.emptyInvitedDesc')
+                : t('org.list.emptyDesc')
             }
-            action={<Button onClick={() => setCreating(true)}>Open your first organization</Button>}
+            action={<Button onClick={() => setCreating(true)}>{t('org.list.emptyAction')}</Button>}
           />
         </Card>
       ) : (
         <section className="flex flex-col gap-2">
           {invitations.length > 0 ? (
             <h2 className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-500 dark:text-ink-400">
-              Your organizations
+              {t('org.list.yourOrgs')}
             </h2>
           ) : null}
           <ul className="flex flex-col gap-2">

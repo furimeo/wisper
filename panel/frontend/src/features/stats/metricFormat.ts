@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {formatBytes} from '@/shell'
 
 import type {MetricPoint, MetricSource} from './statsTypes'
@@ -25,11 +26,11 @@ const BUCKET_SECONDS: Record<MetricSource, number> = {
 export function resolutionLabel(source: MetricSource): string {
   switch (source) {
     case 'RAW':
-      return 'every sample'
+      return t('stats.resolution.raw')
     case 'HOUR':
-      return 'hourly averages'
+      return t('stats.resolution.hour')
     case 'DAY':
-      return 'daily averages'
+      return t('stats.resolution.day')
   }
 }
 
@@ -39,7 +40,8 @@ export function formatCpu(millicores: number): string {
     return `${Math.round(millicores)} m`
   }
   const cores = millicores / 1000
-  return `${cores < 10 ? cores.toFixed(2) : cores.toFixed(1)} cores`
+  const formatted = cores < 10 ? cores.toFixed(2) : cores.toFixed(1)
+  return t('stats.format.cores', {cores: formatted})
 }
 
 /** A throughput, from a total and the seconds it covers. */

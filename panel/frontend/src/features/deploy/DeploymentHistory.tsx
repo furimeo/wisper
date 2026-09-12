@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react'
 
+import {t} from '@/i18n'
 import {DataList, EmptyState, Icon, RelativeTime} from '@/shell'
 import type {DataListColumn, SwipeAction} from '@/shell'
 
@@ -9,21 +10,8 @@ import type {DeploymentSummary} from './deployTypes'
 import {cancellable, describe, durationOf, formatDuration, rollbackTarget} from './deployVocabulary'
 import {rollbackRelease} from './rollbackRelease'
 
-/** How often the elapsed time of a running build is redrawn. */
 const TICK_MS = 1000
 
-/**
- * The history: one row per deployment, newest first.
- *
- * A row on a phone is the three things somebody is scanning for - which number, what it
- * was, and where it got to - with cancel and roll back behind the swipe and the overflow
- * button. The desktop table adds who triggered it and how long it took, which are worth a
- * column when there is room and are not worth two lines of a 375px row when there is not.
- *
- * The clock only runs while something is still building. A page of forty finished
- * deployments re-rendering once a second to show forty unchanging durations is a phone
- * warming up in somebody's hand for nothing.
- */
 export function DeploymentHistory({
   serviceId,
   deployments,
@@ -39,28 +27,28 @@ export function DeploymentHistory({
   const columns: Array<DataListColumn<DeploymentSummary>> = [
     {
       key: 'sequence',
-      header: '#',
+      header: t('deploy.history.col_sequence'),
       cell: (one) => <span className="tabular-nums">#{one.sequence}</span>,
       className: 'w-16',
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('deploy.history.col_status'),
       cell: (one) => <DeploymentStatusBadge deployment={one} />,
     },
     {
       key: 'what',
-      header: 'What was deployed',
+      header: t('deploy.history.col_what'),
       cell: (one) => <span className="line-clamp-2">{describe(one)}</span>,
     },
     {
       key: 'queued',
-      header: 'Started',
+      header: t('deploy.history.col_started'),
       cell: (one) => <RelativeTime at={one.queuedAt} />,
     },
     {
       key: 'duration',
-      header: 'Took',
+      header: t('deploy.history.col_took'),
       align: 'right',
       cell: (one) => (
         <span className="tabular-nums">{formatDuration(durationOf(one, now))}</span>
@@ -70,7 +58,7 @@ export function DeploymentHistory({
 
   return (
     <DataList
-      label="deployments"
+      label={t('deploy.history.label')}
       items={deployments}
       keyOf={(one) => one.id}
       columns={columns}
@@ -92,11 +80,8 @@ export function DeploymentHistory({
       empty={
         <EmptyState
           icon={<Icon name="jobs" />}
-          title="Nothing has been deployed yet"
-          description={
-            'Every deployment of this service will be listed here with its build log, ' +
-            'and any successful one can be rolled back to in a tap. Start one above.'
-          }
+          title={t('deploy.history.empty_title')}
+          description={t('deploy.history.empty_description')}
         />
       }
     />
@@ -108,7 +93,7 @@ function actionsFor(serviceId: string, deployment: DeploymentSummary): SwipeActi
   const actions: SwipeAction[] = []
   if (cancellable(deployment)) {
     actions.push({
-      label: 'Cancel this build',
+      label: t('deploy.history.cancel_action'),
       tone: 'danger',
       icon: <Icon name="close" className="size-4" />,
       onSelect: () => void cancelDeployment(serviceId, deployment),
@@ -116,7 +101,7 @@ function actionsFor(serviceId: string, deployment: DeploymentSummary): SwipeActi
   }
   if (rollbackTarget(deployment)) {
     actions.push({
-      label: `Roll back to #${deployment.sequence}`,
+      label: t('deploy.history.rollback_action', {sequence: deployment.sequence}),
       icon: <Icon name="chevronLeft" className="size-4" />,
       onSelect: () => void rollbackRelease(serviceId, deployment),
     })

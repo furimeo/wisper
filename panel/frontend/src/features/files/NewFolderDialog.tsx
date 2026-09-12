@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Input, Modal, useFormFields} from '@/shell'
 
 import {filesBase} from './fileRequests'
@@ -29,7 +30,7 @@ export function NewFolderDialog({
 
   const submit = () => {
     if (form.data.name.trim() === '') {
-      form.setError('name', 'A folder needs a name.')
+      form.setError('name', t('files.new_folder.empty_error'))
       return
     }
     form.submit(`${filesBase(serviceId)}/folder`, {onSuccess: onClose})
@@ -39,13 +40,13 @@ export function NewFolderDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title="New folder"
-      description="It is created inside the folder you are looking at."
+      title={t('files.new_folder.title')}
+      description={t('files.new_folder.description')}
       size="sm"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} block>
-            Cancel
+            {t('files.new_folder.cancel')}
           </Button>
           <Button
             onClick={submit}
@@ -53,7 +54,7 @@ export function NewFolderDialog({
             disabled={form.data.name.trim() === ''}
             block
           >
-            Create
+            {t('files.new_folder.create')}
           </Button>
         </>
       }
@@ -66,13 +67,13 @@ export function NewFolderDialog({
       >
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('files.new_folder.name_label')}
           autoFocus
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
-          placeholder="uploads"
-          hint="Letters, digits, dots, dashes. No slashes - this makes one folder."
+          placeholder={t('files.new_folder.name_placeholder')}
+          hint={t('files.new_folder.name_hint')}
         />
       </form>
     </Modal>

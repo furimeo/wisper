@@ -1,20 +1,9 @@
+import {t} from '@/i18n'
 import {Badge, Icon, RelativeTime, cx} from '@/shell'
 
 import type {CronTaskView} from './serviceTypes'
 import {describeSchedule, lastRunFailed, lastRunSentence} from './cronVocabulary'
 
-/**
- * One scheduled command.
- *
- * Both halves are on the row: when it is next due, and how the last run went. A cron whose
- * schedule is correct and whose command exits 1 every night looks perfectly healthy on a
- * screen that draws only the schedule, and the customer finds out weeks later from
- * whatever the job was supposed to be doing.
- *
- * The schedule is shown in words with the expression underneath rather than instead of it.
- * `0 3 * * 1` is what gets edited and what a customer pastes from somewhere else, so it
- * has to stay visible; "At 03:00, on Mondays" is what makes a wrong field obvious.
- */
 export function ScheduledTaskRow({
   task,
   onOpen,
@@ -33,13 +22,13 @@ export function ScheduledTaskRow({
           <span className="truncate text-sm font-medium text-ink-900 dark:text-ink-100">
             {task.name}
           </span>
-          {task.enabled ? null : <Badge tone="neutral">Off</Badge>}
+          {task.enabled ? null : <Badge tone="neutral">{t('service.tasks.off_badge')}</Badge>}
           {task.running ? (
             <Badge tone="accent" dot pulse>
-              Running
+              {t('service.tasks.running_badge')}
             </Badge>
           ) : null}
-          {failed ? <Badge tone="failed">Failed</Badge> : null}
+          {failed ? <Badge tone="failed">{t('service.tasks.failed_badge')}</Badge> : null}
         </span>
 
         <span className="mt-0.5 block truncate font-mono text-xs text-ink-500 dark:text-ink-400">
@@ -77,13 +66,14 @@ export function ScheduledTaskRow({
           {task.enabled ? (
             task.nextRunAt ? (
               <>
-                Next <RelativeTime at={task.nextRunAt} />
+                {t('service.tasks.next_run', {time: ''})}
+                <RelativeTime at={task.nextRunAt} />
               </>
             ) : (
-              'No further run could be worked out from this schedule.'
+              t('service.tasks.no_further_run')
             )
           ) : (
-            'Switched off. Its schedule and history are kept.'
+            t('service.tasks.switched_off_hint')
           )}
         </span>
       </span>
@@ -103,7 +93,9 @@ export function ScheduledTaskRow({
           {body}
         </button>
       ) : (
-        <div className="flex w-full touch-target items-start gap-3 px-4 py-3 md:px-5">{body}</div>
+        <div className="flex w-full touch-target items-start gap-3 px-4 py-3 md:px-5">
+          {body}
+        </div>
       )}
     </li>
   )

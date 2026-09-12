@@ -2,6 +2,7 @@ import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
 import {Badge, ByteSize, Card, DataList, EmptyState, PageHeader, RelativeTime} from '@/shell'
+import {t} from '@/i18n'
 
 import {MigrateDialog} from './MigrateDialog'
 import type {NodeCapacity, PlacedServiceRow} from './placementTypes'
@@ -34,20 +35,17 @@ export default function AdminPlacementPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Placement" />
+      <Head title={t('placement.title')} />
 
       <PageHeader
-        title="Placement"
-        description="Which service each node is holding. A service is pinned to its node as
-          soon as it has a volume, so nothing here moves on its own - draining a node means
-          moving what is on it, one decision at a time."
+        title={t('placement.title')}
+        description={t('placement.description')}
       />
 
       {placements.length === 0 ? (
         <EmptyState
-          title="Nothing is placed"
-          description="No service has been scheduled onto a node yet. Create a service and start
-            it, and it will appear here on the node the scheduler picks."
+          title={t('placement.empty.title')}
+          description={t('placement.empty.description')}
         />
       ) : null}
 
@@ -57,39 +55,39 @@ export default function AdminPlacementPage() {
           <Card
             key={group.nodeId}
             title={group.nodeName}
-            description={node ? describe(node, group.rows.length) : `${group.rows.length} placed`}
+            description={node ? describe(node, group.rows.length) : t('placement.describe.placed', {count: group.rows.length})}
           >
             <DataList
               items={group.rows}
-              label="placements"
+              label={t('placement.unit')}
               keyOf={(row) => `${row.serviceId}:${row.nodeId}`}
               primary={(row) => row.serviceName}
               secondary={(row) => `${row.organizationName} · ${row.projectSlug}/${row.serviceSlug}`}
               trailing={(row) => <StateBadge row={row} />}
               actions={(row) =>
                 row.movable
-                  ? [{label: 'Move to another node', onSelect: () => setMoving(row)}]
+                  ? [{label: t('placement.action.moveToAnother'), onSelect: () => setMoving(row)}]
                   : []
               }
               columns={[
-                {key: 'service', header: 'Service', cell: (row) => row.serviceName},
+                {key: 'service', header: t('placement.column.service'), cell: (row) => row.serviceName},
                 {
                   key: 'tenant',
-                  header: 'Tenant',
+                  header: t('placement.column.tenant'),
                   cell: (row) => `${row.organizationName} · ${row.projectSlug}`,
                 },
-                {key: 'kind', header: 'Kind', cell: (row) => row.kind.toLowerCase()},
-                {key: 'state', header: 'State', cell: (row) => <StateBadge row={row} />},
+                {key: 'kind', header: t('placement.column.kind'), cell: (row) => row.kind.toLowerCase()},
+                {key: 'state', header: t('placement.column.state'), cell: (row) => <StateBadge row={row} />},
                 {
                   key: 'data',
-                  header: 'Data',
+                  header: t('placement.column.data'),
                   align: 'right',
                   cell: (row) =>
-                    row.carryingData ? <ByteSize bytes={row.volumeBytes} /> : 'none',
+                    row.carryingData ? <ByteSize bytes={row.volumeBytes} /> : t('placement.data.none'),
                 },
                 {
                   key: 'since',
-                  header: 'Placed',
+                  header: t('placement.column.placed'),
                   cell: (row) => <RelativeTime at={row.placedAt} />,
                 },
               ]}
@@ -100,8 +98,8 @@ export default function AdminPlacementPage() {
 
       {idle.length > 0 ? (
         <Card
-          title="Holding nothing"
-          description="Schedulable and empty. New services land here first."
+          title={t('placement.idle.title')}
+          description={t('placement.idle.description')}
         >
           <ul className="flex flex-wrap gap-2">
             {idle.map((node) => (
@@ -122,11 +120,11 @@ export default function AdminPlacementPage() {
 
 function describe(node: NodeCapacity, placed: number): string {
   const free = headroomOf(node)
-  const held = `${placed} ${placed === 1 ? 'service' : 'services'}`
+  const held = t('placement.describe.held', {count: placed})
   if (isFull(node)) {
-    return `${held} · no headroom left`
+    return t('placement.describe.full', {held})
   }
-  return `${held} · ${(free.cpuMillicores / 1000).toFixed(1)} vCPU free`
+  return t('placement.describe.free', {held, cpu: (free.cpuMillicores / 1000).toFixed(1)})
 }
 
 /**
@@ -138,10 +136,14 @@ function describe(node: NodeCapacity, placed: number): string {
  */
 function StateBadge({row}: {row: PlacedServiceRow}) {
   if (row.draining) {
-    return <Badge tone="degraded">draining</Badge>
+    return <Badge tone="degraded">{t('placement.state.draining')}</Badge>
   }
   if (row.state === 'PLANNED') {
-    return <Badge tone="neutral">planned</Badge>
+    return <Badge tone="neutral">{t('placement.state.planned')}</Badge>
   }
-  return <Badge tone={row.pinned ? 'accent' : 'running'}>{row.pinned ? 'pinned' : 'active'}</Badge>
+  return (
+    <Badge tone={row.pinned ? 'accent' : 'running'}>
+      {row.pinned ? t('placement.state.pinned') : t('placement.state.active')}
+    </Badge>
+  )
 }

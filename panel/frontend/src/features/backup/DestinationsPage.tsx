@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, PageHeader, mayWrite, useCurrentOrganization} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -35,19 +36,17 @@ export default function DestinationsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Backup destinations" />
+      <Head title={t('backup.destinations.title')} />
 
       <BackupTabs organizationId={organizationId} />
 
       <PageHeader
-        title="Destinations"
-        description="Where your snapshots are pushed. The node writes to them directly, so the
-          panel being down does not stop a backup and the panel being compromised does not hand
-          anybody your archives."
+        title={t('backup.destinations.title')}
+        description={t('backup.destinations.description')}
         actions={
           writable ? (
             <Button block className="sm:w-auto" onClick={() => setAdding(true)}>
-              Add a destination
+              {t('backup.destinations.add')}
             </Button>
           ) : null
         }

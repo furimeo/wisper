@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {useI18n} from '@/i18n'
 import {Button, Card, EmptyState, Icon, PageHeader} from '@/shell'
 
 import {CreateNodeForm} from './CreateNodeForm'
@@ -29,6 +30,7 @@ type AdminNodeListProps = {
 }
 
 export default function AdminNodeListPage() {
+  const {t} = useI18n()
   const {nodes, attention} = usePage<AdminNodeListProps>().props
   const [creating, setCreating] = useState(false)
 
@@ -46,16 +48,14 @@ export default function AdminNodeListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Nodes" />
+      <Head title={t('node.list.title')} />
 
       <PageHeader
-        title="Nodes"
-        description="One machine each, running sasayaki. The panel publishes desired state to them
-          and they converge on it every fifteen seconds; customers' traffic reaches them directly
-          and never passes through here."
+        title={t('node.list.title')}
+        description={t('node.list.description')}
         actions={
           <Button block className="sm:w-auto" onClick={() => setCreating(true)}>
-            Add a node
+            {t('node.list.action.add')}
           </Button>
         }
       />
@@ -64,26 +64,25 @@ export default function AdminNodeListPage() {
 
       {nodes.length > 0 ? (
         <dl className="grid grid-cols-3 gap-2 sm:gap-3">
-          <FleetCount label="Connected" value={`${connected}/${nodes.length}`} />
-          <FleetCount label="Taking work" value={String(schedulable)} />
-          <FleetCount label="Workloads running" value={String(workloads)} />
+          <FleetCount label={t('node.list.metric.connected')} value={`${connected}/${nodes.length}`} />
+          <FleetCount label={t('node.list.metric.schedulable')} value={String(schedulable)} />
+          <FleetCount label={t('node.list.metric.workloads')} value={String(workloads)} />
         </dl>
       ) : null}
 
       {flagged.length > 0 ? (
         <Card
-          title="Needs attention"
-          description="Suspended, draining, out of touch, or running with weaker guarantees than
-            the platform claims."
+          title={t('node.list.flagged.title')}
+          description={t('node.list.flagged.description')}
           padded={false}
         >
-          <NodeFleetList nodes={flagged} label="nodes needing attention" />
+          <NodeFleetList nodes={flagged} label={t('node.list.flagged.label')} />
         </Card>
       ) : null}
 
       <Card
-        title="All nodes"
-        description={nodes.length === 1 ? '1 machine' : `${nodes.length} machines`}
+        title={t('node.list.all.title')}
+        description={t('node.list.all.machineCount', {count: nodes.length})}
         padded={false}
       >
         <NodeFleetList
@@ -91,11 +90,9 @@ export default function AdminNodeListPage() {
           empty={
             <EmptyState
               icon={<Icon name="node" />}
-              title="No nodes yet"
-              description="Nothing can be deployed until there is a machine to deploy onto. Adding
-                one gives you a bootstrap token, good for fifteen minutes and one machine, and the
-                three lines to paste into its shell."
-              action={<Button onClick={() => setCreating(true)}>Add the first node</Button>}
+              title={t('node.list.empty.title')}
+              description={t('node.list.empty.description')}
+              action={<Button onClick={() => setCreating(true)}>{t('node.list.empty.action')}</Button>}
             />
           }
         />

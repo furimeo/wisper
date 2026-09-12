@@ -1,5 +1,6 @@
 import type {ReactNode} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, ByteSize, cx, formatBytes} from '@/shell'
 
 import {formatCpu, intervalSeconds, memoryPercent} from './metricFormat'
@@ -23,8 +24,7 @@ export function MetricSummary({series}: {series: MetricSeries}) {
   if (!latest) {
     return (
       <p className="rounded-xl border border-dashed border-ink-300 px-4 py-6 text-center text-sm text-ink-500 dark:border-ink-700 dark:text-ink-400">
-        Nothing has been measured in this window yet. A node pushes readings while a
-        workload is running, so a service that has never started has nothing here.
+        {t('stats.summary.empty')}
       </p>
     )
   }
@@ -34,31 +34,31 @@ export function MetricSummary({series}: {series: MetricSeries}) {
 
   return (
     <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-      <Tile label="CPU" value={formatCpu(latest.cpuMillicores)}>
-        peak {formatCpu(latest.cpuMillicoresMax)}
+      <Tile label={t('stats.summary.cpu')} value={formatCpu(latest.cpuMillicores)}>
+        {t('stats.summary.cpuPeak', {peak: formatCpu(latest.cpuMillicoresMax)})}
       </Tile>
 
-      <Tile label="Memory" value={<ByteSize bytes={latest.memoryBytes} />}>
+      <Tile label={t('stats.summary.memory')} value={<ByteSize bytes={latest.memoryBytes} />}>
         {latest.memoryLimitBytes === null || latest.memoryLimitBytes <= 0
-          ? 'no limit set'
-          : `${percent}% of ${formatBytes(latest.memoryLimitBytes)}`}
+          ? t('stats.summary.memoryNoLimit')
+          : t('stats.summary.memoryWithLimit', {percent: percent ?? 0, limit: formatBytes(latest.memoryLimitBytes)})}
       </Tile>
 
-      <Tile label="Disk" value={<ByteSize bytes={latest.diskBytes} />}>
-        {formatBytes(latest.diskReadBytes / seconds)}/s read
+      <Tile label={t('stats.summary.disk')} value={<ByteSize bytes={latest.diskBytes} />}>
+        {t('stats.summary.diskRead', {rate: formatBytes(latest.diskReadBytes / seconds)})}
       </Tile>
 
-      <Tile label="Network in" value={`${formatBytes(latest.networkRxBytes / seconds)}/s`}>
-        {formatBytes(latest.networkRxBytes)} this point
+      <Tile label={t('stats.summary.netIn')} value={`${formatBytes(latest.networkRxBytes / seconds)}/s`}>
+        {t('stats.summary.netInPoint', {amount: formatBytes(latest.networkRxBytes)})}
       </Tile>
 
-      <Tile label="Network out" value={`${formatBytes(latest.networkTxBytes / seconds)}/s`}>
+      <Tile label={t('stats.summary.netOut')} value={`${formatBytes(latest.networkTxBytes / seconds)}/s`}>
         {latest.restartCount > 0 ? (
           <Badge tone="degraded">
-            {latest.restartCount} restart{latest.restartCount === 1 ? '' : 's'}
+            {t('stats.summary.restarts', {count: latest.restartCount})}
           </Badge>
         ) : (
-          'no restarts'
+          t('stats.summary.noRestarts')
         )}
       </Tile>
     </dl>

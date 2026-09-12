@@ -2,6 +2,7 @@ import {router} from '@inertiajs/react'
 import type {ReactNode} from 'react'
 import {useEffect, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, Card, CopyButton, RelativeTime} from '@/shell'
 
 import type {NodeDetail} from './nodeTypes'
@@ -63,13 +64,12 @@ export function NodeEnrolmentPanel({
 
   return (
     <Card
-      title="Enrol this machine"
-      description="Run these three lines on the machine as root. It checks itself over before it
-        writes anything, so a machine that fails preflight is left exactly as it was."
+      title={t('node.enrol.title')}
+      description={t('node.enrol.description')}
       action={
         remaining === null ? null : (
           <Badge tone={remaining.expired ? 'failed' : remaining.urgent ? 'degraded' : 'accent'} dot>
-            {remaining.expired ? 'Token expired' : `${remaining.text} left`}
+            {remaining.expired ? t('node.enrol.tokenExpired') : t('node.enrol.timeLeft', {time: remaining.text})}
           </Badge>
         )
       }
@@ -82,25 +82,22 @@ export function NodeEnrolmentPanel({
             loading={issuing}
             onClick={issue}
           >
-            {live === null ? 'Issue a bootstrap token' : 'Issue a fresh token'}
+            {live === null ? t('node.enrol.issueToken') : t('node.enrol.issueFresh')}
           </Button>
           {live === null ? null : (
             <p className="text-xs leading-relaxed text-ink-500 sm:mr-auto sm:max-w-md dark:text-ink-400">
-              Issuing another revokes nothing on its own - the old one is still live until it
-              is used, revoked or times out. Revoke it below if you did not mean to leave two.
+              {t('node.enrol.multiTokenWarning')}
             </p>
           )}
         </div>
       }
     >
       <ol className="flex flex-col gap-4">
-        <Step index={1} title="Write the token to a file on the machine">
+        <Step index={1} title={t('node.enrol.step1.title')}>
           {bootstrapToken ? (
             <>
               <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-                This is the only time it is shown. Put it in{' '}
-                <code className="font-mono">token.txt</code> next to the install script; the
-                installer deletes the file once it has enrolled.
+                {t('node.enrol.step1.shownOnce')}
               </p>
               <p className="mt-2 rounded-lg border border-degraded/50 bg-degraded/10 px-3 py-2.5 font-mono text-sm break-all select-all">
                 {bootstrapToken}
@@ -108,32 +105,27 @@ export function NodeEnrolmentPanel({
               <div className="mt-2">
                 <CopyButton
                   value={bootstrapToken}
-                  label="Copy token"
-                  describedAs="Copy the bootstrap token"
+                  label={t('node.enrol.step1.copyToken')}
+                  describedAs={t('node.enrol.step1.copyTokenAria')}
                   className="w-full sm:w-auto"
                 />
               </div>
               <p className="mt-2 text-xs leading-relaxed text-ink-600 dark:text-ink-400">
-                Do not pass it as <code className="font-mono">--token=</code>. Arguments are
-                readable by every user on the machine through{' '}
-                <code className="font-mono">ps</code>; the installer only accepts a file or
-                standard input.
+                {t('node.enrol.step1.argWarning')}
               </p>
             </>
           ) : (
             <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
               {live === null
-                ? 'There is no live token. Issue one below - it is single-use, tied to this record, and good for fifteen minutes.'
-                : 'A token is live but its text was only shown when it was issued. If you no longer have it, issue a fresh one and revoke the old.'}
+                ? t('node.enrol.step1.noLiveToken')
+                : t('node.enrol.step1.tokenHidden')}
             </p>
           )}
         </Step>
 
-        <Step index={2} title="Check the script against this hash">
+        <Step index={2} title={t('node.enrol.step2.title')}>
           <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-            Compare it by eye with the value the command prints. It is the SHA-256 of{' '}
-            <code className="font-mono">/install.sh</code> as this panel renders it, sent to
-            you over your authenticated session rather than by the download being checked.
+            {t('node.enrol.step2.description')}
           </p>
           <p className="mt-2 rounded-lg bg-ink-100 px-3 py-2.5 font-mono text-xs break-all select-all dark:bg-ink-950">
             {checksum}
@@ -141,14 +133,14 @@ export function NodeEnrolmentPanel({
           <div className="mt-2">
             <CopyButton
               value={checksum}
-              label="Copy checksum"
+              label={t('node.enrol.step2.copyHash')}
               size="sm"
-              describedAs="Copy the install script checksum"
+              describedAs={t('node.enrol.step2.copyHashAria')}
             />
           </div>
         </Step>
 
-        <Step index={3} title="Run the installer">
+        <Step index={3} title={t('node.enrol.step3.title')}>
           {command ? (
             <>
               <pre className="overflow-x-auto rounded-lg bg-ink-950 px-3 py-2.5 font-mono text-xs leading-relaxed text-ink-100 select-all">
@@ -157,30 +149,26 @@ export function NodeEnrolmentPanel({
               <div className="mt-2">
                 <CopyButton
                   value={command}
-                  label="Copy command"
-                  describedAs="Copy the install command"
+                  label={t('node.enrol.step3.copyCommand')}
+                  describedAs={t('node.enrol.step3.copyCommandAria')}
                   className="w-full sm:w-auto"
                 />
               </div>
             </>
           ) : (
             <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-              The command appears once a token is live. Without one it would install a daemon
-              that has nothing to enrol with.
+              {t('node.enrol.step3.commandWaiting')}
             </p>
           )}
           <p className="mt-2 text-xs leading-relaxed text-ink-600 dark:text-ink-400">
-            It runs <code className="font-mono">sasayaki doctor</code> first and stops on a
-            required failure, pins this panel&apos;s certificate on first use, and dials{' '}
-            <code className="font-mono">{node.dialEndpoint}</code> outwards - nothing has to
-            reach the machine from here.
+            {t('node.enrol.step3.details', {endpoint: node.dialEndpoint})}
           </p>
         </Step>
       </ol>
 
       {live?.expiresAt ? (
         <p className="mt-4 text-xs text-ink-500 dark:text-ink-400">
-          The live token expires <RelativeTime at={live.expiresAt} />.
+          {t('node.enrol.tokenExpiresAt')}<RelativeTime at={live.expiresAt} />.
         </p>
       ) : null}
     </Card>

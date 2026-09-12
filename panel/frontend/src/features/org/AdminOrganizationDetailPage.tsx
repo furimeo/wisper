@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Badge, Card, CardFact, CardFacts, PageHeader, RelativeTime} from '@/shell'
 
 import {QuotaAlert} from './QuotaAlert'
@@ -61,38 +62,42 @@ export default function AdminOrganizationDetailPage() {
 
       <PageHeader
         title={tenant.name}
-        description={`/${tenant.slug} · ${plan ? plan.name : 'no plan'} · ${accepted.length} ${accepted.length === 1 ? 'member' : 'members'}`}
+        description={t('org.adminDetail.desc', {
+          slug: tenant.slug,
+          plan: plan ? plan.name : t('org.adminDetail.noPlan'),
+          members: t('org.adminDetail.memberCount', {count: accepted.length}),
+        })}
       />
 
       {tenant.suspended ? (
         <div className="rounded-xl border border-failed/40 bg-failed/10 px-4 py-3.5 md:px-5">
-          <p className="text-sm font-semibold text-ink-900 dark:text-ink-100">Suspended</p>
+          <p className="text-sm font-semibold text-ink-900 dark:text-ink-100">{t('org.adminDetail.suspendedTitle')}</p>
           <p className="mt-1 text-sm leading-relaxed text-ink-800 dark:text-ink-200">
-            {tenant.suspensionReason || 'No reason was recorded on the record.'}
+            {tenant.suspensionReason || t('org.adminDetail.suspendedFallbackReason')}
           </p>
         </div>
       ) : null}
 
       <QuotaAlert allowances={allowances} />
 
-      <Card title="Record">
+      <Card title={t('org.adminDetail.recordTitle')}>
         <CardFacts>
-          <CardFact label="Address">
+          <CardFact label={t('org.adminDetail.recordAddress')}>
             <code className="font-mono">/{tenant.slug}</code>
           </CardFact>
-          <CardFact label="Plan">
+          <CardFact label={t('org.adminDetail.recordPlan')}>
             {plan ? (
               <>
                 {plan.name} <Badge tone="neutral">{plan.code}</Badge>
               </>
             ) : (
-              'None - every limit is zero'
+              t('org.adminDetail.recordPlanNone')
             )}
           </CardFact>
-          <CardFact label="Opened">
+          <CardFact label={t('org.adminDetail.recordOpened')}>
             <RelativeTime at={tenant.createdAt} />
           </CardFact>
-          <CardFact label="Last change">
+          <CardFact label={t('org.adminDetail.recordLastChange')}>
             <RelativeTime at={tenant.updatedAt} />
           </CardFact>
         </CardFacts>
@@ -101,8 +106,8 @@ export default function AdminOrganizationDetailPage() {
       <TenantPlanCard tenant={tenant} plan={plan} plans={plans} />
 
       <Card
-        title="Limits in force"
-        description="The plan's numbers, with any exception below already applied."
+        title={t('org.adminDetail.limitsTitle')}
+        description={t('org.adminDetail.limitsDesc')}
         padded={false}
       >
         <ul className="divide-y divide-ink-200 px-4 md:px-5 dark:divide-ink-800">
@@ -122,17 +127,21 @@ export default function AdminOrganizationDetailPage() {
       />
 
       <Card
-        title="People"
+        title={t('org.adminDetail.peopleTitle')}
         description={
           owners.length === 0
-            ? 'Nobody here owns this organization, which should not happen - it is worth looking at.'
-            : `${accepted.length} with access, ${owners.length} ${owners.length === 1 ? 'owner' : 'owners'}. Members are managed by the owners, not from here.`
+            ? t('org.adminDetail.peopleNoOwners')
+            : t('org.adminDetail.peopleDesc', {
+                access: accepted.length,
+                owners: owners.length,
+                ownerWord: t('org.adminDetail.ownerWord', {count: owners.length}),
+              })
         }
         padded={false}
       >
         {members.length === 0 ? (
           <p className="px-4 py-4 text-sm text-ink-600 md:px-5 dark:text-ink-400">
-            No member rows at all. The tenant exists and nobody can reach it.
+            {t('org.adminDetail.peopleEmpty')}
           </p>
         ) : (
           <ul className="divide-y divide-ink-200 dark:divide-ink-800">
@@ -143,19 +152,19 @@ export default function AdminOrganizationDetailPage() {
                     {member.email}
                   </span>
                   <Badge tone={member.accepted ? 'neutral' : 'degraded'}>
-                    {member.accepted ? roleLabel(member.role) : 'Invited'}
+                    {member.accepted ? roleLabel(member.role) : t('org.members.invitedBadge')}
                   </Badge>
                 </p>
                 <p className="mt-0.5 truncate text-xs text-ink-500 dark:text-ink-400">
                   {member.displayName}
                   {member.acceptedAt ? (
                     <>
-                      {' · joined '}
+                      {t('org.adminDetail.peopleJoined')}
                       <RelativeTime at={member.acceptedAt} />
                     </>
                   ) : member.invitedAt ? (
                     <>
-                      {' · invited '}
+                      {t('org.adminDetail.peopleInvited')}
                       <RelativeTime at={member.invitedAt} />
                     </>
                   ) : null}

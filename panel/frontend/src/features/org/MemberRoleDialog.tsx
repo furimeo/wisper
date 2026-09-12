@@ -1,5 +1,6 @@
 import {router} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Button, Modal, Select, askConfirmation, useFormFields} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -56,11 +57,11 @@ export function MemberRoleDialog({
 
   async function remove() {
     const confirmed = await askConfirmation({
-      title: isSelf ? 'Leave this organization?' : `Remove ${member.email}?`,
+      title: isSelf ? t('org.memberDialog.confirmLeaveTitle') : t('org.memberDialog.confirmRemoveTitle', {email: member.email}),
       body: isSelf
-        ? 'You lose access to every project in it. Somebody still inside would have to invite you back.'
-        : 'They lose access to every project in this organization straight away. Nothing they built is deleted.',
-      confirmLabel: isSelf ? 'Leave' : 'Remove them',
+        ? t('org.memberDialog.confirmLeaveBody')
+        : t('org.memberDialog.confirmRemoveBody'),
+      confirmLabel: isSelf ? t('org.memberDialog.confirmLeaveBtn') : t('org.memberDialog.confirmRemoveBtn'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -79,16 +80,22 @@ export function MemberRoleDialog({
       title={member.email}
       description={
         member.accepted
-          ? `${member.displayName} is ${roleLabel(member.role).toLowerCase()} in this organization.`
-          : `${member.displayName} has been invited as ${roleLabel(member.role).toLowerCase()} and has not answered yet.`
+          ? t('org.memberDialog.descAccepted', {
+              name: member.displayName,
+              role: roleLabel(member.role).toLowerCase(),
+            })
+          : t('org.memberDialog.descInvited', {
+              name: member.displayName,
+              role: roleLabel(member.role).toLowerCase(),
+            })
       }
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.processing}>
-            Close
+            {t('org.memberDialog.close')}
           </Button>
           <Button loading={form.processing} disabled={!mayApply} onClick={save}>
-            Change role
+            {t('org.memberDialog.save')}
           </Button>
         </>
       }
@@ -96,11 +103,14 @@ export function MemberRoleDialog({
       <div className="flex flex-col gap-4">
         <Select
           {...form.bind('role')}
-          label="Role"
+          label={t('org.memberDialog.role')}
           disabled={!mayChange}
           options={roles.map((role) => ({
             value: role,
-            label: role === 'OWNER' && !viewer.owner ? `${roleLabel(role)} (owners only)` : roleLabel(role),
+            label:
+              role === 'OWNER' && !viewer.owner
+                ? t('org.memberDialog.roleOwnersOnly', {role: roleLabel(role)})
+                : roleLabel(role),
             disabled: role === 'OWNER' && !viewer.owner,
           }))}
           hint={roleDescription(chosen)}
@@ -116,7 +126,7 @@ export function MemberRoleDialog({
           disabled={!mayRemove || form.processing}
           onClick={() => void remove()}
         >
-          {isSelf ? 'Leave this organization' : 'Remove from organization'}
+          {isSelf ? t('org.memberDialog.leaveBtn') : t('org.memberDialog.removeBtn')}
         </Button>
       </div>
     </Modal>
@@ -139,17 +149,17 @@ function explain({
 }): string {
   if (lastOwner) {
     return isSelf
-      ? 'You are the last owner. Make somebody else an owner before you change your role or leave - otherwise nobody could administer this organization.'
-      : 'This is the last owner, so they cannot be demoted or removed. Make somebody else an owner first.'
+      ? t('org.memberDialog.explainLastOwnerSelf')
+      : t('org.memberDialog.explainLastOwnerOther')
   }
   if (reachingPastSelf) {
-    return 'Only an owner can change or remove another owner. Ask one of them, or ask to be made an owner yourself.'
+    return t('org.memberDialog.explainReachingPastSelf')
   }
   if (!administers) {
-    return 'Changing roles is an owner or admin decision, so the picker is off for you. Leaving is your own to make.'
+    return t('org.memberDialog.explainNotAdmin')
   }
   if (!ownerViewer) {
-    return 'An admin can move people between admin, developer and viewer. Making somebody an owner is an owner’s decision.'
+    return t('org.memberDialog.explainNotOwner')
   }
-  return 'An organization always keeps at least one owner, so the last one cannot be demoted or removed.'
+  return t('org.memberDialog.explainDefault')
 }

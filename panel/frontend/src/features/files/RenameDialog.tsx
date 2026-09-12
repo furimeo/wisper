@@ -1,5 +1,6 @@
 import {useEffect, useId, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, Modal} from '@/shell'
 
 import {renamePath} from './movePaths'
@@ -73,15 +74,15 @@ export function RenameDialog({
     }
     const wanted = name.trim()
     if (wanted === '') {
-      setError('It needs a name.')
+      setError(t('files.rename.empty_error'))
       return
     }
     if (wanted.includes('/')) {
-      setError('A name cannot contain a slash. Use Move to put it in another folder.')
+      setError(t('files.rename.slash_error'))
       return
     }
     if (wanted === entry.name) {
-      setError('That is what it is already called.')
+      setError(t('files.rename.same_name_error'))
       return
     }
     setProcessing(true)
@@ -96,16 +97,16 @@ export function RenameDialog({
     <Modal
       open={entry !== null}
       onClose={onClose}
-      title="Rename"
+      title={t('files.rename.title')}
       description={entry?.path}
       size="sm"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} block>
-            Cancel
+            {t('files.rename.cancel')}
           </Button>
           <Button onClick={() => void submit()} loading={processing} block>
-            Rename
+            {t('files.rename.button')}
           </Button>
         </>
       }
@@ -119,7 +120,7 @@ export function RenameDialog({
       >
         <Input
           id={fieldId}
-          label="Name"
+          label={t('files.rename.name_label')}
           name="to"
           value={name}
           onChange={(event) => {
@@ -130,13 +131,13 @@ export function RenameDialog({
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
-          hint="Just the name. Renaming keeps it in this folder."
+          hint={t('files.rename.name_hint')}
         />
         <Checkbox
-          label="Replace anything already called that"
+          label={t('files.rename.overwrite_label')}
           checked={overwrite}
           onChange={(event) => setOverwrite(event.target.checked)}
-          hint="Off by default. With this on, a file at the new name is overwritten and not recoverable."
+          hint={t('files.rename.overwrite_hint')}
         />
       </form>
     </Modal>

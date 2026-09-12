@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Card, RelativeTime, Textarea, askConfirmation, useFormFields} from '@/shell'
 
 import type {Organization} from './orgTypes'
@@ -25,12 +26,9 @@ export function TenantStatusCard({tenant}: {tenant: Organization}) {
 
   async function suspend() {
     const confirmed = await askConfirmation({
-      title: `Suspend ${tenant.name}?`,
-      body:
-        'They cannot create projects, services, domains, databases, backups or invitations ' +
-        'until this is lifted. Everything already running keeps running, and the reason you ' +
-        'wrote is shown to them.',
-      confirmLabel: 'Suspend',
+      title: t('org.tenantStatus.confirmTitle', {name: tenant.name}),
+      body: t('org.tenantStatus.confirmBody'),
+      confirmLabel: t('org.tenantStatus.confirmBtn'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -41,14 +39,16 @@ export function TenantStatusCard({tenant}: {tenant: Organization}) {
   if (tenant.suspended) {
     return (
       <Card
-        title="Suspended"
+        title={t('org.tenantStatus.suspendedTitle')}
         description={
           tenant.suspendedAt ? (
             <>
-              Suspended <RelativeTime at={tenant.suspendedAt} />.
+              {t('org.tenantStatus.suspendedAt', {time: ''}).split('{time}')[0]}
+              <RelativeTime at={tenant.suspendedAt} />
+              {t('org.tenantStatus.suspendedAt', {time: ''}).split('{time}')[1]}
             </>
           ) : (
-            'Suspended.'
+            t('org.tenantStatus.suspended')
           )
         }
         footer={
@@ -65,16 +65,15 @@ export function TenantStatusCard({tenant}: {tenant: Organization}) {
               )
             }}
           >
-            Resume this organization
+            {t('org.tenantStatus.resumeBtn')}
           </Button>
         }
       >
         <p className="text-sm leading-relaxed text-ink-800 dark:text-ink-200">
-          {tenant.suspensionReason || 'No reason was recorded on the record.'}
+          {tenant.suspensionReason || t('org.tenantStatus.fallbackReason')}
         </p>
         <p className="mt-2 text-sm text-ink-600 dark:text-ink-400">
-          The customer sees this sentence on their organization screen. Resuming clears it and
-          lets them create things again straight away.
+          {t('org.tenantStatus.customerViewNotice')}
         </p>
       </Card>
     )
@@ -82,8 +81,8 @@ export function TenantStatusCard({tenant}: {tenant: Organization}) {
 
   return (
     <Card
-      title="Suspend"
-      description="Stops this tenant creating anything new. Nothing already running is touched."
+      title={t('org.tenantStatus.suspendTitle')}
+      description={t('org.tenantStatus.suspendDesc')}
       footer={
         <Button
           variant="danger"
@@ -92,7 +91,7 @@ export function TenantStatusCard({tenant}: {tenant: Organization}) {
           loading={form.processing}
           onClick={() => void suspend()}
         >
-          Suspend this organization
+          {t('org.tenantStatus.suspendBtn')}
         </Button>
       }
     >
@@ -105,10 +104,10 @@ export function TenantStatusCard({tenant}: {tenant: Organization}) {
       >
         <Textarea
           {...form.bind('reason')}
-          label="Reason"
+          label={t('org.tenantStatus.reason')}
           required
           maxLength={500}
-          hint="Required, and shown to the customer. Say what would lift it - an unpaid invoice, an abuse report, a migration in progress."
+          hint={t('org.tenantStatus.reasonHint')}
         />
         <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />
       </form>

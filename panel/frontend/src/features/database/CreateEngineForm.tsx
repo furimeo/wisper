@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Input, Modal, Select, useFormFields} from '@/shell'
 
 import type {EngineKind} from './databaseTypes'
@@ -37,7 +38,7 @@ export function CreateEngineForm({
 
   function submit() {
     if (!UUID_SHAPE.test(form.data.nodeId.trim())) {
-      form.setError('nodeId', 'That is not a node id. Copy it from the node’s page under Nodes.')
+      form.setError('nodeId', t('database.adminForm.invalidNodeId'))
       return
     }
     form.submit('/admin/databases', {
@@ -52,17 +53,15 @@ export function CreateEngineForm({
     <Modal
       open={open}
       onClose={onClose}
-      title="Add an engine container"
-      description="It goes into the node's spec and starts on its next reconcile. One shared
-        instance per engine per node is the design; customers get a database and a login inside
-        it, not a container each."
+      title={t('database.adminForm.title')}
+      description={t('database.adminForm.description')}
       footer={
         <div className="flex flex-col gap-2 sm:flex-row-reverse">
           <Button block className="sm:w-auto" loading={form.processing} onClick={submit}>
-            Add it
+            {t('database.adminForm.add')}
           </Button>
           <Button variant="ghost" block className="sm:w-auto" onClick={onClose}>
-            Cancel
+            {t('database.adminForm.cancel')}
           </Button>
         </div>
       }
@@ -76,24 +75,24 @@ export function CreateEngineForm({
       >
         <Select
           {...form.bind('engine')}
-          label="Engine"
+          label={t('database.adminForm.engine')}
           required
           options={kinds.map((kind) => ({value: kind, label: engineLabel(kind)}))}
         />
 
         <Input
           {...form.bind('nodeId')}
-          label="Node id"
+          label={t('database.adminForm.nodeId')}
           required
           autoComplete="off"
           spellCheck={false}
           className="font-mono text-xs"
           placeholder="00000000-0000-0000-0000-000000000000"
-          hint="Open Nodes, pick the machine, and copy the node id from its facts."
+          hint={t('database.adminForm.nodeIdHint')}
         />
 
         <button type="submit" className="sr-only">
-          Add engine
+          {t('database.adminForm.add')}
         </button>
       </form>
     </Modal>

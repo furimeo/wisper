@@ -2,6 +2,7 @@ import {Link, router} from '@inertiajs/react'
 import type {ReactNode} from 'react'
 import {useEffect, useRef, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, Icon, Select, cx} from '@/shell'
 
 import {browseHref} from './fileRequests'
@@ -52,14 +53,16 @@ export function FilePathBar({
     <div className="flex flex-col gap-2">
       {roots.length > 1 ? (
         <Select
-          label="Folder tree"
+          label={t('files.path.folder_tree_label')}
           value={root.id}
           onChange={(event) => {
             router.visit(browseHref(serviceId, event.target.value, '', showHidden))
           }}
           options={roots.map((candidate) => ({
             value: candidate.id,
-            label: candidate.writable ? candidate.label : `${candidate.label} (read-only)`,
+            label: candidate.writable
+              ? candidate.label
+              : t('files.path.readonly_suffix', {label: candidate.label}),
           }))}
         />
       ) : null}
@@ -79,14 +82,14 @@ export function FilePathBar({
             size="sm"
             disabled={atTop}
             onClick={() => router.visit(browseHref(serviceId, root.id, parentPath, showHidden))}
-            title={atTop ? 'This is the top of the tree.' : 'Up one folder (Backspace)'}
-            aria-label="Up one folder"
+            title={atTop ? t('files.path.up_button_top') : t('files.path.up_button_title')}
+            aria-label={t('files.path.up_button_aria')}
           >
             <Icon name="chevronLeft" className="size-4" />
           </Button>
 
           <nav
-            aria-label="Folder path"
+            aria-label={t('files.path.nav_aria')}
             className="hide-scrollbar min-w-0 flex-1 overflow-x-auto"
           >
             <ol className="flex w-max min-w-full items-center gap-1 text-sm">
@@ -115,7 +118,7 @@ export function FilePathBar({
 
               {root.writable ? null : (
                 <li className="ml-2">
-                  <Badge tone="neutral">Read-only</Badge>
+                  <Badge tone="neutral">{t('files.path.readonly_badge')}</Badge>
                 </li>
               )}
             </ol>
@@ -125,8 +128,8 @@ export function FilePathBar({
             variant="secondary"
             size="sm"
             onClick={() => onEditingChange(true)}
-            title="Type a path (Ctrl+L)"
-            aria-label="Type a path"
+            title={t('files.path.type_path_title')}
+            aria-label={t('files.path.type_path_aria')}
           >
             <span aria-hidden="true" className="font-mono text-xs">
               /
@@ -186,7 +189,7 @@ function PathField({
         go()
       }}
     >
-      <span className="shrink-0 text-sm text-ink-500 dark:text-ink-400">Path</span>
+      <span className="shrink-0 text-sm text-ink-500 dark:text-ink-400">{t('files.path.path_label')}</span>
       <input
         ref={field}
         value={value}
@@ -198,8 +201,8 @@ function PathField({
             onDone()
           }
         }}
-        aria-label="Folder path"
-        placeholder="the top of this tree"
+        aria-label={t('files.path.nav_aria')}
+        placeholder={t('files.path.field_placeholder')}
         autoCapitalize="off"
         autoCorrect="off"
         spellCheck={false}
@@ -210,10 +213,10 @@ function PathField({
         )}
       />
       <Button type="submit" size="sm">
-        Go
+        {t('files.path.go_button')}
       </Button>
       <Button variant="ghost" size="sm" onClick={onDone}>
-        Cancel
+        {t('files.path.cancel_button')}
       </Button>
     </form>
   )

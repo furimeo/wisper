@@ -1,5 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 
+import {useI18n} from '@/i18n'
 import {Card, EmptyState, Icon, PageHeader, mayWrite} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -35,6 +36,7 @@ type ServiceDomainsProps = {
 }
 
 export default function ServiceDomainsPage() {
+  const {t} = useI18n()
   const {service, domains, nodeAddress, allowance, viewerRole} =
     usePage<ServiceDomainsProps>().props
   const writable = mayWrite(viewerRole)
@@ -43,25 +45,22 @@ export default function ServiceDomainsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title={`Domains · ${service.name}`} />
+      <Head title={t('domain.page.title', {service: service.name})} />
       <ServiceTabs serviceId={service.id} />
 
       <PageHeader
-        title="Domains"
+        title={t('domain.page.header')}
         description={
           primary
-            ? `This service answers at ${primary.hostname}. Any other hostname you add points at the same thing.`
-            : 'No hostname points at this service yet. Add one and wisper will verify it and obtain a certificate for it.'
+            ? t('domain.page.description.primary', {hostname: primary.hostname})
+            : t('domain.page.description.none')
         }
       />
 
       {nodeAddress === null ? (
         <Card>
           <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-            No node is holding this service, so there is no address for DNS to point at and
-            nothing is being served. Hostnames added now are kept and checked as soon as the
-            service is placed - deploy it, or start it from its overview, and this page will
-            fill in the records to create.
+            {t('domain.page.unplacedNotice')}
           </p>
         </Card>
       ) : null}
@@ -71,13 +70,12 @@ export default function ServiceDomainsPage() {
           <p className="text-sm leading-relaxed text-ink-800 dark:text-ink-200">
             {attention.length === domains.length
               ? attention.length === 1
-                ? 'This hostname is not working yet.'
-                : `None of these ${attention.length} hostnames is working yet.`
-              : `${attention.length} of these ${domains.length} hostnames ${
-                  attention.length === 1 ? 'needs' : 'need'
-                } attention:`}{' '}
-            {attention.map((domain) => domain.hostname).join(', ')}. Each one below says
-            which record is missing.
+                ? t('domain.page.attention.allSingle')
+                : t('domain.page.attention.allMultiple', {count: attention.length})
+              : attention.length === 1
+                ? t('domain.page.attention.partialSingle', {total: domains.length})
+                : t('domain.page.attention.partialMultiple', {count: attention.length, total: domains.length})}{' '}
+            {attention.map((domain) => domain.hostname).join(', ')}. {t('domain.page.attention.eachBelow')}
           </p>
         </Card>
       ) : null}
@@ -88,12 +86,8 @@ export default function ServiceDomainsPage() {
         <Card padded={false}>
           <EmptyState
             icon={<Icon name="external" />}
-            title="No hostnames yet"
-            description={
-              'Every hostname pointed at this service will be listed here with its ' +
-              'verification state, the DNS record it still needs, and what the node last ' +
-              'said about its certificate. Add one above to start.'
-            }
+            title={t('domain.page.empty.title')}
+            description={t('domain.page.empty.description')}
           />
         </Card>
       ) : (
@@ -108,18 +102,16 @@ export default function ServiceDomainsPage() {
         ))
       )}
 
-      <Card title="Hostnames on this plan">
+      <Card title={t('domain.page.quota.title')}>
         <QuotaMeter allowance={allowance} />
         <p className="text-sm text-ink-500 dark:text-ink-400">
-          Counted across every service in the organization. A hostname is unique across the
-          whole platform, so removing one here releases the name for anybody to claim.
+          {t('domain.page.quota.description')}
         </p>
       </Card>
 
       {writable ? null : (
         <p className="px-1 text-sm text-ink-500 dark:text-ink-400">
-          You have read access to this organization, so adding, verifying and removing
-          hostnames are off. Everything on this page is still readable.
+          {t('domain.page.readOnly')}
         </p>
       )}
     </div>

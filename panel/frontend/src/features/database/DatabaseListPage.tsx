@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   Button,
@@ -47,17 +48,15 @@ export default function DatabaseListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Databases" />
+      <Head title={t('database.list.title')} />
 
       <PageHeader
-        title="Databases"
-        description="PostgreSQL and MySQL, managed for you. Each one gets its own login, its own
-          size limit and a connection string you can copy - and none of them is reachable from
-          anywhere but your own services."
+        title={t('database.list.title')}
+        description={t('database.list.description')}
         actions={
           projects.length === 0 ? null : (
             <Button block className="sm:w-auto" onClick={() => setCreating(true)}>
-              New database
+              {t('database.list.action.new')}
             </Button>
           )
         }
@@ -67,25 +66,22 @@ export default function DatabaseListPage() {
         <DataList
           items={databases}
           keyOf={(database) => database.id}
-          label="databases"
+          label={t('database.list.label')}
           href={(database) => `/databases/${database.id}`}
           empty={
             projects.length === 0 ? (
               <EmptyState
                 icon={<Icon name="database" />}
-                title="No databases yet"
-                description="A database belongs to a project, so start from the project that needs
-                  it - open it, and create the database from there. Once you have one, this page
-                  lists every database you can reach."
-                action={<ButtonLink href="/">Go to projects</ButtonLink>}
+                title={t('database.list.emptyNoProjects.title')}
+                description={t('database.list.emptyNoProjects.description')}
+                action={<ButtonLink href="/">{t('database.list.emptyNoProjects.action')}</ButtonLink>}
               />
             ) : (
               <EmptyState
                 icon={<Icon name="database" />}
-                title="No databases yet"
-                description="Create one and the platform provisions it on the node your services
-                  already run on, with a login that can reach nothing else."
-                action={<Button onClick={() => setCreating(true)}>New database</Button>}
+                title={t('database.list.empty.title')}
+                description={t('database.list.empty.description')}
+                action={<Button onClick={() => setCreating(true)}>{t('database.list.action.new')}</Button>}
               />
             )
           }
@@ -105,7 +101,7 @@ export default function DatabaseListPage() {
               <DatabaseStateBadge database={database} />
               <span className="text-xs tabular-nums text-ink-500 dark:text-ink-400">
                 {database.usedBytes === null ? (
-                  'not measured'
+                  t('database.list.notMeasured')
                 ) : (
                   <>
                     <ByteSize bytes={database.usedBytes} /> of{' '}
@@ -118,7 +114,7 @@ export default function DatabaseListPage() {
           columns={[
             {
               key: 'name',
-              header: 'Database',
+              header: t('database.list.col.database'),
               cell: (database) => (
                 <div className="flex flex-col gap-0.5">
                   <span className="font-mono">{database.name}</span>
@@ -130,31 +126,31 @@ export default function DatabaseListPage() {
             },
             {
               key: 'engine',
-              header: 'Engine',
+              header: t('database.list.col.engine'),
               cell: (database) => (
                 <span>
                   {database.engineLabel}
                   {database.engineVersion ? (
                     <span className="text-ink-500 dark:text-ink-400"> {database.engineVersion}</span>
                   ) : null}
-                  {database.dedicated ? <Badge className="ml-1.5">dedicated</Badge> : null}
+                  {database.dedicated ? <Badge className="ml-1.5">{t('database.list.dedicatedBadge')}</Badge> : null}
                 </span>
               ),
             },
             {
               key: 'address',
-              header: 'Address',
+              header: t('database.list.col.address'),
               cell: (database) => (
                 <span className="font-mono text-xs">{databaseAddress(database)}</span>
               ),
             },
             {
               key: 'size',
-              header: 'Size',
+              header: t('database.list.col.size'),
               align: 'right',
               cell: (database) =>
                 database.usedBytes === null ? (
-                  <span className="text-ink-400">not measured</span>
+                  <span className="text-ink-400">{t('database.list.notMeasured')}</span>
                 ) : (
                   <span className={database.overQuota ? 'text-failed tabular-nums' : 'tabular-nums'}>
                     <ByteSize bytes={database.usedBytes} /> / <ByteSize bytes={database.quotaBytes} />
@@ -163,7 +159,7 @@ export default function DatabaseListPage() {
             },
             {
               key: 'state',
-              header: 'State',
+              header: t('database.list.col.state'),
               align: 'right',
               cell: (database) => <DatabaseStateBadge database={database} />,
             },

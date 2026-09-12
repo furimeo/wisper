@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Input, Select} from '@/shell'
 import type {FormFields} from '@/shell'
 
@@ -5,18 +6,6 @@ import type {ServiceFormValues} from './serviceFormValues'
 import type {RestartPolicy} from './serviceTypes'
 import {restartPolicyHint, restartPolicyLabel} from './serviceVocabulary'
 
-/**
- * What an app runs: the image, the argv, and how hard the node tries to keep it alive.
- *
- * Only an app gets these. A static site has no process, and `ServiceShape` refuses an
- * image, a port, a command and a health check on one - so the fields are absent rather
- * than present and rejected. A form that offers a box the server always says no to is a
- * form that teaches people to distrust it.
- *
- * `command` and `entrypoint` are one line each and are split into argv by `CommandLine` on
- * the server. Nothing here builds a shell string; the quoting rules are the ones a person
- * already knows from a terminal.
- */
 export function RuntimeFields({
   form,
   restartPolicies,
@@ -35,83 +24,82 @@ export function RuntimeFields({
     <div className="flex flex-col gap-4">
       <Input
         {...form.bind('image')}
-        label="Container image"
+        label={t('service.runtime.image_label')}
         required
         disabled={disabled}
         maxLength={500}
         autoComplete="off"
-        placeholder="ghcr.io/acme/api:1.4"
-        hint="Including the tag. A digest is recorded once the node has pulled it."
+        placeholder={t('service.runtime.image_placeholder')}
+        hint={t('service.runtime.image_hint')}
       />
 
       <Input
         {...form.bind('command')}
-        label="Command"
+        label={t('service.runtime.command_label')}
         disabled={disabled}
         maxLength={2000}
         autoComplete="off"
-        placeholder="node server.js --port 8080"
-        hint="Optional. Overrides the image's CMD. Quote an argument that contains spaces."
+        placeholder={t('service.runtime.command_placeholder')}
+        hint={t('service.runtime.command_hint')}
       />
 
       <Input
         {...form.bind('entrypoint')}
-        label="Entrypoint"
+        label={t('service.runtime.entrypoint_label')}
         disabled={disabled}
         maxLength={2000}
         autoComplete="off"
-        hint="Optional. Leave empty unless the image's own entrypoint gets in the way."
+        hint={t('service.runtime.entrypoint_hint')}
       />
 
       <Input
         {...form.bind('workingDir')}
-        label="Working directory"
+        label={t('service.runtime.working_dir_label')}
         disabled={disabled}
         maxLength={500}
         autoComplete="off"
-        placeholder="/app"
-        hint="Optional. A path inside the container, so it starts with a slash."
+        placeholder={t('service.runtime.working_dir_placeholder')}
+        hint={t('service.runtime.working_dir_hint')}
       />
 
       <Input
         {...form.bind('containerPort')}
-        label="Port"
+        label={t('service.runtime.port_label')}
         type="number"
         inputMode="numeric"
         min={1}
         max={65535}
         disabled={disabled}
-        hint="The port the app listens on inside the container. Needed before a domain can
-          reach it, and before a health check has anything to probe."
+        hint={t('service.runtime.port_hint')}
       />
 
       <Input
         {...form.bind('healthCheckPath')}
-        label="Health check path"
+        label={t('service.runtime.health_check_label')}
         disabled={disabled}
         maxLength={500}
         autoComplete="off"
-        placeholder="/healthz"
-        hint="Optional, and it needs the port above. A 2xx means healthy."
+        placeholder={t('service.runtime.health_check_placeholder')}
+        hint={t('service.runtime.health_check_hint')}
       />
 
       {showProbeInterval ? (
         <Input
           {...form.bind('healthCheckIntervalSeconds')}
-          label="Probe every"
+          label={t('service.runtime.probe_every_label')}
           type="number"
           inputMode="numeric"
           min={1}
           max={3600}
           disabled={disabled}
-          suffix="seconds"
-          hint="Between every second and every hour."
+          suffix={t('service.runtime.seconds_suffix')}
+          hint={t('service.runtime.probe_hint')}
         />
       ) : null}
 
       <Select
         {...form.bind('restartPolicy')}
-        label="Restart"
+        label={t('service.runtime.restart_label')}
         disabled={disabled}
         hint={restartPolicyHint(policy)}
         options={restartPolicies.map((value) => ({

@@ -1,3 +1,4 @@
+import {t, useI18n} from '@/i18n'
 import {cx, formatBytes} from '@/shell'
 
 import type {NodeSummary} from './nodeTypes'
@@ -29,6 +30,7 @@ export interface NodeMeter {
 }
 
 export function NodeCapacity({node, className}: {node: NodeSummary; className?: string}) {
+  const {t} = useI18n()
   const meters: NodeMeter[] = [
     {
       label: 'CPU',
@@ -54,8 +56,7 @@ export function NodeCapacity({node, className}: {node: NodeSummary; className?: 
   if (!reported) {
     return (
       <p className={cx('text-sm text-ink-500 dark:text-ink-400', className)}>
-        No capacity reported. The node sends its CPU, memory and disk when it connects, so
-        this fills in as soon as it does.
+        {t('node.capacity.none')}
       </p>
     )
   }
@@ -71,6 +72,7 @@ export function NodeCapacity({node, className}: {node: NodeSummary; className?: 
 
 /** One bar, its numbers, and nothing else. */
 export function CapacityMeter({meter}: {meter: NodeMeter}) {
+  const {t} = useI18n()
   const {label, used, capacity, format} = meter
   const known = capacity !== null && capacity > 0 && used !== null
   const share = known ? Math.min(1, Math.max(0, used / capacity)) : 0
@@ -90,14 +92,14 @@ export function CapacityMeter({meter}: {meter: NodeMeter}) {
                 : 'text-ink-500 dark:text-ink-400',
           )}
         >
-          {known ? `${format(used)} of ${format(capacity)}` : 'not reported'}
+          {known ? t('node.capacity.of', {used: format(used), capacity: format(capacity)}) : t('node.capacity.notReported')}
         </dd>
       </div>
       <div
         className="h-1.5 w-full overflow-hidden rounded-full bg-ink-200 dark:bg-ink-800"
         role="img"
         aria-label={
-          known ? `${label}: ${percent}% used` : `${label}: the node has not reported this`
+          known ? t('node.capacity.ariaUsed', {label, percent}) : t('node.capacity.ariaUnreported', {label})
         }
       >
         <div
@@ -144,5 +146,5 @@ export function formatMillicores(millicores: number): string {
     return `${Math.round(millicores)}m`
   }
   const cores = millicores / 1000
-  return `${cores < 10 ? cores.toFixed(1) : Math.round(cores)} cores`
+  return t('node.capacity.cores', {count: cores < 10 ? cores.toFixed(1) : Math.round(cores)})
 }

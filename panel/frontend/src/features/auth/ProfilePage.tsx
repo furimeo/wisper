@@ -1,5 +1,6 @@
 import {Head, Link, usePage} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   Button,
@@ -38,16 +39,16 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Profile" />
+      <Head title={t('auth.profile.title')} />
       <SettingsTabs />
       <PageHeader
-        title="Profile"
-        description="Your name, your password, and the facts the panel records about this account."
+        title={t('auth.profile.title')}
+        description={t('auth.profile.description')}
       />
 
       <Card
-        title="Name and address"
-        description="The name appears next to anything you do in the panel and in the audit log."
+        title={t('auth.profile.nameSection')}
+        description={t('auth.profile.nameDesc')}
       >
         <form
           className="flex flex-col gap-5"
@@ -58,7 +59,7 @@ export default function ProfilePage() {
         >
           <Input
             {...form.bind('displayName')}
-            label="Display name"
+            label={t('auth.profile.displayName')}
             required
             maxLength={120}
             autoComplete="name"
@@ -67,14 +68,13 @@ export default function ProfilePage() {
 
           <div>
             <span className="text-sm font-medium text-ink-700 dark:text-ink-300">
-              Email address
+              {t('auth.profile.email')}
             </span>
             <p className="mt-1.5 font-mono text-sm break-all text-ink-700 dark:text-ink-300">
               {profile.email}
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-ink-500">
-              This is also your sign-in name. Ask the platform operator if it needs to
-              change.
+              {t('auth.profile.emailNotice')}
             </p>
           </div>
 
@@ -84,7 +84,7 @@ export default function ProfilePage() {
             loading={form.processing}
             disabled={form.data.displayName.trim() === profile.displayName}
           >
-            {form.processing ? 'Saving…' : 'Save name'}
+            {form.processing ? t('auth.profile.saving') : t('auth.profile.saveName')}
           </Button>
         </form>
       </Card>
@@ -94,73 +94,73 @@ export default function ProfilePage() {
       <ChangePasswordForm />
 
       <Card
-        title="Account"
+        title={t('auth.profile.accountSection')}
         action={
           profile.status === 'ACTIVE' ? (
             <Badge tone="running" dot>
-              Active
+              {t('auth.profile.statusActive')}
             </Badge>
           ) : (
             <Badge tone="failed" dot>
-              Suspended
+              {t('auth.profile.statusSuspended')}
             </Badge>
           )
         }
       >
         <CardFacts>
-          <CardFact label="Role">
-            {profile.platformRole === 'ADMIN' ? 'Platform operator' : 'Customer'}
+          <CardFact label={t('auth.profile.role')}>
+            {profile.platformRole === 'ADMIN' ? t('auth.profile.roleAdmin') : t('auth.profile.roleCustomer')}
           </CardFact>
 
-          <CardFact label="Two-factor authentication">
+          <CardFact label={t('auth.profile.twoFactor')}>
             <span className="flex flex-wrap items-center gap-2">
               {profile.twoFactorEnabled ? (
                 <Badge tone="running" dot>
-                  On
+                  {t('auth.profile.twoFactorOn')}
                 </Badge>
               ) : (
                 <Badge tone="degraded" dot>
-                  Off
+                  {t('auth.profile.twoFactorOff')}
                 </Badge>
               )}
               <Link
                 href="/settings/security"
                 className="text-accent-600 underline underline-offset-2 dark:text-accent-400"
               >
-                {profile.twoFactorEnabled ? 'Manage' : 'Turn it on'}
+                {profile.twoFactorEnabled ? t('auth.profile.twoFactorManage') : t('auth.profile.twoFactorTurnOn')}
               </Link>
             </span>
           </CardFact>
 
-          <CardFact label="Last signed in">
+          <CardFact label={t('auth.profile.lastSignIn')}>
             {profile.lastLoginAt ? (
               <>
                 <RelativeTime at={profile.lastLoginAt} />
                 {profile.lastLoginAddress ? (
-                  <span className="text-ink-500"> from {profile.lastLoginAddress}</span>
+                  <span className="text-ink-500">{t('auth.profile.fromIp', {ip: profile.lastLoginAddress})}</span>
                 ) : null}
               </>
             ) : (
-              'This is your first session'
+              t('auth.profile.firstSession')
             )}
           </CardFact>
 
-          <CardFact label="Password last changed">
+          <CardFact label={t('auth.profile.passwordChanged')}>
             <RelativeTime
               at={profile.passwordChangedAt}
-              fallback="Never - still the one you were given"
+              fallback={t('auth.profile.passwordNeverChanged')}
             />
           </CardFact>
 
           {profile.lockedUntil ? (
-            <CardFact label="Locked until">
+            <CardFact label={t('auth.profile.lockedUntil')}>
               <span className="text-failed">
-                <RelativeTime at={profile.lockedUntil} /> - too many wrong passwords
+                <RelativeTime at={profile.lockedUntil} />{t('auth.profile.tooManyPasswords')}
               </span>
             </CardFact>
           ) : null}
 
-          <CardFact label="Account created">
+          <CardFact label={t('auth.profile.accountCreated')}>
             <RelativeTime at={profile.createdAt} />
           </CardFact>
         </CardFacts>

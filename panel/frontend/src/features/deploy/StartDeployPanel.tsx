@@ -1,5 +1,6 @@
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Card, Tabs, useFormFields} from '@/shell'
 import type {TabItem} from '@/shell'
 
@@ -36,10 +37,9 @@ export function StartDeployPanel({
   const spent = allowance.limit > 0 && allowance.used >= allowance.limit
   const disabled = !writable || spent
   const reason = !writable
-    ? 'You have read access to this organization, so you cannot start a deployment.'
+    ? t('deploy.start.reason_read_only')
     : spent
-      ? `This organization has used all ${allowance.limit} of today's deployments. The ` +
-        'count resets on the hour, twenty-four hours after each one was started.'
+      ? t('deploy.start.reason_spent', {limit: allowance.limit})
       : undefined
 
   if (!target.deploysFromGit && !target.acceptsArchive) {
@@ -67,8 +67,8 @@ function RedeployImageCard({
 
   return (
     <Card
-      title="Deploy"
-      description="An app is deployed by handing its node a spec naming the image it should run."
+      title={t('deploy.start.app_card_title')}
+      description={t('deploy.start.app_card_desc')}
     >
       <Button
         block
@@ -76,12 +76,10 @@ function RedeployImageCard({
         disabled={disabled}
         onClick={() => form.submit(`/services/${target.serviceId}/deployments`)}
       >
-        Deploy the configured image
+        {t('deploy.start.deploy_configured_image')}
       </Button>
       <p className="mt-3 text-sm text-ink-500 dark:text-ink-400">
-        {disabledReason ??
-          'The container is replaced with one started from the image in this service’s ' +
-            'settings. Change the image there first if that is what you meant to update.'}
+        {disabledReason ?? t('deploy.start.app_hint_default')}
       </p>
     </Card>
   )
@@ -103,18 +101,18 @@ function SiteDeployCard({
   )
 
   const items: TabItem[] = [
-    {value: 'git', label: 'From Git'},
-    {value: 'archive', label: 'Upload a zip'},
+    {value: 'git', label: t('deploy.start.tab_git')},
+    {value: 'archive', label: t('deploy.start.tab_archive')},
   ]
 
   return (
     <Card
-      title="Deploy"
-      description="The build runs on the node holding this site and only swaps the live release when it succeeds."
+      title={t('deploy.start.site_card_title')}
+      description={t('deploy.start.site_card_desc')}
     >
       {both ? (
         <Tabs
-          label="How to deploy"
+          label={t('deploy.start.tabs_label')}
           items={items}
           value={mode}
           onSelect={(value) => setMode(value === 'archive' ? 'archive' : 'git')}
@@ -137,8 +135,7 @@ function SiteDeployCard({
           />
           {target.deploysFromGit ? null : (
             <p className="mt-3 text-sm text-ink-500 dark:text-ink-400">
-              This site has no repository set, so deploying from Git is not offered. Add
-              one under Settings and every push to its branch can build automatically.
+              {t('deploy.start.no_repo_hint')}
             </p>
           )}
         </>

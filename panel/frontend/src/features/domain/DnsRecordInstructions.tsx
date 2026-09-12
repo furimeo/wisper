@@ -1,3 +1,4 @@
+import {useI18n} from '@/i18n'
 import {CopyButton, Icon, RelativeTime} from '@/shell'
 
 import type {DomainView} from './domainTypes'
@@ -29,14 +30,16 @@ export function DnsRecordInstructions({
   /** `node.public_address` of the service's active placement, or null when nothing holds it. */
   nodeAddress: string | null
 }) {
+  const {t} = useI18n()
+
   if (domain.verified) {
     return (
       <p className="flex items-start gap-2 text-sm text-ink-600 dark:text-ink-400">
         <Icon name="check" className="mt-0.5 size-4 shrink-0 text-running" />
         <span>
-          Ownership was proved <RelativeTime at={domain.verifiedAt} />. wisper does not
-          re-check a verified hostname, so moving DNS during a migration will not switch
-          HTTPS off underneath a working site.
+          {t('domain.dns.verifiedPrefix')}
+          <RelativeTime at={domain.verifiedAt} />
+          {t('domain.dns.verifiedSuffix')}
         </span>
       </p>
     )
@@ -46,10 +49,7 @@ export function DnsRecordInstructions({
     return (
       <div className="rounded-lg border border-ink-200 bg-ink-50 p-3 dark:border-ink-800 dark:bg-ink-950">
         <p className="text-sm leading-relaxed text-ink-700 dark:text-ink-300">
-          No node is holding this service yet, so there is no address to point{' '}
-          <strong className="font-medium">{domain.hostname}</strong> at. That is not
-          something you can fix from here - deploy the service, or ask an operator whether
-          the platform has room. wisper starts checking on its own as soon as it is placed.
+          {t('domain.dns.unplacedNotice', {hostname: domain.hostname})}
         </p>
       </div>
     )
@@ -60,8 +60,8 @@ export function DnsRecordInstructions({
       <LastCheck domain={domain} />
 
       <Record
-        title="Point the hostname here"
-        note="The usual way, and the one that also makes the site reachable."
+        title={t('domain.dns.record.pointHere.title')}
+        note={t('domain.dns.record.pointHere.note')}
         type={recordType(nodeAddress)}
         name={domain.hostname}
         value={nodeAddress}
@@ -69,8 +69,8 @@ export function DnsRecordInstructions({
 
       {domain.verificationToken === null ? null : (
         <Record
-          title="Or prove ownership without moving traffic"
-          note="For a hostname still serving a live site elsewhere. wisper also accepts this record one level up, at the parent name, for DNS panels that will not create it here."
+          title={t('domain.dns.record.txtChallenge.title')}
+          note={t('domain.dns.record.txtChallenge.note')}
           type="TXT"
           name={domain.challengeRecordName}
           value={domain.challengeRecordValue}
@@ -78,10 +78,7 @@ export function DnsRecordInstructions({
       )}
 
       <p className="text-sm text-ink-500 dark:text-ink-400">
-        Some DNS panels want the name relative to the zone rather than in full - in that
-        case enter only the part before your registered domain, or <code>@</code> for the
-        domain itself. Changes can take a few minutes to propagate; wisper rechecks on its
-        own and the button above forces one now.
+        {t('domain.dns.propagationNotice')}
       </p>
     </div>
   )
@@ -89,11 +86,12 @@ export function DnsRecordInstructions({
 
 /** What the last lookup actually found, which is the whole point of storing it. */
 function LastCheck({domain}: {domain: DomainView}) {
+  const {t} = useI18n()
+
   if (domain.lastCheckError === null && domain.lastCheckedAt === null) {
     return (
       <p className="text-sm text-ink-600 dark:text-ink-400">
-        Nothing has been checked yet. wisper looks this hostname up shortly after it is
-        added.
+        {t('domain.dns.notCheckedYet')}
       </p>
     )
   }
@@ -106,11 +104,12 @@ function LastCheck({domain}: {domain: DomainView}) {
       }
     >
       <p className="text-sm leading-relaxed text-ink-800 dark:text-ink-200">
-        {domain.lastCheckError ?? 'The last check reached no conclusion.'}
+        {domain.lastCheckError ?? t('domain.dns.noConclusion')}
       </p>
       {domain.lastCheckedAt === null ? null : (
         <p className="mt-1 text-xs text-ink-500 dark:text-ink-400">
-          Checked <RelativeTime at={domain.lastCheckedAt} />
+          {t('domain.dns.checkedPrefix')}
+          <RelativeTime at={domain.lastCheckedAt} />
         </p>
       )}
     </div>
@@ -131,15 +130,17 @@ function Record({
   name: string
   value: string
 }) {
+  const {t} = useI18n()
+
   return (
     <div className="rounded-lg border border-ink-200 p-3 dark:border-ink-800">
       <h4 className="text-sm font-medium text-ink-900 dark:text-ink-100">{title}</h4>
       <p className="mt-0.5 mb-3 text-sm text-ink-500 dark:text-ink-400">{note}</p>
 
       <dl className="flex flex-col gap-2">
-        <Field label="Type" value={type} copyable={false} />
-        <Field label="Name" value={name} copyable />
-        <Field label="Value" value={value} copyable />
+        <Field label={t('domain.dns.field.type')} value={type} copyable={false} />
+        <Field label={t('domain.dns.field.name')} value={name} copyable />
+        <Field label={t('domain.dns.field.value')} value={value} copyable />
       </dl>
     </div>
   )
@@ -154,6 +155,7 @@ function Field({
   value: string
   copyable: boolean
 }) {
+  const {t} = useI18n()
   // The label sits above rather than beside the value: at 375px a label column plus a
   // 44px copy button leaves the value about a hundred and eighty pixels, which is not
   // enough to see a hostname or a base64 token without scrolling it sideways first.
@@ -167,7 +169,7 @@ function Field({
           {value}
         </code>
         {copyable ? (
-          <CopyButton value={value} describedAs={`Copy the record ${label.toLowerCase()}`} />
+          <CopyButton value={value} describedAs={t('domain.dns.field.copy', {field: label.toLowerCase()})} />
         ) : null}
       </dd>
     </div>

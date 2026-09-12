@@ -3,6 +3,7 @@ import {useState} from 'react'
 
 import {QuotaMeter} from '@/features/org/QuotaMeter'
 import type {QuotaAllowance} from '@/features/org/orgTypes'
+import {t} from '@/i18n'
 import {
   Button,
   ButtonLink,
@@ -67,19 +68,17 @@ export default function BackupListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Backups" />
+      <Head title={t('backup.list.title')} />
 
       <BackupTabs organizationId={organization.id} />
 
       <PageHeader
-        title="Backups"
-        description="The node does the copying and pushes straight to your destination; nothing
-          passes through the panel. Restoring is one press, and verifying a snapshot without
-          touching anything live is another."
+        title={t('backup.list.title')}
+        description={t('backup.list.description')}
         actions={
           writable && usableDestinations.length > 0 ? (
             <Button block className="sm:w-auto" onClick={() => setCreating(true)}>
-              New schedule
+              {t('backup.list.action.new')}
             </Button>
           ) : null
         }
@@ -87,12 +86,11 @@ export default function BackupListPage() {
 
       {writable && usableDestinations.length === 0 ? (
         <Card
-          title="There is nowhere to put a backup yet"
-          description="A schedule needs a destination - an S3-compatible bucket, or a path on the
-            node itself. Add one and check it before you rely on it."
+          title={t('backup.list.noDestTitle')}
+          description={t('backup.list.noDestDesc')}
           action={
             <ButtonLink href={`/backups/${organization.id}/destinations`}>
-              Add a destination
+              {t('backup.list.addDest')}
             </ButtonLink>
           }
         />
@@ -100,10 +98,7 @@ export default function BackupListPage() {
 
       {unproven > 0 ? (
         <p className="rounded-xl border border-degraded/50 bg-degraded/10 px-4 py-3 text-sm leading-relaxed">
-          {unproven === 1
-            ? 'One schedule has never produced a snapshot.'
-            : `${unproven} schedules have never produced a snapshot.`}{' '}
-          Run them once by hand rather than finding out on the day you need them.
+          {t('backup.list.unproven', {count: unproven})}
         </p>
       ) : null}
 
@@ -117,7 +112,7 @@ export default function BackupListPage() {
       <RestoreHistory organizationId={organization.id} restores={restores} />
 
       {snapshotAllowance || byteAllowance ? (
-        <Card title="Your plan" description="What this organization's plan allows for backups.">
+        <Card title={t('backup.list.plan.title')} description={t('backup.list.plan.description')}>
           {snapshotAllowance ? <QuotaMeter allowance={snapshotAllowance} /> : null}
           {byteAllowance ? <QuotaMeter allowance={byteAllowance} /> : null}
         </Card>
@@ -148,15 +143,14 @@ export default function BackupListPage() {
 function NoOrganization() {
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Backups" />
-      <PageHeader title="Backups" />
+      <Head title={t('backup.list.title')} />
+      <PageHeader title={t('backup.list.title')} />
       <Card>
         <EmptyState
           icon={<Icon name="backup" />}
-          title="Nothing to back up yet"
-          description="Backups belong to an organization, and you are not a member of one. Create
-            one, or ask somebody to invite you, and this page fills in."
-          action={<ButtonLink href="/orgs">Organizations</ButtonLink>}
+          title={t('backup.list.noOrg.title')}
+          description={t('backup.list.noOrg.desc')}
+          action={<ButtonLink href="/orgs">{t('backup.list.noOrg.action')}</ButtonLink>}
         />
       </Card>
     </div>

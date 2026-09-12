@@ -2,6 +2,7 @@ import {Link} from '@inertiajs/react'
 import type {ReactNode} from 'react'
 
 import {Badge, Card, DataList, EmptyState, Icon, RelativeTime} from '@/shell'
+import {t} from '@/i18n'
 
 import type {AuditFilter, AuditLogEntry} from './auditTypes'
 import type {FilterOverrides} from './auditQuery'
@@ -40,14 +41,12 @@ export function AuditEntryList({
       <DataList
         items={entries}
         keyOf={(entry) => entry.id}
-        label="audit entries"
+        label={t('audit.list.label')}
         empty={
           <EmptyState
             icon={<Icon name="audit" />}
-            title="Nothing matches"
-            description="Either nothing like this has happened, or the filter is narrower than you
-              meant. Every state-changing action on the platform is written here, including the
-              ones that were refused."
+            title={t('audit.list.empty.title')}
+            description={t('audit.list.empty.description')}
           />
         }
         primary={(entry) => (
@@ -73,12 +72,12 @@ export function AuditEntryList({
         columns={[
           {
             key: 'when',
-            header: 'When',
+            header: t('audit.list.column.when'),
             cell: (entry) => <RelativeTime at={entry.occurredAt} className="text-xs" />,
           },
           {
             key: 'actor',
-            header: 'Who',
+            header: t('audit.list.column.actor'),
             cell: (entry) => (
               <div className="flex flex-col gap-0.5">
                 <NarrowLink
@@ -101,7 +100,7 @@ export function AuditEntryList({
           },
           {
             key: 'action',
-            header: 'Did',
+            header: t('audit.list.column.action'),
             cell: (entry) => (
               <NarrowLink filter={filter} overrides={{action: entry.action, offset: null}}>
                 {verbOf(entry.action)}
@@ -110,7 +109,7 @@ export function AuditEntryList({
           },
           {
             key: 'target',
-            header: 'To',
+            header: t('audit.list.column.target'),
             cell: (entry) => (
               <NarrowLink
                 filter={filter}
@@ -130,10 +129,10 @@ export function AuditEntryList({
           },
           {
             key: 'organization',
-            header: 'Tenant',
+            header: t('audit.list.column.tenant'),
             cell: (entry) =>
               entry.organizationId === null ? (
-                <span className="text-ink-400">platform</span>
+                <span className="text-ink-400">{t('audit.list.tenant.platform')}</span>
               ) : (
                 <NarrowLink
                   filter={filter}
@@ -145,7 +144,7 @@ export function AuditEntryList({
           },
           {
             key: 'detail',
-            header: 'Detail',
+            header: t('audit.list.column.detail'),
             cell: (entry) => (
               <span className="text-xs text-ink-600 dark:text-ink-400">
                 {entry.detail ?? '-'}
@@ -157,7 +156,7 @@ export function AuditEntryList({
           },
           {
             key: 'outcome',
-            header: 'Outcome',
+            header: t('audit.list.column.outcome'),
             align: 'right',
             cell: (entry) => (
               <Badge tone={outcomeTone(entry.outcome)} dot={entry.outcome !== 'SUCCEEDED'}>

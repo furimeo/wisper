@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Card, Input, Textarea, useFormFields} from '@/shell'
 
 import type {Project} from './projectTypes'
@@ -17,8 +18,8 @@ export function RenameProjectForm({project, disabled}: {project: Project; disabl
 
   return (
     <Card
-      title="Name"
-      description="What this project is called in the switcher and on the dashboard."
+      title={t('project.rename.title')}
+      description={t('project.rename.description')}
       footer={
         <Button
           block
@@ -27,7 +28,7 @@ export function RenameProjectForm({project, disabled}: {project: Project; disabl
           disabled={disabled || !form.dirty}
           onClick={() => form.submit(`/projects/${project.id}`)}
         >
-          Save
+          {t('project.rename.save')}
         </Button>
       }
     >
@@ -40,7 +41,7 @@ export function RenameProjectForm({project, disabled}: {project: Project; disabl
       >
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('project.rename.name')}
           required
           maxLength={120}
           disabled={disabled}
@@ -48,14 +49,13 @@ export function RenameProjectForm({project, disabled}: {project: Project; disabl
         />
         <Textarea
           {...form.bind('description')}
-          label="Description"
+          label={t('project.rename.descLabel')}
           maxLength={500}
           disabled={disabled}
-          hint="Shown under the name on the dashboard."
+          hint={t('project.rename.descHint')}
         />
         <p className="text-sm text-ink-500 dark:text-ink-400">
-          Address: <code className="font-mono">/{project.slug}</code>. It cannot be changed -
-          something is always still pointing at the old one.
+          {t('project.rename.addressNote', {slug: project.slug})}
         </p>
         <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />
       </form>

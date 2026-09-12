@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Badge, Card, ErrorState, Spinner, Tabs, formatBytes} from '@/shell'
 import type {TabItem} from '@/shell'
 
@@ -14,15 +15,6 @@ const ACCENT = 'var(--color-accent-500)'
 const PEAK = 'var(--color-degraded)'
 const OUT = 'var(--color-running)'
 const LIMIT = 'var(--color-failed)'
-
-const RANGES: Array<{value: MetricRange; label: string}> = [
-  {value: 'live', label: 'Live'},
-  {value: '1h', label: '1 hour'},
-  {value: '6h', label: '6 hours'},
-  {value: '24h', label: '24 hours'},
-  {value: '7d', label: '7 days'},
-  {value: '30d', label: '30 days'},
-]
 
 /**
  * The charts, shared by the service page and the node page.
@@ -61,21 +53,28 @@ export function MetricDashboard({
   const writeRate = ratesOf(points, series.source, (point) => point.diskWriteBytes)
 
   const memoryBands: ChartBand[] = [
-    {label: 'Used', values: points.map((point) => point.memoryBytes), colour: ACCENT},
-    {label: 'Peak', values: points.map((point) => point.memoryBytesMax), colour: PEAK},
+    {label: t('stats.chart.bandUsed'), values: points.map((point) => point.memoryBytes), colour: ACCENT},
+    {label: t('stats.chart.bandPeak'), values: points.map((point) => point.memoryBytesMax), colour: PEAK},
   ]
   const limits = points.map((point) => point.memoryLimitBytes ?? 0)
   if (limits.some((value) => value > 0)) {
-    memoryBands.push({label: 'Limit', values: limits, colour: LIMIT, reference: true})
+    memoryBands.push({label: t('stats.chart.bandLimit'), values: limits, colour: LIMIT, reference: true})
   }
 
-  const tabs: TabItem[] = RANGES.map((entry) => ({value: entry.value, label: entry.label}))
+  const tabs: TabItem[] = [
+    {value: 'live', label: t('stats.dashboard.rangeLive')},
+    {value: '1h', label: t('stats.dashboard.range1h')},
+    {value: '6h', label: t('stats.dashboard.range6h')},
+    {value: '24h', label: t('stats.dashboard.range24h')},
+    {value: '7d', label: t('stats.dashboard.range7d')},
+    {value: '30d', label: t('stats.dashboard.range30d')},
+  ]
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <Tabs
-          label="Chart range"
+          label={t('stats.dashboard.rangeLabel')}
           items={tabs}
           value={feed.range}
           onSelect={(value) => feed.setRange(value as MetricRange)}
@@ -83,7 +82,7 @@ export function MetricDashboard({
         />
         {feed.range === 'live' ? (
           <Badge tone={feed.streaming ? 'running' : 'degraded'} dot pulse={!feed.streaming}>
-            {feed.streaming ? 'Live' : 'Connecting'}
+            {feed.streaming ? t('stats.dashboard.statusLive') : t('stats.dashboard.statusConnecting')}
           </Badge>
         ) : null}
         {feed.loading ? <Spinner /> : null}
@@ -91,7 +90,7 @@ export function MetricDashboard({
 
       {feed.error ? (
         <ErrorState
-          title="That range could not be read"
+          title={t('stats.dashboard.errorTitle')}
           description={feed.error}
           onRetry={feed.retry}
         />
@@ -100,22 +99,25 @@ export function MetricDashboard({
       <MetricSummary series={series} />
 
       <Card
-        title="Over time"
-        description={`${points.length.toLocaleString()} points, ${resolutionLabel(series.source)}.`}
+        title={t('stats.dashboard.overTime')}
+        description={t('stats.dashboard.overTimeDesc', {
+          count: points.length.toLocaleString(),
+          resolution: resolutionLabel(series.source),
+        })}
       >
         <div className="flex flex-col gap-5">
           <MetricChart
-            title="CPU"
+            title={t('stats.chart.cpu')}
             timestamps={timestamps}
             format={formatCpu}
             bands={[
               {
-                label: 'Average',
+                label: t('stats.chart.bandAverage'),
                 values: points.map((point) => point.cpuMillicores),
                 colour: ACCENT,
               },
               {
-                label: 'Peak',
+                label: t('stats.chart.bandPeak'),
                 values: points.map((point) => point.cpuMillicoresMax),
                 colour: PEAK,
               },
@@ -123,38 +125,38 @@ export function MetricDashboard({
           />
 
           <MetricChart
-            title="Memory"
+            title={t('stats.chart.memory')}
             timestamps={timestamps}
             format={formatBytes}
             bands={memoryBands}
           />
 
           <MetricChart
-            title="Disk used"
+            title={t('stats.chart.diskUsed')}
             timestamps={timestamps}
             format={formatBytes}
             bands={[
-              {label: 'On disk', values: points.map((point) => point.diskBytes), colour: ACCENT},
+              {label: t('stats.chart.bandOnDisk'), values: points.map((point) => point.diskBytes), colour: ACCENT},
             ]}
           />
 
           <MetricChart
-            title="Disk throughput"
+            title={t('stats.chart.diskThroughput')}
             timestamps={timestamps}
             format={formatRate}
             bands={[
-              {label: 'Read', values: readRate, colour: ACCENT},
-              {label: 'Written', values: writeRate, colour: OUT},
+              {label: t('stats.chart.bandRead'), values: readRate, colour: ACCENT},
+              {label: t('stats.chart.bandWritten'), values: writeRate, colour: OUT},
             ]}
           />
 
           <MetricChart
-            title="Network"
+            title={t('stats.chart.network')}
             timestamps={timestamps}
             format={formatRate}
             bands={[
-              {label: 'In', values: rxRate, colour: ACCENT},
-              {label: 'Out', values: txRate, colour: OUT},
+              {label: t('stats.chart.bandIn'), values: rxRate, colour: ACCENT},
+              {label: t('stats.chart.bandOut'), values: txRate, colour: OUT},
             ]}
           />
         </div>
@@ -162,3 +164,4 @@ export function MetricDashboard({
     </div>
   )
 }
+

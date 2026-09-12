@@ -1,27 +1,12 @@
 import {router} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {Button, Checkbox, Input, Modal, Select, askConfirmation, useFormFields} from '@/shell'
 
 import type {ConcurrencyPolicy, CronTaskView, ServiceView} from './serviceTypes'
 import {SCHEDULE_PRESETS, TIMEOUT_CHOICES, describeSchedule} from './cronVocabulary'
 import {concurrencyHint, concurrencyLabel} from './serviceVocabulary'
 
-/**
- * Scheduling a command, and editing or removing one that exists.
- *
- * The expression is typed, not built out of six dropdowns. Everyone who schedules
- * anything already has a crontab line to paste, and a builder that cannot express "every
- * quarter hour between nine and five on weekdays" would send them back to a text box
- * anyway. What the dialog adds is the sentence underneath, recomputed as they type: a
- * wrong field is obvious in words and invisible in five numbers.
- *
- * The name is the key `UpdateScheduledTask` looks the entry up by, so it is fixed once the
- * task exists. Renaming is delete-then-add, which is what it actually is.
- *
- * The timezone is a plain input rather than a list of six hundred IANA names in a
- * `<select>` a phone renders as a wheel. Left empty it is UTC, which is what the server
- * does with it too.
- */
 export function ScheduledTaskDialog({
   service,
   task,
@@ -60,9 +45,9 @@ export function ScheduledTaskDialog({
       return
     }
     const confirmed = await askConfirmation({
-      title: `Remove ${task.name}?`,
-      body: 'The command stops being scheduled, and its run history goes with it.',
-      confirmLabel: 'Remove it',
+      title: t('service.tasks.remove_confirm_title', {name: task.name}),
+      body: t('service.tasks.remove_confirm_body'),
+      confirmLabel: t('service.tasks.remove_confirm_button'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -79,15 +64,15 @@ export function ScheduledTaskDialog({
       open
       onClose={onClose}
       size="lg"
-      title={editing ? task.name : 'New scheduled command'}
-      description="The node runs it inside this service's container and keeps the schedule even while the panel is unreachable."
+      title={editing ? task.name : t('service.tasks.dialog_new_title')}
+      description={t('service.tasks.dialog_description')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.processing}>
-            Cancel
+            {t('service.variables.cancel')}
           </Button>
           <Button loading={form.processing} onClick={save}>
-            {editing ? 'Save' : 'Schedule it'}
+            {editing ? t('service.variables.save') : t('service.tasks.schedule_it')}
           </Button>
         </>
       }
@@ -101,48 +86,48 @@ export function ScheduledTaskDialog({
       >
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('service.tasks.name_label')}
           required
           disabled={editing}
           maxLength={63}
           autoComplete="off"
           inputMode="url"
           spellCheck={false}
-          placeholder="nightly-cleanup"
+          placeholder={t('service.tasks.name_placeholder')}
           hint={
             editing
-              ? 'A name cannot be changed: it is what identifies this entry. Remove it and add the new name.'
-              : 'Lower-case letters, digits and dashes. It is how this entry is identified.'
+              ? t('service.tasks.name_hint_edit')
+              : t('service.tasks.name_hint_new')
           }
         />
 
         <Input
           {...form.bind('command')}
-          label="Command"
+          label={t('service.tasks.command_label')}
           required
           maxLength={4000}
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
           className="font-mono"
-          placeholder="php artisan queue:prune-batches"
-          hint="Split into arguments the way a shell would, then run directly - there is no shell in between, so pipes and redirects do not work here."
+          placeholder={t('service.tasks.command_placeholder')}
+          hint={t('service.tasks.command_hint')}
         />
 
         <div className="flex flex-col gap-2">
           <Input
             {...form.bind('schedule')}
-            label="Schedule"
+            label={t('service.tasks.schedule_label')}
             required
             maxLength={200}
             autoComplete="off"
             autoCapitalize="none"
             spellCheck={false}
             className="font-mono"
-            placeholder="0 3 * * *"
+            placeholder={t('service.tasks.schedule_placeholder')}
             hint={
               spoken === form.data.schedule
-                ? 'Five fields: minute, hour, day of month, month, day of week.'
+                ? t('service.tasks.schedule_default_hint')
                 : spoken
             }
           />
@@ -162,41 +147,41 @@ export function ScheduledTaskDialog({
 
         <Input
           {...form.bind('timezone')}
-          label="Timezone"
+          label={t('service.tasks.timezone_label')}
           maxLength={64}
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
-          placeholder="UTC"
-          hint="An IANA name such as Asia/Ho_Chi_Minh. Left empty it is UTC - which is what a job that must not move twice a year wants."
+          placeholder={t('service.tasks.timezone_placeholder')}
+          hint={t('service.tasks.timezone_hint')}
         />
 
         <Select
           {...form.bind('timeoutSeconds')}
-          label="Give up after"
+          label={t('service.tasks.timeout_label')}
           options={TIMEOUT_CHOICES.map((choice) => ({
             value: String(choice.seconds),
             label: choice.label,
           }))}
-          hint="The node kills the run at this point and records it as failed."
+          hint={t('service.tasks.timeout_hint')}
         />
 
         <Select
           {...form.bind('concurrencyPolicy')}
-          label="If the last run is still going"
+          label={t('service.tasks.concurrency_label')}
           options={policies.map((value) => ({value, label: concurrencyLabel(value)}))}
           hint={concurrencyHint(policy)}
         />
 
         <Checkbox
           {...form.check('enabled')}
-          label="Scheduled"
-          hint="Off keeps the entry and its history but stops the node running it."
+          label={t('service.tasks.enabled_label')}
+          hint={t('service.tasks.enabled_hint')}
         />
 
         {editing ? (
           <Button variant="danger" block onClick={() => void remove()} disabled={form.processing}>
-            Remove this command
+            {t('service.tasks.remove_command_button')}
           </Button>
         ) : null}
 

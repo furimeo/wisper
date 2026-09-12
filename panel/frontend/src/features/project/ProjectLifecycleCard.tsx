@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Card, askConfirmation} from '@/shell'
 
 import type {Project} from './projectTypes'
@@ -28,7 +29,7 @@ export function ProjectLifecycleCard({
   mayDelete: boolean
 }) {
   const [working, setWorking] = useState(false)
-  const services = `${serviceCount} ${serviceCount === 1 ? 'service' : 'services'}`
+  const services = t('project.card.servicesCount', {count: serviceCount})
 
   function post(path: string, data?: Record<string, string>) {
     setWorking(true)
@@ -40,14 +41,12 @@ export function ProjectLifecycleCard({
 
   async function confirmDelete() {
     const confirmed = await askConfirmation({
-      title: `Delete ${project.name}?`,
-      body:
-        `This removes the project and ${services} in it. Volume data stays on the node until ` +
-        'it is purged, and nothing else about this can be undone.',
-      confirmLabel: 'Delete project',
+      title: t('project.lifecycle.confirmDeleteTitle', {name: project.name}),
+      body: t('project.lifecycle.confirmDeleteBody', {services}),
+      confirmLabel: t('project.lifecycle.confirmDeleteBtn'),
       tone: 'danger',
       requireText: project.slug,
-      requireTextLabel: `Type ${project.slug} to confirm`,
+      requireTextLabel: t('project.lifecycle.confirmDeleteTypeLabel', {slug: project.slug}),
     })
     if (confirmed) {
       post(`/projects/${project.id}/delete`, {confirmation: project.slug})
@@ -56,11 +55,11 @@ export function ProjectLifecycleCard({
 
   return (
     <Card
-      title={project.archived ? 'Archived' : 'Archive or delete'}
+      title={project.archived ? t('project.lifecycle.archivedTitle') : t('project.lifecycle.activeTitle')}
       description={
         project.archived
-          ? 'Nothing in this project is running. Restore it and the services come back stopped.'
-          : `Archiving stops everything and deletes nothing. Deleting removes the project and ${services}.`
+          ? t('project.lifecycle.archivedDesc')
+          : t('project.lifecycle.activeDesc', {services})
       }
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -72,7 +71,7 @@ export function ProjectLifecycleCard({
             disabled={!mayArchive || working}
             onClick={() => post(`/projects/${project.id}/restore`)}
           >
-            Restore project
+            {t('project.lifecycle.restoreBtn')}
           </Button>
         ) : (
           <Button
@@ -82,7 +81,7 @@ export function ProjectLifecycleCard({
             disabled={!mayArchive || working}
             onClick={() => post(`/projects/${project.id}/archive`)}
           >
-            Archive project
+            {t('project.lifecycle.archiveBtn')}
           </Button>
         )}
 
@@ -93,14 +92,13 @@ export function ProjectLifecycleCard({
           disabled={!mayDelete || working}
           onClick={() => void confirmDelete()}
         >
-          Delete project
+          {t('project.lifecycle.deleteBtn')}
         </Button>
       </div>
 
       {mayDelete ? null : (
         <p className="mt-3 text-sm text-ink-500 dark:text-ink-400">
-          Deleting a project is an owner or admin decision. A developer may break a service and
-          should not be able to remove the folder holding six of them.
+          {t('project.lifecycle.readOnlyNotice')}
         </p>
       )}
     </Card>

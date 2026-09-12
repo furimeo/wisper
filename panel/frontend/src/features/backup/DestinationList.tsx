@@ -2,6 +2,7 @@ import {router} from '@inertiajs/react'
 import type {ReactNode} from 'react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {
   Badge,
   Button,
@@ -54,9 +55,9 @@ export function DestinationList({
 
   async function remove(destination: DestinationView) {
     const confirmed = await askConfirmation({
-      title: `Delete “${destination.name}”?`,
-      body: 'Nothing stored there is touched. The panel just stops offering it as somewhere to write.',
-      confirmLabel: 'Delete it',
+      title: t('backup.destList.deleteConfirm.title', {name: destination.name}),
+      body: t('backup.destList.deleteConfirm.body'),
+      confirmLabel: t('backup.destList.deleteConfirm.confirm'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -69,10 +70,8 @@ export function DestinationList({
       <Card>
         <EmptyState
           icon={<Icon name="backup" />}
-          title="No destinations yet"
-          description="A backup needs somewhere to go. An S3-compatible bucket is the useful
-            answer - it survives the machine - and a path on the node is there for the cases where
-            offsite is not an option."
+          title={t('backup.destList.empty.title')}
+          description={t('backup.destList.empty.desc')}
         />
       </Card>
     )
@@ -87,7 +86,7 @@ export function DestinationList({
               <span className="flex items-center gap-2">
                 <span className="truncate">{destination.name}</span>
                 <Badge>{destinationKindLabel(destination.kind)}</Badge>
-                {destination.platformWide ? <Badge tone="accent">platform</Badge> : null}
+                {destination.platformWide ? <Badge tone="accent">{t('backup.destList.platformBadge')}</Badge> : null}
               </span>
             }
             description={destinationSummary(destination)}
@@ -105,12 +104,12 @@ export function DestinationList({
                 dot
               >
                 {destination.lastCheckError
-                  ? 'Check failed'
+                  ? t('backup.destList.checkFailed')
                   : !destination.enabled
-                    ? 'Off'
+                    ? t('backup.destList.off')
                     : destination.provenReachable
-                      ? 'Reachable'
-                      : 'Never checked'}
+                      ? t('backup.destList.reachable')
+                      : t('backup.destList.neverChecked')}
               </Badge>
             }
             footer={
@@ -123,7 +122,7 @@ export function DestinationList({
                     loading={pending === `${destination.id}:verify`}
                     onClick={() => post(destination, 'verify')}
                   >
-                    Check it
+                    {t('backup.destList.checkIt')}
                   </Button>
                   <Button
                     variant="secondary"
@@ -131,7 +130,7 @@ export function DestinationList({
                     className="sm:w-auto"
                     onClick={() => onEdit(destination)}
                   >
-                    Edit
+                    {t('backup.destList.edit')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -141,14 +140,14 @@ export function DestinationList({
                     loading={pending === `${destination.id}:delete`}
                     onClick={() => void remove(destination)}
                   >
-                    Delete
+                    {t('backup.destList.delete')}
                   </Button>
                 </div>
               ) : (
                 <p className="text-sm text-ink-500 dark:text-ink-400">
                   {destination.platformWide
-                    ? 'Provided by the platform. Anybody here can back up to it; only an operator can change it.'
-                    : 'Your role here is read-only, so this is shown but not editable.'}
+                    ? t('backup.destList.platformNotice')
+                    : t('backup.destList.readOnlyNotice')}
                 </p>
               )
             }
@@ -158,21 +157,21 @@ export function DestinationList({
             </p>
 
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
-              <Fact label="Schedules" value={String(destination.policyCount)} />
-              <Fact label="Snapshots" value={String(destination.snapshotCount)} />
+              <Fact label={t('backup.destList.schedules')} value={String(destination.policyCount)} />
+              <Fact label={t('backup.destList.snapshots')} value={String(destination.snapshotCount)} />
               <Fact
-                label="Stored"
+                label={t('backup.destList.stored')}
                 value={<ByteSize bytes={destination.storedBytes} />}
               />
               <Fact
-                label="Last checked"
-                value={<RelativeTime at={destination.lastCheckedAt} fallback="never" />}
+                label={t('backup.destList.lastChecked')}
+                value={<RelativeTime at={destination.lastCheckedAt} fallback={t('backup.snapshotList.never')} />}
               />
             </dl>
 
             {writable && destination.editable && !destination.removable ? (
               <p className="mt-3 text-xs text-ink-500 dark:text-ink-400">
-                It cannot be deleted while a schedule points at it or a snapshot sits on it.
+                {t('backup.destList.cannotDelete')}
               </p>
             ) : null}
           </Card>

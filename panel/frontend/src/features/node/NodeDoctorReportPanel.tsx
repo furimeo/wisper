@@ -1,3 +1,4 @@
+import {useI18n} from '@/i18n'
 import {Badge, Card, EmptyState, Icon, RelativeTime, cx} from '@/shell'
 
 import type {DoctorCheck, DoctorMachine, NodeDoctorReport} from './nodeTypes'
@@ -24,15 +25,15 @@ import {outcomeLabel, outcomeTone, severityLabel} from './nodeVocabulary'
 const ORDER: Record<string, number> = {FAIL: 0, WARN: 1, UNSPECIFIED: 2, PASS: 3}
 
 export function NodeDoctorReportPanel({report}: {report: NodeDoctorReport | null}) {
+  const {t} = useI18n()
+
   if (report === null) {
     return (
-      <Card title="Preflight report">
+      <Card title={t('node.doctor.title')}>
         <EmptyState
           icon={<Icon name="monitor" />}
-          title="No report yet"
-          description="The machine sends this when it enrols and again on every reconnect. Nothing
-            has arrived, so either no machine has enrolled against this record or none has
-            reconnected since the panel started keeping them."
+          title={t('node.doctor.noReport.title')}
+          description={t('node.doctor.noReport.description')}
         />
       </Card>
     )
@@ -49,38 +50,39 @@ export function NodeDoctorReportPanel({report}: {report: NodeDoctorReport | null
       <MachineWeaknesses machine={report.machine} />
 
       <Card
-        title="Preflight report"
+        title={t('node.doctor.title')}
         description={
           <>
-            Taken <RelativeTime at={report.takenAt} fallback="at an unknown time" /> by sasayaki{' '}
-            {report.agentVersion ?? 'of an unrecorded version'}.
+            Taken <RelativeTime at={report.takenAt} fallback={t('node.doctor.unknownTime')} /> by sasayaki{' '}
+            {report.agentVersion ?? t('node.doctor.unrecordedVersion')}.
           </>
         }
         action={
           <Badge tone={report.requiredChecksPassed ? 'running' : 'failed'} dot>
-            {report.requiredChecksPassed ? 'Required checks passed' : 'Required checks failed'}
+            {report.requiredChecksPassed ? t('node.doctor.requiredPassed') : t('node.doctor.requiredFailed')}
           </Badge>
         }
         padded={false}
       >
         {report.requiredChecksPassed ? null : (
           <p className="border-b border-ink-200 bg-failed/10 px-4 py-3 text-sm leading-relaxed text-ink-800 md:px-5 dark:border-ink-800 dark:text-ink-200">
-            At least one required check failed on this machine. The installer refuses to write
-            anything in this state, so a node reporting it either had the checks pass at install
-            time and regressed since, or is running from an older binary.
+            {t('node.doctor.requiredFailedNotice')}
           </p>
         )}
 
         <p className="border-b border-ink-200 px-4 py-2.5 text-xs text-ink-500 md:px-5 dark:border-ink-800 dark:text-ink-400">
-          {checks.length} checks · {failures} failing · {warnings} warning
-          {warnings === 1 ? '' : 's'}
+          {t('node.doctor.summaryCounts', {
+            checks: checks.length,
+            failures,
+            warnings,
+            suffix: warnings === 1 ? '' : 's',
+          })}
         </p>
 
         {checks.length === 0 ? (
           <EmptyState
-            title="The report has no checks in it"
-            description="The machine sent a report with an empty check list, which means it is
-              running a build older than the preflight suite. Upgrade sasayaki on it."
+            title={t('node.doctor.emptyChecks.title')}
+            description={t('node.doctor.emptyChecks.description')}
           />
         ) : (
           <ul className="divide-y divide-ink-200 dark:divide-ink-800">
@@ -98,6 +100,7 @@ export function NodeDoctorReportPanel({report}: {report: NodeDoctorReport | null
 
 /** One check: what it looked at, what it found, and what to do about it. */
 function CheckRow({check}: {check: DoctorCheck}) {
+  const {t} = useI18n()
   const bad = check.outcome === 'FAIL' || check.outcome === 'WARN'
   return (
     <li
@@ -124,7 +127,7 @@ function CheckRow({check}: {check: DoctorCheck}) {
 
       {bad && check.remedy ? (
         <p className="rounded-lg bg-ink-100 px-3 py-2 text-sm leading-relaxed text-ink-800 dark:bg-ink-950 dark:text-ink-200">
-          <span className="font-medium">To fix: </span>
+          <span className="font-medium">{t('node.doctor.toFix')}</span>
           {check.remedy}
         </p>
       ) : null}
@@ -141,6 +144,7 @@ function CheckRow({check}: {check: DoctorCheck}) {
  * what is true.
  */
 function MachineWeaknesses({machine}: {machine: DoctorMachine | null}) {
+  const {t} = useI18n()
   if (machine === null) {
     return null
   }
@@ -148,43 +152,30 @@ function MachineWeaknesses({machine}: {machine: DoctorMachine | null}) {
 
   if (!machine.runscAvailable) {
     weak.push({
-      title: 'gVisor is missing on this machine',
-      body:
-        'Every container placed here runs under runc instead. A customer workload is separated ' +
-        'from this host by the kernel and nothing else, which is not the isolation the rest of ' +
-        'this panel implies.',
-      remedy: 'Install runsc, then restart sasayaki. Until then, keep untrusted work off this node.',
+      title: t('node.doctor.weaknesses.gvisor.title'),
+      body: t('node.doctor.weaknesses.gvisor.body'),
+      remedy: t('node.doctor.weaknesses.gvisor.remedy'),
     })
   }
   if (!machine.projectQuotaSupported) {
     weak.push({
-      title: `Disk quota cannot be enforced on ${machine.stateFilesystem || 'this filesystem'}`,
-      body:
-        'Volume size limits on this node are advisory. One customer filling the disk takes down ' +
-        'every other service on the machine, and the panel will still show their volume as ' +
-        'within its limit.',
-      remedy:
-        'Project quota needs XFS mounted with pquota on /var/lib/wisper. Changing the volume root ' +
-        'later means moving customer data, so decide it before this machine fills up.',
+      title: t('node.doctor.weaknesses.quota.title', {fs: machine.stateFilesystem || 'this filesystem'}),
+      body: t('node.doctor.weaknesses.quota.body'),
+      remedy: t('node.doctor.weaknesses.quota.remedy'),
     })
   }
   if (!machine.cgroupsV2) {
     weak.push({
-      title: 'cgroups v2 is not enabled',
-      body:
-        'CPU and memory limits are what stop one workload starving the rest, and without cgroups ' +
-        'v2 they are not being applied.',
-      remedy: 'Boot the machine with systemd.unified_cgroup_hierarchy=1 and restart Docker.',
+      title: t('node.doctor.weaknesses.cgroups.title'),
+      body: t('node.doctor.weaknesses.cgroups.body'),
+      remedy: t('node.doctor.weaknesses.cgroups.remedy'),
     })
   }
   if (!machine.clockSynchronised) {
     weak.push({
-      title: "This machine's clock is not synchronised",
-      body:
-        `It is ${Math.round(machine.clockOffsetMillis / 1000)} seconds out. TLS handshakes and ` +
-        'ACME both fail on clock skew, with errors that point at DNS, at the certificate ' +
-        'authority, at anything but the time.',
-      remedy: 'Enable an NTP client - systemd-timesyncd or chrony - and let it settle.',
+      title: t('node.doctor.weaknesses.clock.title'),
+      body: t('node.doctor.weaknesses.clock.body', {seconds: Math.round(machine.clockOffsetMillis / 1000)}),
+      remedy: t('node.doctor.weaknesses.clock.remedy'),
     })
   }
 
@@ -203,7 +194,7 @@ function MachineWeaknesses({machine}: {machine: DoctorMachine | null}) {
         </span>
         <div className="min-w-0">
           <h2 id="machine-weaknesses" className="text-base font-semibold">
-            This machine cannot keep some of the guarantees the platform makes
+            {t('node.doctor.weaknesses.title')}
           </h2>
           <ul className="mt-2 flex flex-col gap-3">
             {weak.map((item) => (
@@ -222,6 +213,7 @@ function MachineWeaknesses({machine}: {machine: DoctorMachine | null}) {
 
 /** What the machine is. Useful, unalarming, and therefore at the bottom. */
 function MachineFacts({machine}: {machine: DoctorMachine}) {
+  const {t} = useI18n()
   const facts: Array<[string, string]> = [
     ['Hostname', machine.hostname || '-'],
     ['Operating system', machine.operatingSystem || '-'],
@@ -240,7 +232,7 @@ function MachineFacts({machine}: {machine: DoctorMachine}) {
   ]
 
   return (
-    <Card title="What this machine is" description="As reported at the last preflight run.">
+    <Card title={t('node.doctor.machineFacts.title')} description={t('node.doctor.machineFacts.description')}>
       <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
         {facts.map(([label, value]) => (
           <div key={label} className="flex flex-col gap-0.5 py-2">

@@ -1,5 +1,6 @@
 import type {ReactNode} from 'react'
 
+import {useI18n} from '@/i18n'
 import {Badge, CopyButton, RelativeTime, cx} from '@/shell'
 
 import type {DomainView} from './domainTypes'
@@ -27,13 +28,12 @@ import {
  * outage that arrives without warning.
  */
 export function CertificateStatus({domain}: {domain: DomainView}) {
+  const {t} = useI18n()
+
   if (!wantsCertificate(domain)) {
     return (
       <p className="text-sm leading-relaxed text-ink-600 dark:text-ink-400">
-        TLS is switched off for this hostname, so no certificate is obtained and visitors
-        are served over plain HTTP. That is the right setting while DNS still points
-        somewhere else - it stops the node retrying ACME against a name it cannot answer
-        for.
+        {t('domain.cert.tlsOff')}
       </p>
     )
   }
@@ -42,10 +42,7 @@ export function CertificateStatus({domain}: {domain: DomainView}) {
   if (certificate === null) {
     return (
       <p className="text-sm leading-relaxed text-ink-600 dark:text-ink-400">
-        No certificate yet. The node obtains one the first time a visitor asks for{' '}
-        <strong className="font-medium">{domain.hostname}</strong> over HTTPS, which needs
-        DNS pointing at it and port 443 reachable from the internet. Nothing on this page
-        has to be pressed for that to happen.
+        {t('domain.cert.noneYet', {hostname: domain.hostname})}
       </p>
     )
   }
@@ -66,7 +63,7 @@ export function CertificateStatus({domain}: {domain: DomainView}) {
         </Badge>
         {certificate.live ? (
           <span className="text-sm text-ink-600 dark:text-ink-400">
-            This is what visitors are being served.
+            {t('domain.cert.liveBadge')}
           </span>
         ) : null}
       </div>
@@ -87,50 +84,48 @@ export function CertificateStatus({domain}: {domain: DomainView}) {
       {failing ? (
         <p className="text-sm leading-relaxed text-failed">
           {certificate.renewalFailureCount === 0
-            ? 'The last attempt to obtain a certificate failed.'
-            : `Renewal has failed ${certificate.renewalFailureCount} time${
-                certificate.renewalFailureCount === 1 ? '' : 's'
-              } in a row. The count goes back to zero as soon as one succeeds, so this is happening now.`}
+            ? t('domain.cert.failedOnce')
+            : t('domain.cert.failedTimes', {count: certificate.renewalFailureCount})}
         </p>
       ) : null}
 
       <dl className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
-        <Fact label="Issued by">{certificate.issuer ?? 'Not reported'}</Fact>
+        <Fact label={t('domain.cert.fact.issuedBy')}>{certificate.issuer ?? t('domain.cert.notReported')}</Fact>
 
-        <Fact label="Expires">
+        <Fact label={t('domain.cert.fact.expires')}>
           {certificate.notAfter === null ? (
-            'Not reported'
+            t('domain.cert.notReported')
           ) : (
             <span className={cx(expiring ? 'text-failed' : '')}>
               <RelativeTime at={certificate.notAfter} />
               {days === null ? null : (
                 <span className="text-ink-500 dark:text-ink-400">
                   {' '}
-                  ({days < 0 ? 'expired' : `${days} day${days === 1 ? '' : 's'}`})
+                  ({days < 0 ? t('domain.cert.expired') : t('domain.cert.daysRemaining', {count: days})})
                 </span>
               )}
             </span>
           )}
         </Fact>
 
-        <Fact label="Obtained">
+        <Fact label={t('domain.cert.fact.obtained')}>
           {certificate.obtainedAt === null ? (
-            'Never'
+            t('domain.cert.never')
           ) : (
             <RelativeTime at={certificate.obtainedAt} />
           )}
         </Fact>
 
-        <Fact label="Last renewal attempt">
+        <Fact label={t('domain.cert.fact.lastRenewal')}>
           {certificate.lastRenewalAttemptAt === null ? (
-            'None since it was obtained'
+            t('domain.cert.noneSinceObtained')
           ) : (
             <RelativeTime at={certificate.lastRenewalAttemptAt} />
           )}
         </Fact>
 
         {certificate.subjectAlternativeNames.length > 1 ? (
-          <Fact label="Also covers">
+          <Fact label={t('domain.cert.fact.alsoCovers')}>
             {certificate.subjectAlternativeNames
               .filter((name) => name !== domain.hostname)
               .join(', ')}
@@ -138,14 +133,14 @@ export function CertificateStatus({domain}: {domain: DomainView}) {
         ) : null}
 
         {certificate.fingerprintSha256 === null ? null : (
-          <Fact label="SHA-256 fingerprint">
+          <Fact label={t('domain.cert.fact.fingerprint')}>
             <span className="flex flex-wrap items-center gap-2">
               <code className="font-mono text-xs break-all">
                 {certificate.fingerprintSha256}
               </code>
               <CopyButton
                 value={certificate.fingerprintSha256}
-                describedAs="Copy the certificate fingerprint"
+                describedAs={t('domain.cert.fact.copyFingerprint')}
               />
             </span>
           </Fact>

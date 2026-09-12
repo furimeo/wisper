@@ -1,0 +1,44 @@
+{
+  "jobs.title": "Jobs",
+  "jobs.description": "The panel's own work queue. Deployments, backups, spec publication and the nightly sweeps all run through it, so a stalled queue looks like a dozen unrelated things being broken.",
+  "jobs.unit": "failing jobs",
+
+  "jobs.health.title": "Queue",
+  "jobs.health.healthy": "Nothing is failing.",
+  "jobs.health.failing": {
+    "one": "{count} job has a current failure streak.",
+    "other": "{count} jobs have a current failure streak."
+  },
+  "jobs.health.queued": "Queued",
+  "jobs.health.due": "Due",
+  "jobs.health.running": "Running",
+  "jobs.health.failingLabel": "Failing",
+  "jobs.health.stoppedWarning": "Work is due and no worker has picked any of it up. That is not a slow queue, it is a stopped one: check that this panel is running with its scheduler enabled, and that nothing else is holding the lock.",
+
+  "jobs.list.empty.title": "Nothing is failing",
+  "jobs.list.empty.description": "Every scheduled job either succeeded or has not run into trouble yet.",
+  "jobs.list.action.runNow": "Run now",
+  "jobs.list.action.discard": "Discard",
+  "jobs.list.column.task": "Task",
+  "jobs.list.column.instance": "Instance",
+  "jobs.list.column.failures": "Failures",
+  "jobs.list.column.lastFailure": "Last failure",
+  "jobs.list.column.history": "History",
+  "jobs.list.column.nextAttempt": "Next attempt",
+  "jobs.list.history.worked": "worked",
+  "jobs.list.history.never": "never succeeded",
+  "jobs.list.runningOn": "running on {worker}",
+  "jobs.list.workerFallback": "a worker",
+  "jobs.list.streak": "{count} in a row",
+
+  "jobs.action.retry.title": "Run {task} now?",
+  "jobs.action.retry.body": "Its next attempt is scheduled further out after every failure; this clears that wait and the streak of {failures}, and hands it to a worker immediately. If the cause has not been fixed it will simply fail again, which is harmless.",
+  "jobs.action.retry.confirm": "Run it now",
+  "jobs.action.retry.cancel": "Leave it queued",
+
+  "jobs.action.discard.title": "Discard {task}?",
+  "jobs.action.discard.body": "The row is deleted and the work is not done. Nothing retries it and nothing else notices: whatever was waiting on it - a deployment, a backup, a spec the node has not been sent - stays unfinished until somebody does it another way.",
+  "jobs.action.discard.confirm": "Discard it",
+  "jobs.action.discard.cancel": "Keep it",
+  "jobs.action.discard.requireTextLabel": "Type the task name to confirm"
+}

@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Badge, Button, Card, CopyButton, useFormFields, useSharedProps} from '@/shell'
 
 /**
@@ -35,13 +36,12 @@ export function RecoveryCodesPanel({
 
   return (
     <Card
-      title="Recovery codes"
-      description="What gets you in when the phone with the authenticator on it is not available.
-        Each code works once."
+      title={t('auth.recovery.title')}
+      description={t('auth.recovery.description')}
       action={
         twoFactorEnabled ? (
           <Badge tone={remaining === 0 ? 'failed' : remaining <= 2 ? 'degraded' : 'running'} dot>
-            {remaining} left
+            {t('auth.recovery.badgeLeft', {count: remaining})}
           </Badge>
         ) : null
       }
@@ -50,8 +50,7 @@ export function RecoveryCodesPanel({
         {codes ? (
           <div className="rounded-lg border border-degraded/50 bg-degraded/10 p-4">
             <p className="text-sm leading-relaxed font-medium text-ink-900 dark:text-ink-100">
-              Save these now. They are not shown again, and any previous codes have stopped
-              working.
+              {t('auth.recovery.saveNow')}
             </p>
             <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono text-sm tabular-nums select-all">
               {codes.map((code) => (
@@ -61,8 +60,8 @@ export function RecoveryCodesPanel({
             <div className="mt-4 flex flex-wrap gap-2">
               <CopyButton
                 value={codes.join('\n')}
-                label="Copy all"
-                describedAs="Copy every recovery code"
+                label={t('auth.recovery.copyAll')}
+                describedAs={t('auth.recovery.copyAllDesc')}
               />
               <DownloadCodesButton codes={codes} />
             </div>
@@ -73,9 +72,9 @@ export function RecoveryCodesPanel({
           <div>
             <p className="text-sm leading-relaxed text-ink-600 dark:text-ink-400">
               {remaining === 0
-                ? `All ${issued} of your codes have been used. Generate a new batch before you need one.`
-                : `${remaining} of ${issued} unused.`}{' '}
-              Generating a new batch immediately invalidates the old one.
+                ? t('auth.recovery.allUsed', {count: issued})
+                : t('auth.recovery.unused', {remaining, issued})}{' '}
+              {t('auth.recovery.regenerateNotice')}
             </p>
             {errors.code ? (
               <p role="alert" className="mt-2 text-sm text-failed">
@@ -88,13 +87,12 @@ export function RecoveryCodesPanel({
               loading={regenerate.processing}
               onClick={() => regenerate.submit('/settings/security/recovery-codes')}
             >
-              {regenerate.processing ? 'Generating…' : 'Generate new codes'}
+              {regenerate.processing ? t('auth.recovery.generating') : t('auth.recovery.generate')}
             </Button>
           </div>
         ) : (
           <p className="text-sm leading-relaxed text-ink-600 dark:text-ink-400">
-            Turn on two-factor authentication first. Codes are issued as part of that, and
-            there is nothing for them to recover from until then.
+            {t('auth.recovery.turnOnFirst')}
           </p>
         )}
       </div>
@@ -123,7 +121,7 @@ function DownloadCodesButton({codes}: {codes: string[]}) {
         URL.revokeObjectURL(href)
       }}
     >
-      Download
+      {t('auth.recovery.download')}
     </Button>
   )
 }

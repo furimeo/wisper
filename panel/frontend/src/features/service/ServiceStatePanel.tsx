@@ -1,6 +1,7 @@
 import {router} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, Card, RelativeTime, askConfirmation} from '@/shell'
 
 import {ServiceStatusBadge} from './ServiceStatusBadge'
@@ -8,26 +9,6 @@ import type {DesiredState, ServiceSummary, ServiceView} from './serviceTypes'
 import {healthLabel, statusSentence} from './serviceVocabulary'
 import {useLiveServiceStatus} from './useLiveServiceStatus'
 
-/**
- * What the service is doing, and the three buttons that change it.
- *
- * One component and not two, because the optimistic state is what couples them. Pressing
- * Stop has to change what the panel says about the service in the same frame as the press
- * - on a phone over 4G the round trip is long enough for a customer to press it again -
- * and the sentence it changes is the one two lines above the button. Splitting the
- * display from the controls would mean holding that half-second of intent in the page and
- * threading it back down into both.
- *
- * Intent and fact are drawn separately throughout. `service.desiredState` is what the
- * customer asked for and the panel owns it; `status.reportedState` is what the node last
- * saw and the node owns it (AGENTS.md §4.2). The case worth designing for is the one
- * where they disagree - asked to run, reported crashed - and a single pill cannot show
- * it.
- *
- * Stop and Restart ask first. Start does not: the failure mode of an accidental start is
- * a container that runs, and the failure mode of an accidental stop on a 375px screen is
- * a customer's site going down because a thumb landed two millimetres left.
- */
 type Action = 'start' | 'stop' | 'restart'
 
 export function ServiceStatePanel({
@@ -65,21 +46,17 @@ export function ServiceStatePanel({
     const confirmed = await askConfirmation(
       action === 'stop'
         ? {
-            title: `Stop ${service.name}?`,
+            title: t('service.state.stop_confirm_title', {name: service.name}),
             body: service.site
-              ? 'The node stops serving this site until you start it again. The files and every ' +
-                'release stay where they are.'
-              : 'The container is stopped. Its volumes, its logs and its environment stay where ' +
-                'they are, and starting it again brings it back.',
-            confirmLabel: 'Stop it',
+              ? t('service.state.stop_confirm_body_site')
+              : t('service.state.stop_confirm_body_app'),
+            confirmLabel: t('service.state.stop_confirm_button'),
             tone: 'danger',
           }
         : {
-            title: `Restart ${service.name}?`,
-            body:
-              'The container is stopped and started again, so whatever it is serving right now ' +
-              'is interrupted for a few seconds.',
-            confirmLabel: 'Restart it',
+            title: t('service.state.restart_confirm_title', {name: service.name}),
+            body: t('service.state.restart_confirm_body'),
+            confirmLabel: t('service.state.restart_confirm_button'),
           },
     )
     if (confirmed) {
@@ -92,8 +69,8 @@ export function ServiceStatePanel({
 
   return (
     <Card
-      title="State"
-      action={status ? <ServiceStatusBadge status={status} /> : <Badge tone="neutral">Not placed</Badge>}
+      title={t('service.state.title')}
+      action={status ? <ServiceStatusBadge status={status} /> : <Badge tone="neutral">{t('service.state.not_placed')}</Badge>}
       footer={
         <div className="flex flex-col gap-2 sm:flex-row">
           {intent === 'RUNNING' ? (
@@ -105,7 +82,7 @@ export function ServiceStatePanel({
               loading={pending === 'stop'}
               onClick={() => void confirmThenAct('stop')}
             >
-              Stop
+              {t('service.state.stop')}
             </Button>
           ) : (
             <Button
@@ -115,7 +92,7 @@ export function ServiceStatePanel({
               loading={pending === 'start'}
               onClick={() => act('start')}
             >
-              Start
+              {t('service.state.start')}
             </Button>
           )}
 
@@ -128,7 +105,7 @@ export function ServiceStatePanel({
               loading={pending === 'restart'}
               onClick={() => void confirmThenAct('restart')}
             >
-              Restart
+              {t('service.state.restart')}
             </Button>
           ) : null}
         </div>
@@ -145,22 +122,22 @@ export function ServiceStatePanel({
 
         <dl className="grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
           <div className="flex items-baseline justify-between gap-3 py-0.5">
-            <dt className="text-ink-500 dark:text-ink-400">You asked for</dt>
+            <dt className="text-ink-500 dark:text-ink-400">{t('service.state.you_asked_for')}</dt>
             <dd className="font-medium text-ink-900 dark:text-ink-100">
-              {intent === 'RUNNING' ? 'Running' : 'Stopped'}
+              {intent === 'RUNNING' ? t('service.reported_states.RUNNING') : t('service.reported_states.STOPPED')}
             </dd>
           </div>
 
           <div className="flex items-baseline justify-between gap-3 py-0.5">
-            <dt className="text-ink-500 dark:text-ink-400">Node last reported</dt>
+            <dt className="text-ink-500 dark:text-ink-400">{t('service.state.node_last_reported')}</dt>
             <dd className="font-medium text-ink-900 dark:text-ink-100">
-              <RelativeTime at={status?.reportedAt} fallback="never" />
+              <RelativeTime at={status?.reportedAt} fallback={t('service.state.never')} />
             </dd>
           </div>
 
           {status?.health ? (
             <div className="flex items-baseline justify-between gap-3 py-0.5">
-              <dt className="text-ink-500 dark:text-ink-400">Health check</dt>
+              <dt className="text-ink-500 dark:text-ink-400">{t('service.state.health_check')}</dt>
               <dd className="font-medium text-ink-900 dark:text-ink-100">
                 {healthLabel(status.health)}
               </dd>
@@ -168,17 +145,16 @@ export function ServiceStatePanel({
           ) : null}
 
           <div className="flex items-baseline justify-between gap-3 py-0.5">
-            <dt className="text-ink-500 dark:text-ink-400">Node</dt>
+            <dt className="text-ink-500 dark:text-ink-400">{t('service.state.node')}</dt>
             <dd className="font-mono text-xs text-ink-900 dark:text-ink-100">
-              {status?.nodeId ? shortId(status.nodeId) : 'none yet'}
+              {status?.nodeId ? shortId(status.nodeId) : t('service.state.none_yet')}
             </dd>
           </div>
         </dl>
 
         {settling && !service.archived ? (
           <p className="text-xs text-ink-500 dark:text-ink-400">
-            Watching for the node to report. It reconciles every fifteen seconds, so this
-            settles on its own.
+            {t('service.state.watching_node')}
           </p>
         ) : null}
       </div>
@@ -190,22 +166,14 @@ export function ServiceStatePanel({
 function inFlightSentence(action: Action, name: string): string {
   switch (action) {
     case 'start':
-      return `Asking the node to run ${name}. It picks the change up on its next reconcile.`
+      return t('service.state.in_flight.start', {name})
     case 'stop':
-      return `Asking the node to stop ${name}. Its volumes and logs stay where they are.`
+      return t('service.state.in_flight.stop', {name})
     default:
-      return `Restarting ${name}.`
+      return t('service.state.in_flight.restart', {name})
   }
 }
 
-/**
- * Whether the answer is expected to change shortly, which is what decides how often the
- * page asks for it.
- *
- * Nothing reported and nothing asked for is not settling - a stopped service nobody has
- * placed will report nothing for ever, and polling it every six seconds would spend a
- * customer's mobile data on a question with a permanent answer.
- */
 function isSettling(status: ServiceSummary | null, intent: DesiredState): boolean {
   if (status === null) {
     return intent === 'RUNNING'
@@ -219,7 +187,6 @@ function isSettling(status: ServiceSummary | null, intent: DesiredState): boolea
   return status.reportedState === 'PENDING' || status.reportedState === 'CREATING'
 }
 
-/** A node id is a UUID; the first block is enough to tell two nodes apart on a phone. */
 function shortId(id: string): string {
   return id.slice(0, 8)
 }

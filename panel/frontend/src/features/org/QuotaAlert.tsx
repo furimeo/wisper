@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {cx} from '@/shell'
 
 import type {QuotaAllowance} from './orgTypes'
@@ -48,12 +49,8 @@ export function QuotaAlert({
     >
       <p className="text-sm font-semibold text-ink-900 dark:text-ink-100">
         {worst === 'over'
-          ? over.length === 1
-            ? 'One limit has been passed'
-            : `${over.length} limits have been passed`
-          : near.length === 1
-            ? 'One limit is nearly reached'
-            : `${near.length} limits are nearly reached`}
+          ? t('org.alert.overTitle', {count: over.length})
+          : t('org.alert.nearTitle', {count: near.length})}
       </p>
 
       <ul className="mt-2 flex flex-col gap-1.5">

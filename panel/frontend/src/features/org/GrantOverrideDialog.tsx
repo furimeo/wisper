@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Button, Input, Modal, Select, Textarea, useFormFields} from '@/shell'
 
 import {QuotaLimitField} from './QuotaLimitField'
@@ -58,15 +59,15 @@ export function GrantOverrideDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title="Grant an exception"
-      description="Replaces one limit for this organization only. The plan is left alone."
+      title={t('org.grantOverride.title')}
+      description={t('org.grantOverride.desc')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.processing}>
-            Cancel
+            {t('org.grantOverride.cancel')}
           </Button>
           <Button loading={form.processing} onClick={grant}>
-            Grant exception
+            {t('org.grantOverride.submit')}
           </Button>
         </>
       }
@@ -80,13 +81,16 @@ export function GrantOverrideDialog({
       >
         <Select
           {...form.bind('resource')}
-          label="Limit"
+          label={t('org.grantOverride.limit')}
           required
           options={resources.map((value) => ({value, label: quotaLabel(value)}))}
           hint={
             current
-              ? `In force now: ${quotaFigure(resource, current.limit)}, with ${quotaFigure(resource, current.used)} used.`
-              : 'Nothing is in force for this resource yet.'
+              ? t('org.grantOverride.hintInForce', {
+                  limit: quotaFigure(resource, current.limit),
+                  used: quotaFigure(resource, current.used),
+                })
+              : t('org.grantOverride.hintNotInForce')
           }
         />
 
@@ -101,22 +105,22 @@ export function GrantOverrideDialog({
 
         <Textarea
           {...form.bind('reason')}
-          label="Reason"
+          label={t('org.grantOverride.reason')}
           required
           maxLength={500}
-          hint="Kept on the exception and in the audit trail. Whoever finds this in six months is you."
+          hint={t('org.grantOverride.reasonHint')}
         />
 
         <Input
           {...form.bind('expiresInDays')}
-          label="Expires after"
+          label={t('org.grantOverride.expiresAfter')}
           type="number"
           inputMode="numeric"
           min={1}
           max={3650}
           step={1}
-          suffix="days"
-          hint="Leave it empty for an exception that stands until it is revoked."
+          suffix={t('org.grantOverride.days')}
+          hint={t('org.grantOverride.expiresHint')}
         />
 
         <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />

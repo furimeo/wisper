@@ -1,6 +1,7 @@
 import {Head, Link, router, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Badge, Button, Card, EmptyState, Icon, PageHeader, askConfirmation} from '@/shell'
 
 import {CreatePlanDialog} from './CreatePlanDialog'
@@ -41,11 +42,9 @@ export default function AdminPlanListPage() {
 
   async function archive(plan: Plan) {
     const confirmed = await askConfirmation({
-      title: `Retire ${plan.code}?`,
-      body:
-        'It stops being offered to new organizations. Everyone already on it stays on it with ' +
-        'exactly the limits they have now, and you can bring it back at any time.',
-      confirmLabel: 'Retire it',
+      title: t('org.plans.confirmRetireTitle', {code: plan.code}),
+      body: t('org.plans.confirmRetireBody'),
+      confirmLabel: t('org.plans.confirmRetireBtn'),
       tone: 'danger',
     })
     if (confirmed) {
@@ -55,14 +54,14 @@ export default function AdminPlanListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Plans" />
+      <Head title={t('org.plans.title')} />
 
       <PageHeader
-        title="Plans"
-        description="What an organization is allowed. Every tenant is on exactly one, and exceptions are granted per tenant."
+        title={t('org.plans.title')}
+        description={t('org.plans.description')}
         actions={
           <Button icon={<Icon name="plan" />} onClick={() => setCreating(true)}>
-            New plan
+            {t('org.plans.newPlan')}
           </Button>
         }
       />
@@ -70,11 +69,10 @@ export default function AdminPlanListPage() {
       {!hasDefault && plans.length > 0 ? (
         <div className="rounded-xl border border-failed/40 bg-failed/10 px-4 py-3.5 md:px-5">
           <p className="text-sm font-semibold text-ink-900 dark:text-ink-100">
-            No selectable default plan
+            {t('org.plans.noDefaultTitle')}
           </p>
           <p className="mt-1 text-sm leading-relaxed text-ink-800 dark:text-ink-200">
-            Opening an organization is refused while this is true, because a tenant on no plan
-            has every limit at zero. Make one of the tiers below the default.
+            {t('org.plans.noDefaultDesc')}
           </p>
         </div>
       ) : null}
@@ -83,11 +81,9 @@ export default function AdminPlanListPage() {
         <Card padded={false}>
           <EmptyState
             icon={<Icon name="plan" />}
-            title="No plans yet"
-            description="Nothing can be created on this installation until there is one: an organization
-              needs a plan, and a plan is what says how many projects, services and gigabytes it may
-              have. Make one, set its limits, and mark it as the default."
-            action={<Button onClick={() => setCreating(true)}>Create the first plan</Button>}
+            title={t('org.plans.emptyTitle')}
+            description={t('org.plans.emptyDesc')}
+            action={<Button onClick={() => setCreating(true)}>{t('org.plans.emptyBtn')}</Button>}
           />
         </Card>
       ) : (
@@ -109,8 +105,8 @@ export default function AdminPlanListPage() {
                     <code className="font-mono text-xs text-ink-500 dark:text-ink-400">
                       {plan.code}
                     </code>
-                    {plan.isDefault ? <Badge tone="accent">Default</Badge> : null}
-                    {plan.selectable ? null : <Badge tone="neutral">Retired</Badge>}
+                    {plan.isDefault ? <Badge tone="accent">{t('org.plans.badgeDefault')}</Badge> : null}
+                    {plan.selectable ? null : <Badge tone="neutral">{t('org.plans.badgeRetired')}</Badge>}
                   </Link>
 
                   {plan.description ? (
@@ -128,7 +124,7 @@ export default function AdminPlanListPage() {
                       loading={working === plan.id}
                       onClick={() => post(`/admin/plans/${plan.id}/default`, plan.id)}
                     >
-                      Make default
+                      {t('org.plans.makeDefault')}
                     </Button>
                   ) : null}
 
@@ -139,7 +135,7 @@ export default function AdminPlanListPage() {
                       loading={working === plan.id}
                       onClick={() => void archive(plan)}
                     >
-                      Retire
+                      {t('org.plans.retire')}
                     </Button>
                   ) : (
                     <Button
@@ -148,7 +144,7 @@ export default function AdminPlanListPage() {
                       loading={working === plan.id}
                       onClick={() => post(`/admin/plans/${plan.id}/restore`, plan.id)}
                     >
-                      Offer again
+                      {t('org.plans.offerAgain')}
                     </Button>
                   )}
                 </div>
@@ -158,7 +154,7 @@ export default function AdminPlanListPage() {
                 href={`/admin/plans/${plan.id}`}
                 className="mt-2 inline-flex touch-target items-center gap-1 text-sm font-medium text-accent-600 dark:text-accent-400"
               >
-                Limits and tenants
+                {t('org.plans.limitsAndTenants')}
                 <Icon name="chevronRight" className="size-4" />
               </Link>
             </li>

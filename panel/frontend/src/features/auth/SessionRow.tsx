@@ -1,3 +1,4 @@
+import {t} from '@/i18n'
 import {Badge, Button, CardFact, CardFacts, RelativeTime} from '@/shell'
 
 import type {SessionView} from './authTypes'
@@ -29,27 +30,27 @@ export function SessionRow({session, busy, onRevoke}: SessionRowProps) {
         <span className="mr-auto text-sm font-medium">{describeAgent(session.userAgent)}</span>
         {session.current ? (
           <Badge tone="accent" dot>
-            This device
+            {t('auth.sessions.thisDevice')}
           </Badge>
         ) : null}
         {session.secondFactorSatisfied ? null : (
           <Badge tone="degraded" dot>
-            Second factor outstanding
+            {t('auth.sessions.secondFactorPending')}
           </Badge>
         )}
       </div>
 
       <CardFacts>
-        <CardFact label="Address">
-          <span className="font-mono break-all">{session.remoteAddress ?? 'Not recorded'}</span>
+        <CardFact label={t('auth.sessions.address')}>
+          <span className="font-mono break-all">{session.remoteAddress ?? t('auth.sessions.notRecorded')}</span>
         </CardFact>
-        <CardFact label="Last seen">
-          <RelativeTime at={session.lastSeenAt} fallback="Not since it started" />
+        <CardFact label={t('auth.sessions.lastSeen')}>
+          <RelativeTime at={session.lastSeenAt} fallback={t('auth.sessions.notSinceStarted')} />
         </CardFact>
-        <CardFact label="Started">
+        <CardFact label={t('auth.sessions.started')}>
           <RelativeTime at={session.createdAt} />
         </CardFact>
-        <CardFact label="Expires">
+        <CardFact label={t('auth.sessions.expires')}>
           <RelativeTime at={session.expiresAt} />
         </CardFact>
       </CardFacts>
@@ -62,7 +63,7 @@ export function SessionRow({session, busy, onRevoke}: SessionRowProps) {
 
       {session.current ? (
         <p className="mt-3 text-xs text-ink-500">
-          Use “Sign out” in the account menu to end this one.
+          {t('auth.sessions.useSignOut')}
         </p>
       ) : (
         <Button
@@ -71,7 +72,7 @@ export function SessionRow({session, busy, onRevoke}: SessionRowProps) {
           loading={busy}
           onClick={onRevoke}
         >
-          Sign this one out
+          {t('auth.sessions.signOutThisOne')}
         </Button>
       )}
     </li>
@@ -87,7 +88,7 @@ export function SessionRow({session, busy, onRevoke}: SessionRowProps) {
  */
 function describeAgent(userAgent: string | null): string {
   if (!userAgent) {
-    return 'Unidentified client'
+    return t('auth.sessions.unidentifiedClient')
   }
 
   const browser = userAgent.includes('Edg/')
@@ -115,12 +116,12 @@ function describeAgent(userAgent: string | null): string {
             : null
 
   if (browser && platform) {
-    return `${browser} on ${platform}`
+    return t('auth.sessions.onPlatform', {browser, platform})
   }
   if (browser ?? platform) {
     return (browser ?? platform) as string
   }
   // Something that is not a browser at all - curl, a script, a monitoring probe. Showing
   // the first token is more use than calling it unknown.
-  return userAgent.split(' ')[0] ?? 'Unidentified client'
+  return userAgent.split(' ')[0] ?? t('auth.sessions.unidentifiedClient')
 }

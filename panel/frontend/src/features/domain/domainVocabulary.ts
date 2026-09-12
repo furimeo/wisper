@@ -1,4 +1,5 @@
 import type {BadgeTone} from '@/shell'
+import {t} from '@/i18n'
 
 import type {
   CertificateState,
@@ -18,36 +19,10 @@ import type {
  * same glance, and two names for one state is a support ticket.
  */
 
-const KIND_LABELS: Record<DomainKind, string> = {
-  PRIMARY: 'Main address',
-  ALIAS: 'Also points here',
-  WILDCARD: 'Wildcard',
-}
-
-const TLS_LABELS: Record<DomainTlsMode, string> = {
-  ON_DEMAND: 'HTTPS, certificate obtained automatically',
-  STATIC: 'HTTPS, certificate obtained automatically',
-  OFF: 'Plain HTTP, no certificate',
-}
-
-const VERIFICATION_LABELS: Record<DomainVerification, string> = {
-  PENDING: 'Checking',
-  VERIFIED: 'Verified',
-  FAILED: 'Not pointing here',
-}
-
 const VERIFICATION_TONES: Record<DomainVerification, BadgeTone> = {
   PENDING: 'neutral',
   VERIFIED: 'running',
   FAILED: 'degraded',
-}
-
-const CERTIFICATE_LABELS: Record<CertificateState, string> = {
-  PENDING: 'Waiting for a certificate',
-  ISSUED: 'Certificate issued',
-  RENEWING: 'Renewing',
-  FAILED: 'Certificate failed',
-  REVOKED: 'Revoked',
 }
 
 const CERTIFICATE_TONES: Record<CertificateState, BadgeTone> = {
@@ -58,34 +33,43 @@ const CERTIFICATE_TONES: Record<CertificateState, BadgeTone> = {
   REVOKED: 'failed',
 }
 
-/**
- * One sentence per certificate state, saying what the platform is doing about it.
- *
- * `RENEWING` is the one that reads alarming and is not: the certificate in force is still
- * being served while the node retries ACME, and only a renewal that keeps failing for a
- * fortnight is worth anybody's attention.
- */
-const CERTIFICATE_SENTENCES: Record<CertificateState, string> = {
-  PENDING:
-    'The node will obtain one the first time somebody asks for this hostname over HTTPS. ' +
-    'That needs DNS pointing here and port 443 reachable.',
-  ISSUED: 'Visitors get HTTPS. The node renews it well before it lapses, without asking.',
-  RENEWING:
-    'The current certificate is still being served while the node obtains its replacement.',
-  FAILED: 'No certificate is in force, so HTTPS to this hostname will not complete.',
-  REVOKED: 'This certificate was withdrawn and is not being served.',
-}
-
 export function kindLabel(kind: DomainKind): string {
-  return KIND_LABELS[kind] ?? kind
+  switch (kind) {
+    case 'PRIMARY':
+      return t('domain.kind.primary')
+    case 'ALIAS':
+      return t('domain.kind.alias')
+    case 'WILDCARD':
+      return t('domain.kind.wildcard')
+    default:
+      return kind
+  }
 }
 
 export function tlsLabel(mode: DomainTlsMode): string {
-  return TLS_LABELS[mode] ?? mode
+  switch (mode) {
+    case 'ON_DEMAND':
+      return t('domain.tls.onDemand')
+    case 'STATIC':
+      return t('domain.tls.static')
+    case 'OFF':
+      return t('domain.tls.off')
+    default:
+      return mode
+  }
 }
 
 export function verificationLabel(state: DomainVerification): string {
-  return VERIFICATION_LABELS[state] ?? state
+  switch (state) {
+    case 'PENDING':
+      return t('domain.verification.pending')
+    case 'VERIFIED':
+      return t('domain.verification.verified')
+    case 'FAILED':
+      return t('domain.verification.failed')
+    default:
+      return state
+  }
 }
 
 export function verificationTone(state: DomainVerification): BadgeTone {
@@ -93,7 +77,20 @@ export function verificationTone(state: DomainVerification): BadgeTone {
 }
 
 export function certificateLabel(state: CertificateState): string {
-  return CERTIFICATE_LABELS[state] ?? state
+  switch (state) {
+    case 'PENDING':
+      return t('domain.certificate.pending')
+    case 'ISSUED':
+      return t('domain.certificate.issued')
+    case 'RENEWING':
+      return t('domain.certificate.renewing')
+    case 'FAILED':
+      return t('domain.certificate.failed')
+    case 'REVOKED':
+      return t('domain.certificate.revoked')
+    default:
+      return state
+  }
 }
 
 export function certificateTone(state: CertificateState): BadgeTone {
@@ -101,7 +98,20 @@ export function certificateTone(state: CertificateState): BadgeTone {
 }
 
 export function certificateSentence(state: CertificateState): string {
-  return CERTIFICATE_SENTENCES[state] ?? ''
+  switch (state) {
+    case 'PENDING':
+      return t('domain.certificate.sentence.pending')
+    case 'ISSUED':
+      return t('domain.certificate.sentence.issued')
+    case 'RENEWING':
+      return t('domain.certificate.sentence.renewing')
+    case 'FAILED':
+      return t('domain.certificate.sentence.failed')
+    case 'REVOKED':
+      return t('domain.certificate.sentence.revoked')
+    default:
+      return ''
+  }
 }
 
 /** Whether the panel wants a certificate for this hostname at all. Mirrors `wantsCertificate()`. */
@@ -146,31 +156,31 @@ export const EXPIRY_WARNING_DAYS = 14
  */
 export function domainHeadline(domain: DomainView, placed: boolean): string {
   if (!placed) {
-    return 'Nothing is running this service yet, so there is no address to point this hostname at.'
+    return t('domain.headline.notPlaced')
   }
   if (domain.verificationState === 'FAILED') {
-    return domain.lastCheckError ?? 'This hostname does not resolve to this service’s node.'
+    return domain.lastCheckError ?? t('domain.headline.failedDefault')
   }
   if (domain.verificationState === 'PENDING') {
-    return domain.lastCheckError ?? 'wisper is waiting for DNS to point here. It rechecks on its own.'
+    return domain.lastCheckError ?? t('domain.headline.pendingDefault')
   }
   if (!wantsCertificate(domain)) {
-    return 'Verified and served over plain HTTP. No certificate is being obtained for it.'
+    return t('domain.headline.noTls')
   }
   const certificate = domain.certificate
   if (certificate === null) {
-    return 'Verified. The node obtains a certificate the first time somebody asks for it over HTTPS.'
+    return t('domain.headline.noCertYet')
   }
   if (certificate.state === 'FAILED' || certificate.renewalFailureCount > 0) {
-    return certificate.lastError ?? 'The node could not obtain a certificate for this hostname.'
+    return certificate.lastError ?? t('domain.headline.certFailedDefault')
   }
   const days = daysUntilExpiry(certificate)
   if (days !== null && days <= EXPIRY_WARNING_DAYS) {
     return days < 0
-      ? 'This certificate has expired and HTTPS to this hostname will not complete.'
-      : `This certificate expires in ${days} day${days === 1 ? '' : 's'} and has not renewed yet.`
+      ? t('domain.headline.certExpired')
+      : t('domain.headline.certExpiresSoon', {count: days})
   }
   return domain.serving
-    ? 'Verified, served over HTTPS, and the node is answering for it.'
-    : 'Verified. The node has not reported serving it yet.'
+    ? t('domain.headline.serving')
+    : t('domain.headline.notServingYet')
 }

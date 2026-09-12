@@ -1,6 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 import {useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Card, EmptyState, Icon, PageHeader} from '@/shell'
 import type {MemberRole} from '@/shell'
 
@@ -47,15 +48,15 @@ export default function MemberListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Head title="Members" />
+      <Head title={t('org.members.title')} />
 
       <PageHeader
-        title="Members"
-        description="A role applies to every project in this organization. There is no per-project access, on purpose: a permission model nobody can hold in their head gets granted wide and left."
+        title={t('org.members.title')}
+        description={t('org.members.description')}
         actions={
           administers ? (
             <Button icon={<Icon name="account" />} onClick={() => setInviting(true)}>
-              Invite somebody
+              {t('org.members.inviteBtn')}
             </Button>
           ) : null
         }
@@ -68,8 +69,7 @@ export default function MemberListPage() {
       {owners === 1 ? (
         <Card>
           <p className="text-sm leading-relaxed text-ink-800 dark:text-ink-200">
-            There is one owner. If that account is lost, nobody can invite anybody, change a
-            role or move this organization onto another plan - promote a second one.
+            {t('org.members.singleOwnerWarning')}
           </p>
         </Card>
       ) : null}
@@ -77,30 +77,27 @@ export default function MemberListPage() {
       {administers ? null : (
         <Card>
           <p className="text-sm text-ink-700 dark:text-ink-300">
-            Inviting people and changing roles is an owner or admin decision, so those controls
-            are off for you. You can still see who has access.
+            {t('org.members.readOnlyNotice')}
           </p>
         </Card>
       )}
 
       <Card
-        title="People"
+        title={t('org.members.peopleTitle')}
         description={
           pending > 0
-            ? `${members.length} in total, ${pending} still to answer their invitation.`
-            : `${members.length} ${members.length === 1 ? 'person' : 'people'}.`
+            ? t('org.members.peoplePending', {total: members.length, pending})
+            : t('org.members.peopleCount', {count: members.length})
         }
         padded={false}
       >
         {members.length === 0 ? (
           <EmptyState
             icon={<Icon name="account" />}
-            title="Nobody here yet"
-            description="That is unusual - an organization normally keeps its owner. Invite somebody
-              with an account on this installation and they will appear here as soon as they are
-              asked."
+            title={t('org.members.emptyTitle')}
+            description={t('org.members.emptyDesc')}
             action={
-              administers ? <Button onClick={() => setInviting(true)}>Invite somebody</Button> : null
+              administers ? <Button onClick={() => setInviting(true)}>{t('org.members.inviteBtn')}</Button> : null
             }
           />
         ) : (

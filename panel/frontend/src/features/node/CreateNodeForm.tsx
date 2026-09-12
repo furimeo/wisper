@@ -1,3 +1,4 @@
+import {useI18n} from '@/i18n'
 import {Button, Input, Modal, Textarea, useFormFields} from '@/shell'
 
 /**
@@ -22,6 +23,7 @@ export interface NodeFormValues {
 }
 
 export function CreateNodeForm({open, onClose}: {open: boolean; onClose: () => void}) {
+  const {t} = useI18n()
   const form = useFormFields<NodeFormValues>({
     name: '',
     description: '',
@@ -42,16 +44,15 @@ export function CreateNodeForm({open, onClose}: {open: boolean; onClose: () => v
     <Modal
       open={open}
       onClose={onClose}
-      title="Add a node"
-      description="This creates the record and mints a bootstrap token in one step. The token is
-        shown once, on the page you land on, and it is good for fifteen minutes."
+      title={t('node.form.create.title')}
+      description={t('node.form.create.description')}
       footer={
         <div className="flex flex-col gap-2 sm:flex-row-reverse">
           <Button block className="sm:w-auto" loading={form.processing} onClick={submit}>
-            Create and issue a token
+            {t('node.form.create.submit')}
           </Button>
           <Button variant="ghost" block className="sm:w-auto" onClick={onClose}>
-            Cancel
+            {t('node.form.create.cancel')}
           </Button>
         </div>
       }
@@ -65,47 +66,44 @@ export function CreateNodeForm({open, onClose}: {open: boolean; onClose: () => v
       >
         <Input
           {...form.bind('name')}
-          label="Name"
+          label={t('node.form.create.name')}
           required
           maxLength={63}
           autoComplete="off"
-          placeholder="fra-01"
-          hint="What you will call this machine everywhere, and what you have to type to delete it."
+          placeholder={t('node.form.create.namePlaceholder')}
+          hint={t('node.form.create.nameHint')}
         />
 
         <Input
           {...form.bind('publicAddress')}
-          label="Public address"
+          label={t('node.form.create.publicAddress')}
           maxLength={255}
           autoComplete="off"
-          placeholder="203.0.113.10"
-          hint="The address customers' traffic reaches this machine on. It is what a domain's A
-            record has to point at, and it is not how the panel reaches the node - the node dials
-            out."
+          placeholder={t('node.form.create.publicAddressPlaceholder')}
+          hint={t('node.form.create.publicAddressHint')}
         />
 
         <Input
           {...form.bind('tags')}
-          label="Tags"
+          label={t('node.form.create.tags')}
           maxLength={500}
           autoComplete="off"
-          placeholder="eu, ssd, general"
-          hint="Comma separated. Placement filters on these, so a service that needs an SSD can be
-            kept off a machine that has none."
+          placeholder={t('node.form.create.tagsPlaceholder')}
+          hint={t('node.form.create.tagsHint')}
         />
 
         <Textarea
           {...form.bind('description')}
-          label="Notes"
+          label={t('node.form.create.notes')}
           maxLength={500}
           rows={2}
           autoGrow
-          hint="For the next operator: whose hardware it is, which rack, who to ring."
+          hint={t('node.form.create.notesHint')}
         />
 
         {/* Submits on Enter from any field without a visible duplicate of the footer button. */}
         <button type="submit" className="sr-only">
-          Create node
+          {t('node.form.create.submit')}
         </button>
       </form>
     </Modal>

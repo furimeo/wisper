@@ -1,5 +1,6 @@
 import {router} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {askConfirmation} from '@/shell'
 
 import type {DeploymentSummary} from './deployTypes'
@@ -20,12 +21,10 @@ export async function cancelDeployment(
   deployment: DeploymentSummary,
 ): Promise<void> {
   const confirmed = await askConfirmation({
-    title: `Cancel deployment #${deployment.sequence}?`,
-    body:
-      'The build stops where it is. Whatever is live now stays live, and nothing that has ' +
-      'already been published is undone.',
-    confirmLabel: 'Cancel the build',
-    cancelLabel: 'Leave it running',
+    title: t('deploy.cancel.confirm_title', {sequence: deployment.sequence}),
+    body: t('deploy.cancel.confirm_body'),
+    confirmLabel: t('deploy.cancel.confirm_button'),
+    cancelLabel: t('deploy.cancel.cancel_button'),
     tone: 'danger',
   })
   if (!confirmed) {

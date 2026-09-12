@@ -1,5 +1,6 @@
 import {router} from '@inertiajs/react'
 
+import {t} from '@/i18n'
 import {askConfirmation} from '@/shell'
 
 import type {DomainView} from './domainTypes'
@@ -39,16 +40,13 @@ export function makePrimaryDomain(serviceId: string, domain: DomainView): void {
 /** `POST /services/{serviceId}/domains/{domainId}/remove`, behind the hostname typed out. */
 export async function removeDomain(serviceId: string, domain: DomainView): Promise<void> {
   const confirmed = await askConfirmation({
-    title: `Remove ${domain.hostname}?`,
-    body:
-      'The node stops answering for it and its certificate is dropped. A hostname is ' +
-      'unique across the whole platform, so once this row is gone anybody may add the ' +
-      'same name to their own service - remove the DNS record too if you are done with it.',
-    confirmLabel: 'Remove this hostname',
-    cancelLabel: 'Keep it',
+    title: t('domain.confirm.remove.title', {hostname: domain.hostname}),
+    body: t('domain.confirm.remove.body'),
+    confirmLabel: t('domain.confirm.remove.confirm'),
+    cancelLabel: t('domain.confirm.remove.cancel'),
     tone: 'danger',
     requireText: domain.hostname,
-    requireTextLabel: 'Type the hostname to confirm',
+    requireTextLabel: t('domain.confirm.remove.requireTextLabel'),
   })
   if (!confirmed) {
     return

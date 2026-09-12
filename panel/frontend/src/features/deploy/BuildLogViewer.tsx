@@ -1,6 +1,7 @@
 import type {ReactElement} from 'react'
 import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react'
 
+import {t} from '@/i18n'
 import {Button, Icon, cx, useIsWide} from '@/shell'
 
 import type {DeploymentLog} from './deployTypes'
@@ -191,9 +192,7 @@ export function BuildLogViewer({
 
       {dropped > 0 ? (
         <p className="border-b border-ink-800 bg-degraded/15 px-4 py-2 text-sm text-ink-800 dark:text-ink-100">
-          This build printed more than this page can hold. The first{' '}
-          <span className="tabular-nums">{dropped.toLocaleString()}</span> lines were
-          dropped; everything since is below.
+          {t('deploy.viewer.dropped_notice', {dropped: dropped.toLocaleString()})}
         </p>
       ) : null}
 
@@ -202,7 +201,7 @@ export function BuildLogViewer({
           ref={scroller}
           onScroll={onScroll}
           tabIndex={0}
-          aria-label="Build log"
+          aria-label={t('deploy.viewer.aria_label')}
           className={cx(
             'relative h-[60dvh] min-h-64 overflow-y-auto overscroll-contain bg-ink-950 py-2',
             'md:h-[68dvh]',
@@ -220,9 +219,8 @@ export function BuildLogViewer({
           {lines.length === 0 ? (
             <p className={cx('px-3 text-ink-400', LOG_TEXT_CLASSES)}>
               {ended
-                ? 'This deployment produced no build output. An app is deployed by handing '
-                  + 'its node a spec, so there is nothing to compile and nothing to print.'
-                : 'Waiting for the node to start printing…'}
+                ? t('deploy.viewer.empty_ended')
+                : t('deploy.viewer.empty_running')}
             </p>
           ) : (
             <div className="relative" style={{height: view.totalHeight}}>
@@ -237,7 +235,7 @@ export function BuildLogViewer({
             icon={<Icon name="chevronDown" className="size-4" />}
             className="absolute bottom-3 left-1/2 -translate-x-1/2 shadow-lg"
           >
-            Jump to latest
+            {t('deploy.viewer.jump_latest')}
           </Button>
         )}
       </div>

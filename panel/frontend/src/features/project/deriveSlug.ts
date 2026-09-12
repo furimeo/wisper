@@ -1,3 +1,5 @@
+import {t} from '@/i18n'
+
 /**
  * The address a name would produce, for showing the customer before they submit.
  *
@@ -38,8 +40,5 @@ export function deriveSlug(raw: string): string {
 
 /** The sentence shown under a slug input. Mirrors `Slug.rule(minimum)`. */
 export function slugRule(minimum: 1 | 2): string {
-  return (
-    `Use ${minimum} to ${MAX_LENGTH} characters: lower-case letters, digits and dashes, ` +
-    'starting with a letter or a digit.'
-  )
+  return t('project.create.slugRule', {min: minimum, max: MAX_LENGTH})
 }
