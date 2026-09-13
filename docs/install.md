@@ -15,11 +15,25 @@ This guide walks you through deploying **wisper** in production or staging with 
 
 ## 1. Setting Up the Panel (`wisper`)
 
-### 1.1 Prerequisites
-- **OS**: Linux (Ubuntu 22.04/24.04, Debian 12, etc.) or any OS with Java 21 LTS.
-- **Java Runtime**: OpenJDK 21 LTS (`apt install openjdk-21-jre-headless`).
-- **Database**: PostgreSQL 17 (or 15+).
-- **Domain & Reverse Proxy (Recommended)**: Panel should run behind your reverse proxy (Caddy, Nginx, or Cloudflare Tunnel) with a domain (e.g. `panel.example.com`).
+### 1.1 Install Prerequisites (Java 21 & PostgreSQL)
+
+Run the package installation command for your distribution:
+
+**Ubuntu 24.04 / Debian 12 / Ubuntu 22.04:**
+```bash
+sudo apt update
+# Install OpenJDK 21 headless runtime and PostgreSQL
+sudo apt install -y openjdk-21-jre-headless postgresql postgresql-contrib
+
+# Verify Java is installed at /usr/bin/java
+java -version
+```
+
+*(Optional: For RHEL / Rocky / AlmaLinux 9)*:
+```bash
+sudo dnf install -y java-21-openjdk-headless postgresql-server postgresql-contrib
+sudo postgresql-setup --initdb && sudo systemctl enable --now postgresql
+```
 
 ### 1.2 Prepare Database
 Create the database and database user:
