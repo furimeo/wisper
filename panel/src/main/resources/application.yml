@@ -123,6 +123,9 @@ wisper:
     cpu-headroom-percent: 15
     memory-headroom-percent: 15
     disk-headroom-percent: 20
+    # Where nodes fetch daemon binaries. Defaults to GitHub Releases latest CDN.
+    # Set empty to fall back to the panel's own /dist directory.
+    upgrade-download-base: ${WISPER_NODE_UPGRADE_DOWNLOAD_BASE:https://github.com/furimeo/wisper/releases/latest/download}
 
   crypto:
     # Every reversibly encrypted column is AES-256-GCM under one of these keys, and the

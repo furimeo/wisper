@@ -125,9 +125,10 @@ Deliberately not built: Kubernetes, DNS automation, billing, multi-region, SSH/S
 
 ## Documentation
 
-`docs/contracts/` holds the binding documents - the seams between panel and node, the HTTP
-and view conventions, the database invariants, the translation rules. They were written
-before the code and the code is held to them.
+- **[Installation & Deployment Guide](docs/install.md)** - step-by-step production setup for the panel, database, and remote nodes with GitHub Releases CDN integration.
+- `docs/contracts/` holds the binding documents - the seams between panel and node, the HTTP
+  and view conventions, the database invariants, the translation rules. They were written
+  before the code and the code is held to them.
 
 ## Licence
 

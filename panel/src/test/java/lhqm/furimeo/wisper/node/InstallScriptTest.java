@@ -53,6 +53,7 @@ class InstallScriptTest {
     void thePanelUrlAndDialEndpointAreTheOnesTheRequestArrivedOn() {
         assertThat(script.text())
                 .contains("PANEL_URL=\"https://panel.example\"")
+                .contains("DOWNLOAD_URL=\"https://panel.example/dist\"")
                 .contains("DIAL_ENDPOINT=\"panel.example:9090\"");
     }
 

@@ -66,7 +66,8 @@ public class InstallScriptController {
                     .body(message);
         }
 
-        InstallScript script = InstallScript.render(panelBaseUrl, dialEndpoint, published);
+        String downloadBaseUrl = settings.downloadBaseFor(panelBaseUrl);
+        InstallScript script = InstallScript.render(panelBaseUrl, downloadBaseUrl, dialEndpoint, published);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .header(CHECKSUM_HEADER, script.sha256())
