@@ -39,10 +39,12 @@ curl -fsSL -o wisper.jar https://github.com/furimeo/wisper/releases/latest/downl
 ```
 
 ### 1.4 Generate Encryption Key & Environment
-The panel uses AES-256-GCM to reversibly encrypt customer credentials and secrets. Generate a random 32-byte Base64 key and write it directly to `/etc/wisper/panel.env`:
+The panel uses AES-256-GCM to reversibly encrypt customer credentials and secrets.
+
+Run the following command directly in your terminal (bash/sh) to automatically generate a cryptographically random 32-byte key and initialize `/etc/wisper/panel.env`:
 
 ```bash
-# Generate panel.env with a freshly generated random AES-256 key
+# Run this entire block directly in your terminal:
 sudo bash -c "cat <<EOF > /etc/wisper/panel.env
 WISPER_DB_USER=wisper
 WISPER_DB_PASSWORD=your_db_password
@@ -53,6 +55,13 @@ WISPER_CRYPTO_KEY_1=$(openssl rand -base64 32)
 EOF"
 ```
 
+> **Note**: Do not copy the block above into a text editor (like `nano`) manually, because `$(openssl rand -base64 32)` needs to be evaluated by your shell.
+>
+> If you need to edit your database password or configuration later, edit the generated file:
+> ```bash
+> sudo nano /etc/wisper/panel.env
+> ```
+>
 > **Important**: Never commit or hardcode `WISPER_CRYPTO_KEY_1`. Back up this key securely; if lost, encrypted database secrets cannot be decrypted.
 
 ### 1.5 Configure Systemd Service
