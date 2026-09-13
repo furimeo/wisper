@@ -28,6 +28,17 @@ address or behind a tunnel with no public address at all; nodes reach it either 
 That last line is the point: the panel going down costs you the ability to manage the
 platform, not the ability to serve it.
 
+---
+
+## Quick Start & Installation
+
+Ready to deploy? Follow the step-by-step production installation guide:
+
+👉 **[Complete Installation & Deployment Guide (docs/install.md)](docs/install.md)**  
+Includes panel setup (Java 21 + PostgreSQL 17), remote node enrollment (`sasayaki` + Docker + gVisor), firewall rules, and offline installation instructions via GitHub Releases CDN.
+
+---
+
 ## What a customer gets
 
 - **Apps** - any container: Node, Python, Go, a bot, a worker, a cron job. Deployed from a
