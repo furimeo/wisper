@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import lhqm.furimeo.wisper.audit.AuditActor;
+import lhqm.furimeo.wisper.audit.AuditEntry;
 import lhqm.furimeo.wisper.audit.AuditTrail;
 
 /**
@@ -73,7 +74,10 @@ class CreateOrganizationTest {
         assertThat(saved.getValue().role()).isEqualTo(MemberRole.OWNER);
         assertThat(saved.getValue().accountId()).isEqualTo(OWNER);
         assertThat(saved.getValue().isAccepted()).isTrue();
-        verify(audit).record(any());
+        ArgumentCaptor<AuditEntry> entry = ArgumentCaptor.forClass(AuditEntry.class);
+        verify(audit).record(entry.capture());
+        assertThat(entry.getValue().organizationId()).isNull();
+        assertThat(entry.getValue().target().id()).isEqualTo(created.id());
     }
 
     @Test

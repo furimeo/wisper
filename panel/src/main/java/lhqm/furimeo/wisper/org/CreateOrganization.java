@@ -66,7 +66,7 @@ public class CreateOrganization {
 
         audit.record(AuditEntry.succeeded(actor, "organization.create",
                 AuditTarget.of("organization", organization.id(), organization.name()),
-                organization.id(), "Opened on plan " + plan.code()));
+                null, "Opened on plan " + plan.code()));
         return organization;
     }
 
