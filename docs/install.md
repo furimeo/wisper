@@ -15,24 +15,38 @@ This guide walks you through deploying **wisper** in production or staging with 
 
 ## 1. Setting Up the Panel (`wisper`)
 
-### 1.1 Install Prerequisites (Java 21 & PostgreSQL)
+### 1.1 Install Prerequisites (Java 21 & PostgreSQL 17)
 
-Run the package installation command for your distribution:
+wisper requires **Java 21 LTS** and **PostgreSQL 17** (or 15+ for `NULLS NOT DISTINCT` unique index support). On older distributions like Ubuntu 22.04, the default package manager installs PostgreSQL 14 which is unsupported. Use the official repository:
 
-**Ubuntu 24.04 / Debian 12 / Ubuntu 22.04:**
+**Ubuntu 24.04 / 22.04 / Debian 12:**
 ```bash
 sudo apt update
-# Install OpenJDK 21 headless runtime and PostgreSQL
-sudo apt install -y openjdk-21-jre-headless postgresql postgresql-contrib
+sudo apt install -y curl ca-certificates gnupg openjdk-21-jre-headless
 
-# Verify Java is installed at /usr/bin/java
+# Add official PostgreSQL APT repository for PostgreSQL 17
+sudo install -d /etc/apt/keyrings
+curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/keyrings/postgresql.gpg
+echo "deb [signed-by=/etc/apt/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+
+# Install PostgreSQL 17
+sudo apt update
+sudo apt install -y postgresql-17 postgresql-contrib-17
+sudo systemctl enable --now postgresql
+
+# Verify versions
 java -version
+psql --version
 ```
 
 *(Optional: For RHEL / Rocky / AlmaLinux 9)*:
 ```bash
-sudo dnf install -y java-21-openjdk-headless postgresql-server postgresql-contrib
-sudo postgresql-setup --initdb && sudo systemctl enable --now postgresql
+sudo dnf install -y java-21-openjdk-headless
+sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo dnf -qy module disable postgresql
+sudo dnf install -y postgresql17-server
+sudo /usr/pgsql-17/bin/postgresql-17-setup initdb
+sudo systemctl enable --now postgresql-17
 ```
 
 ### 1.2 Prepare Database
