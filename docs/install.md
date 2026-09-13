@@ -137,14 +137,46 @@ On first boot with an empty database, the panel runs migrations automatically, c
 
 On each server you want to run customer workloads:
 
-### 2.1 Prerequisites
-- **OS**: Linux (`x86_64` / `amd64` or `aarch64` / `arm64`).
-- **Docker Engine**: Installed and running (`systemctl status docker`).
-- **gVisor `runsc`** (Recommended for sandboxed tenant isolation):
-  ```bash
-  # Optional but recommended for workload isolation
-  sudo apt-get install -y runsc
-  ```
+### 2.1 Install Prerequisites (Docker Engine & gVisor)
+
+Node machines require **Docker Engine** (to run customer workload containers) and optionally **gVisor `runsc`** (for kernel sandbox isolation).
+
+**Install official Docker Engine (Ubuntu / Debian):**
+```bash
+# Set up Docker's official apt repository
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add repository to apt sources
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker Engine, CLI, containerd, and plugins
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
+
+# Verify Docker is running
+sudo docker version
+```
+
+*(Optional: Install gVisor `runsc` for secure tenant container sandboxing)*:
+```bash
+sudo apt-get install -y runsc || {
+  # Alternative if not present in distro apt:
+  ARCH=$(uname -m)
+  curl -fsSL https://storage.googleapis.com/gvisor/releases/release/latest/${ARCH}/runsc -o runsc
+  chmod a+rx runsc
+  sudo mv runsc /usr/local/bin/
+  sudo runsc install
+  sudo systemctl restart docker
+}
+```
 
 ### 2.2 Generate Node Token
 1. Go to **Admin ➔ Nodes** (`/admin/nodes`) on the panel web interface.
