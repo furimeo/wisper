@@ -30,11 +30,14 @@ public class ResumeNode {
 
     private final NodeRepository nodes;
     private final PublishNodeSpec publishNodeSpec;
+    private final RecordDisconnect recordDisconnect;
     private final AuditTrail audit;
 
-    public ResumeNode(NodeRepository nodes, PublishNodeSpec publishNodeSpec, AuditTrail audit) {
+    public ResumeNode(NodeRepository nodes, PublishNodeSpec publishNodeSpec,
+                      RecordDisconnect recordDisconnect, AuditTrail audit) {
         this.nodes = nodes;
         this.publishNodeSpec = publishNodeSpec;
+        this.recordDisconnect = recordDisconnect;
         this.audit = audit;
     }
 
@@ -51,6 +54,7 @@ public class ResumeNode {
         }
 
         Node resumed = nodes.save(node.resumed());
+        recordDisconnect.accept(nodeId, "operator resumed the node");
         audit.record(AuditEntry.succeeded(actor, "node.resume",
                 AuditTarget.of("node", nodeId, node.name()), null,
                 "Suspension lifted; the current spec was republished"));
