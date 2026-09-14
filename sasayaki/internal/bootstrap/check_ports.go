@@ -22,7 +22,22 @@ import (
 // Both listeners are held at once and released together. Taking them one at a time can
 // report :443 as free because the :80 listener from a moment ago is still in TIME_WAIT
 // and something else grabbed it in between.
+//
+// When preflight runs in an active daemon whose edge is already listening, ports 80 and
+// 443 are already bound by sasayaki itself; attempting to bind them would fail with
+// EADDRINUSE. In this case, the checks report passed.
 func checkPorts(_ context.Context, m *machine, facts *wisperpb.MachineFacts) []*wisperpb.DoctorCheck {
+	if m.edgeRunning {
+		facts.Port_80Free = true
+		facts.Port_443Free = true
+		return []*wisperpb.DoctorCheck{
+			passed("network.port80", "Port 80 available", severityRequired,
+				":80 is bound and served by the embedded edge"),
+			passed("network.port443", "Port 443 available", severityRequired,
+				":443 is bound and served by the embedded edge"),
+		}
+	}
+
 	held := make([]io.Closer, 0, 2)
 	defer func() {
 		for _, listener := range held {

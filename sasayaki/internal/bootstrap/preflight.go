@@ -35,6 +35,11 @@ type PreflightOptions struct {
 	// DockerHost overrides the socket. Empty means the environment's DOCKER_HOST, then
 	// the platform default.
 	DockerHost string
+
+	// EdgeRunning indicates whether the embedded edge proxy (Caddy) is already running and
+	// listening on ports 80 and 443 in this daemon process. When true, port checks treat
+	// :80 and :443 as bound and served by sasayaki edge rather than attempting to bind them.
+	EdgeRunning bool
 }
 
 // Preflight inspects this machine and changes nothing on it.

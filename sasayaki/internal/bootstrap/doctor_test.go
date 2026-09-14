@@ -190,6 +190,32 @@ func TestPortEightyBeingTakenFailsAndExplainsAcme(t *testing.T) {
 	}
 }
 
+func TestEdgeRunningTreatsPortsAsPassed(t *testing.T) {
+	host := healthyMachine(t)
+	host.edgeRunning = true
+	// Ensure that even if host.listen would fail, it is not called because edge is running.
+	host.listen = func(_, _ string) (io.Closer, error) {
+		return nil, errors.New("bind: address already in use")
+	}
+
+	report := preflight(context.Background(), host)
+
+	if !report.GetRequiredChecksPassed() {
+		t.Fatal("a machine with edge running must pass required checks")
+	}
+	port80 := checkNamed(t, report, "network.port80")
+	if port80.GetOutcome() != outcomePass {
+		t.Fatalf(":80 with edge running produced %v, want pass", port80.GetOutcome())
+	}
+	port443 := checkNamed(t, report, "network.port443")
+	if port443.GetOutcome() != outcomePass {
+		t.Fatalf(":443 with edge running produced %v, want pass", port443.GetOutcome())
+	}
+	if !report.GetMachine().GetPort_80Free() || !report.GetMachine().GetPort_443Free() {
+		t.Fatal("the facts claim ports are not free when edge is running")
+	}
+}
+
 // The check exists to separate "this machine cannot reach the panel" from "the panel
 // refused the token", which look identical from a terminal and send an operator to
 // different places (design section 7.2).

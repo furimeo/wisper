@@ -195,6 +195,35 @@ func TestHelloConnectsEvenWhenTheGenerationCannotBeRead(t *testing.T) {
 	}
 }
 
+func TestHelloPassesEdgeRunningToPreflight(t *testing.T) {
+	var capturedOptions bootstrap.PreflightOptions
+	describe := nodeDescription{
+		generations: fakeGenerations{generation: 1},
+		engine:      fakeContainment{},
+		capacity:    fakeSampler{snapshot: capacitySnapshot(&wisperpb.Capacity{})},
+		edgeRunning: func() bool { return true },
+		log:         discardLogger(),
+		preflight: func(_ context.Context, opts bootstrap.PreflightOptions) *wisperpb.DoctorReport {
+			capturedOptions = opts
+			return &wisperpb.DoctorReport{
+				Machine:              &wisperpb.MachineFacts{},
+				RequiredChecksPassed: true,
+			}
+		},
+	}
+
+	hello, err := describe.Hello(context.Background())
+	if err != nil {
+		t.Fatalf("describe: %v", err)
+	}
+	if !capturedOptions.EdgeRunning {
+		t.Errorf("expected EdgeRunning to be true in preflight options, got false")
+	}
+	if !hello.GetMachine().GetPort_80Free() || !hello.GetMachine().GetPort_443Free() {
+		t.Errorf("expected ports 80/443 to be marked free in machine facts when edge is running")
+	}
+}
+
 func capacitySnapshot(capacity *wisperpb.Capacity) stats.Snapshot {
 	return stats.Snapshot{At: noon, Capacity: capacity}
 }

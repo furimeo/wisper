@@ -48,6 +48,7 @@ type nodeDescription struct {
 	generations generations
 	engine      containment
 	capacity    capacities
+	edgeRunning func() bool
 	log         *slog.Logger
 
 	// stateDir and panelEndpoint are what a preflight run cannot work out for itself: which
@@ -69,9 +70,14 @@ var _ rpc.HelloSource = nodeDescription{}
 // rather than to the node, and rpc stamps them so that no implementation of this interface
 // can get them wrong.
 func (n nodeDescription) Hello(ctx context.Context) (*wisperpb.NodeHello, error) {
+	edgeRunning := false
+	if n.edgeRunning != nil {
+		edgeRunning = n.edgeRunning()
+	}
 	report := n.preflight(ctx, bootstrap.PreflightOptions{
-		StateDir: n.stateDir,
-		Panel:    n.panelEndpoint,
+		StateDir:    n.stateDir,
+		Panel:       n.panelEndpoint,
+		EdgeRunning: edgeRunning,
 	})
 
 	return &wisperpb.NodeHello{
@@ -146,6 +152,11 @@ func (n nodeDescription) machineFacts(ctx context.Context, facts *wisperpb.Machi
 	if total := capacity.GetDiskBytesTotal(); total > 0 {
 		facts.DiskTotalBytes = total
 		facts.DiskFreeBytes = total - capacity.GetDiskBytesUsed()
+	}
+
+	if n.edgeRunning != nil && n.edgeRunning() {
+		facts.Port_80Free = true
+		facts.Port_443Free = true
 	}
 
 	return facts

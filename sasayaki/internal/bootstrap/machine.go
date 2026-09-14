@@ -49,6 +49,9 @@ type machine struct {
 	// dockerHost overrides the socket, for a node whose engine is not in the usual place.
 	dockerHost string
 
+	// edgeRunning is true when the embedded Caddy edge is already serving :80 and :443.
+	edgeRunning bool
+
 	// uid is the effective user id. Nodes run as root: binding :80 needs it, and the DMI
 	// serials the machine fingerprint is derived from are 0400.
 	uid int
@@ -142,6 +145,7 @@ func newMachine(options PreflightOptions) *machine {
 		stateDir:    stateDir,
 		panel:       options.Panel,
 		dockerHost:  options.DockerHost,
+		edgeRunning: options.EdgeRunning,
 		uid:         os.Geteuid(),
 		now:         time.Now,
 		lookPath:    exec.LookPath,

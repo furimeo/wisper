@@ -38,6 +38,7 @@ func (n *node) openControl(ctx context.Context, credential rpc.Credential, errOu
 			generations:   n.store,
 			engine:        n.docker,
 			capacity:      n.sampler,
+			edgeRunning:   n.edge.Running,
 			log:           n.log,
 			stateDir:      n.settings.stateDir,
 			panelEndpoint: credential.Panel,

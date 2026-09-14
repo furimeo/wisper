@@ -137,6 +137,14 @@ func (e *Edge) Stop(context.Context) error {
 	return nil
 }
 
+// Running reports whether the embedded web server is currently listening.
+func (e *Edge) Running() bool {
+	if e == nil {
+		return false
+	}
+	return e.started.Load()
+}
+
 // prepareDirectories makes the three directories the edge writes into.
 //
 // 0700 on all of them. Certificate private keys are under the first one, and an access
