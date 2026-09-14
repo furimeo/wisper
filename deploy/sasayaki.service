@@ -60,15 +60,10 @@ ReadWritePaths=/var/lib/wisper /etc/wisper
 # this machine's addresses over a netlink route socket, and without it the node enrols
 # advertising no address at all.
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
-# Binding :80 and :443 is the only privileged thing the daemon does itself. Everything
-# that needs more - creating containers, mounting volumes, remapping users - is done by
-# the Docker engine, which is its own service with its own privileges.
-#
-# If a future package needs the daemon to do one of those directly, add the capability
-# here and say why in the commit: XFS project quotas need CAP_SYS_ADMIN, and changing the
-# owner of a file the daemon did not create needs CAP_CHOWN.
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE
-AmbientCapabilities=CAP_NET_BIND_SERVICE
+# Binding :80 and :443, and programming iptables egress filters on tenant bridges are
+# the privileged operations the daemon performs itself.
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_NET_ADMIN CAP_NET_RAW
+AmbientCapabilities=CAP_NET_BIND_SERVICE CAP_NET_ADMIN CAP_NET_RAW
 RestrictSUIDSGID=yes
 RestrictRealtime=yes
 RestrictNamespaces=yes

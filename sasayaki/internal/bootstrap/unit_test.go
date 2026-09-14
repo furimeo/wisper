@@ -26,7 +26,7 @@ func TestTheUnitCarriesEveryDirectiveTheDesignRequires(t *testing.T) {
 		"PrivateTmp=yes",
 		"ReadWritePaths=/var/lib/wisper /etc/wisper",
 		"RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX",
-		"CapabilityBoundingSet=CAP_NET_BIND_SERVICE",
+		"CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_NET_ADMIN CAP_NET_RAW",
 		"LimitNOFILE=",
 		"ExecStart=/usr/local/bin/sasayaki run --config /etc/wisper/node.json --state-dir /var/lib/wisper",
 		"[Install]",
