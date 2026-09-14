@@ -116,6 +116,17 @@ class DetectClonedNodeTest {
     }
 
     @Test
+    void reconnectingFromTheSameHostWithDifferentPortIsNotAClone() {
+        given(statuses.findRow(original)).willReturn(Optional.of(
+                NodeStatusFixture.connected(original, "198.51.100.7:50001", 7L)));
+
+        boolean cloned = detectClonedNode.atHandshake(original, "node-a", "198.51.100.7:50002");
+
+        assertThat(cloned).isFalse();
+        verify(suspendNode, never()).suspend(any(), any(), any(), any());
+    }
+
+    @Test
     void connectingWhileThePanelBelievesNothingIsOpenIsNormal() {
         given(statuses.findRow(original)).willReturn(Optional.of(
                 NodeStatusFixture.disconnected(original, java.time.Instant.now())));

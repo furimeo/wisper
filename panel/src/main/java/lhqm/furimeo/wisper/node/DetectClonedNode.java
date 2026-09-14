@@ -108,9 +108,9 @@ public class DetectClonedNode {
             return false;
         }
         String establishedAddress = current.get().remoteAddress();
-        if (establishedAddress == null || establishedAddress.equals(remoteAddress)) {
-            // Same address: an old stream the panel has not noticed dying yet. Normal
-            // through a tunnel, and the new stream replaces the old one.
+        if (establishedAddress == null || sameHost(establishedAddress, remoteAddress)) {
+            // Same host: an old stream the panel has not noticed dying yet. Normal
+            // through a tunnel or restart, and the new stream replaces the old one.
             return false;
         }
         String detail = "Node " + nodeName + " opened a second control stream from "
@@ -120,6 +120,25 @@ public class DetectClonedNode {
         suspendNode.suspend(AuditActor.node(nodeId, nodeName, remoteAddress), nodeId,
                 NodeSuspensionReason.DUPLICATE_FINGERPRINT, detail);
         return true;
+    }
+
+    static boolean sameHost(String first, String second) {
+        return hostOf(first).equals(hostOf(second));
+    }
+
+    static String hostOf(String address) {
+        if (address == null) {
+            return "";
+        }
+        String trimmed = address.trim();
+        if (trimmed.startsWith("[") && trimmed.contains("]:")) {
+            return trimmed.substring(1, trimmed.indexOf("]:"));
+        }
+        int colon = trimmed.lastIndexOf(':');
+        if (colon > 0 && !trimmed.contains("[")) {
+            return trimmed.substring(0, colon);
+        }
+        return trimmed;
     }
 
     /** Enough of a hash to recognise in a message, without pasting sixty-four characters. */
