@@ -1,5 +1,7 @@
 # wisper - engineering doctrine
 
+> **NVNMC Hosting Environment & Operations:** See [`agent.md`](agent.md) for NVNMC Hosting workspace instructions, production VM `192.168.1.149` (`wisper.nvnmc.cloud`), safety risk gates, and deployment workflows.
+
 Read this before you touch anything. It is short on purpose, and every rule in it
 exists because its absence cost this project's predecessor a rewrite.
 
