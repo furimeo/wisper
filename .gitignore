@@ -69,6 +69,7 @@ yarn-error.log*
 *.iws
 .vscode/
 *.code-workspace
+.claude/*.local.json
 .classpath
 .project
 .settings/
