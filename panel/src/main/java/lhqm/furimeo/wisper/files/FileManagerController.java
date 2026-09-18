@@ -1,5 +1,6 @@
 package lhqm.furimeo.wisper.files;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Controller;
@@ -10,7 +11,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lhqm.furimeo.wisper.node.NodeOffline;
+import lhqm.furimeo.wisper.service.LocateService;
+import lhqm.furimeo.wisper.service.ServiceLocation;
 import lhqm.furimeo.wisper.service.ServiceNotPlaced;
+import lhqm.furimeo.wisper.web.NotFoundException;
 
 /**
  * The file manager itself: {@code GET /services/{id}/files}.
@@ -32,13 +36,16 @@ import lhqm.furimeo.wisper.service.ServiceNotPlaced;
 public class FileManagerController {
 
     private final AuthorizeFileAccess authorize;
+    private final LocateService services;
     private final ListFileRoots roots;
     private final ListDirectoryEntries listing;
     private final FilesSettings settings;
 
-    public FileManagerController(AuthorizeFileAccess authorize, ListFileRoots roots,
-                                 ListDirectoryEntries listing, FilesSettings settings) {
+    public FileManagerController(AuthorizeFileAccess authorize, LocateService services,
+                                 ListFileRoots roots, ListDirectoryEntries listing,
+                                 FilesSettings settings) {
         this.authorize = authorize;
+        this.services = services;
         this.roots = roots;
         this.listing = listing;
         this.settings = settings;
@@ -50,7 +57,25 @@ public class FileManagerController {
                          @RequestParam(name = "path", required = false) String path,
                          @RequestParam(name = "hidden", defaultValue = "false") boolean hidden,
                          HttpServletRequest request, Model model) {
-        FileAccess access = authorize.toRead(serviceId, rootId, request);
+        FileAccess access;
+        try {
+            access = authorize.toRead(serviceId, rootId, request);
+        } catch (NotFoundException noStorage) {
+            ServiceLocation service = services.byId(serviceId);
+            model.addAttribute("service", service);
+            model.addAttribute("roots", List.of());
+            model.addAttribute("root", null);
+            model.addAttribute("path", "");
+            model.addAttribute("parentPath", "");
+            model.addAttribute("canWrite", false);
+            model.addAttribute("showHidden", hidden);
+            model.addAttribute("chunkSize", settings.chunkSizeBytes());
+            model.addAttribute("maxEditableBytes", settings.maxEditableBytes().toBytes());
+            model.addAttribute("page", DirectoryPage.empty(""));
+            model.addAttribute("unavailable", null);
+            model.addAttribute("hasStorage", false);
+            return "files/FileManager";
+        }
         RelativePath here = RelativePath.of(path);
 
         model.addAttribute("service", access.service());
@@ -60,10 +85,9 @@ public class FileManagerController {
         model.addAttribute("parentPath", here.parent().value());
         model.addAttribute("canWrite", access.canWrite());
         model.addAttribute("showHidden", hidden);
-        // The client needs both to size its uploads and to decide whether to offer the
-        // editor; sending them saves a second endpoint that exists only to report settings.
         model.addAttribute("chunkSize", settings.chunkSizeBytes());
         model.addAttribute("maxEditableBytes", settings.maxEditableBytes().toBytes());
+        model.addAttribute("hasStorage", true);
 
         String unavailable = null;
         try {

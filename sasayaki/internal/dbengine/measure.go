@@ -45,9 +45,22 @@ func (e *Engines) Statuses(ctx context.Context) ([]spec.DatabaseStatus, error) {
 	}
 
 	placed := place(desired, wanted, servers)
-	statuses := make([]spec.DatabaseStatus, 0, len(desired.Grants))
+	statuses := make([]spec.DatabaseStatus, 0, len(desired.Grants)+len(desired.Engines))
 	for _, grant := range desired.Grants {
 		statuses = append(statuses, e.measure(grant, placed, servers, at))
+	}
+	if len(desired.Grants) == 0 {
+		for _, engine := range desired.Engines {
+			seen := servers[engine.DataVolumeID]
+			statuses = append(statuses, spec.DatabaseStatus{
+				GrantID:       engine.DataVolumeID,
+				Engine:        engine.Kind,
+				Exists:        seen.Ready,
+				EngineVersion: seen.Version,
+				MeasuredAt:    at,
+				LastError:     seen.Detail,
+			})
+		}
 	}
 	return statuses, nil
 }

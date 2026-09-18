@@ -29,6 +29,15 @@ const PATHS: Record<FileCategory, string> = {
     'M7 3.5h7.5L19 8v11.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1ZM14 3.5V8h4.5M9.5 12.5h1.5v4H9.5v-4ZM13.5 12.5H15v4h-1.5v-4Z',
 }
 
+const COLOR_BY_CATEGORY: Record<FileCategory, string> = {
+  folder: 'text-amber-500 dark:text-amber-400',
+  archive: 'text-orange-500 dark:text-orange-400',
+  image: 'text-emerald-500 dark:text-emerald-400',
+  code: 'text-sky-500 dark:text-sky-400',
+  text: 'text-ink-500 dark:text-ink-400',
+  binary: 'text-ink-400 dark:text-ink-500',
+}
+
 export function FileGlyph({entry, className}: {entry: FileEntryView; className?: string}) {
   const category = categoryOf(entry)
   return (
@@ -38,7 +47,7 @@ export function FileGlyph({entry, className}: {entry: FileEntryView; className?:
       aria-hidden="true"
       className={cx(
         'size-5 shrink-0',
-        category === 'folder' ? 'text-accent-500' : 'text-ink-400 dark:text-ink-500',
+        COLOR_BY_CATEGORY[category],
         className,
       )}
     >

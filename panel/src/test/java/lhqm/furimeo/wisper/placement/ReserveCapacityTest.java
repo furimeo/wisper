@@ -95,12 +95,12 @@ class ReserveCapacityTest {
     }
 
     @Test
-    void theTightestNodeThatStillWorksWins() {
+    void theLeastLoadedNodeThatStillWorksWins() {
         given(capacities.candidates(anyList())).willReturn(List.of(
                 PlacementFixture.capacity(FIRST, "roomy", 4_000L, 0L, 0),
                 PlacementFixture.capacity(SECOND, "snug", 4_000L, 3_000L, 0)));
 
-        assertThat(reserve.bestFit(service, demand, List.of())).isEqualTo(SECOND);
+        assertThat(reserve.bestFit(service, demand, List.of())).isEqualTo(FIRST);
     }
 
     @Test
@@ -109,7 +109,7 @@ class ReserveCapacityTest {
                 PlacementFixture.capacity(FIRST, "roomy", 4_000L, 0L, 0),
                 PlacementFixture.capacity(SECOND, "snug", 4_000L, 3_000L, 0)));
 
-        assertThat(reserve.bestFit(service, demand, List.of(SECOND))).isEqualTo(FIRST);
+        assertThat(reserve.bestFit(service, demand, List.of(FIRST))).isEqualTo(SECOND);
     }
 
     @Test

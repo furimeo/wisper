@@ -1,6 +1,6 @@
 import {Head, usePage} from '@inertiajs/react'
 import type {ReactNode} from 'react'
-import {Suspense, lazy, useCallback, useRef, useState} from 'react'
+import {Suspense, lazy, useCallback, useEffect, useRef, useState} from 'react'
 
 import {Badge, Button, ButtonLink, Card, PageHeader, Spinner, useTheme} from '@/shell'
 import {t} from '@/i18n'
@@ -11,6 +11,7 @@ import type {ServiceLocation} from '@/features/service/serviceTypes'
 import {MobileKeyBar} from './MobileKeyBar'
 import {TerminalPasteDialog} from './TerminalPasteDialog'
 import type {TerminalHandle} from './TerminalScreen'
+import type {TerminalView} from './fileTypes'
 import {controlByteFor, terminalKeys, textForKey} from './terminalKeys'
 import {binaryToBytes, textToBytes} from './terminalCodec'
 import {useTerminalSession} from './useTerminalSession'
@@ -60,6 +61,19 @@ export default function TerminalPage() {
   const screen = useRef<TerminalHandle | null>(null)
   const [controlArmed, setControlArmed] = useState(false)
   const [pasting, setPasting] = useState(false)
+  const [detachedSessions, setDetachedSessions] = useState<TerminalView[]>([])
+
+  useEffect(() => {
+    if (!placed || !canOpen) {
+      return
+    }
+    fetch(`/services/${service.serviceId}/terminal/sessions`, {
+      headers: {Accept: 'application/json'},
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((sessions: TerminalView[]) => setDetachedSessions(sessions))
+      .catch(() => {})
+  }, [service.serviceId, placed, canOpen])
 
   const write = useCallback((bytes: Uint8Array) => {
     screen.current?.write(bytes)
@@ -188,14 +202,52 @@ export default function TerminalPage() {
               {t('terminal.page.end_session')}
             </Button>
           ) : (
-            <Button onClick={start} loading={shell.phase === 'opening'}>
-              {shell.phase === 'ended' || shell.phase === 'failed'
-                ? t('terminal.page.start_another_shell')
-                : t('terminal.page.start_shell')}
-            </Button>
+            <div className="flex items-center gap-2">
+              {detachedSessions.length > 0 && shell.phase === 'idle' && detachedSessions[0] ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    const target = detachedSessions[0]
+                    if (target) {
+                      setDetachedSessions([])
+                      shell.reattach(target)
+                    }
+                  }}
+                >
+                  {t('terminal.page.resume_session')}
+                </Button>
+              ) : null}
+              <Button onClick={start} loading={shell.phase === 'opening'}>
+                {shell.phase === 'ended' || shell.phase === 'failed'
+                  ? t('terminal.page.start_another_shell')
+                  : t('terminal.page.start_shell')}
+              </Button>
+            </div>
           )
         }
       />
+
+      {shell.phase === 'idle' && detachedSessions.length > 0 && detachedSessions[0] ? (
+        <div className="flex flex-col gap-2 rounded-xl border border-accent-500/30 bg-accent-50/50 p-4 dark:bg-accent-950/20 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-ink-800 dark:text-ink-200">
+            {t('terminal.page.detached_banner', {
+              id: detachedSessions[0].containerId.slice(0, 12),
+            })}
+          </p>
+          <Button
+            size="sm"
+            onClick={() => {
+              const target = detachedSessions[0]
+              if (target) {
+                setDetachedSessions([])
+                shell.reattach(target)
+              }
+            }}
+          >
+            {t('terminal.page.resume_session')}
+          </Button>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
         {shell.phase === 'live' ? (

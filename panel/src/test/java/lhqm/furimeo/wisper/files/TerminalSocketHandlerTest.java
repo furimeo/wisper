@@ -58,7 +58,7 @@ class TerminalSocketHandlerTest {
             DataSize.ofMegabytes(8), Duration.ofHours(24), 200, 1000, DataSize.ofMegabytes(2),
             Duration.ofMinutes(2), Duration.ofMinutes(30), Duration.ofMinutes(15),
             Duration.ofSeconds(20), Duration.ofMinutes(15), Duration.ofHours(4),
-            Duration.ofSeconds(20));
+            Duration.ofSeconds(20), Duration.ofMinutes(5));
 
     private final UUID serviceId = UUID.randomUUID();
     private final UUID accountId = UUID.randomUUID();
@@ -76,7 +76,7 @@ class TerminalSocketHandlerTest {
 
     @BeforeEach
     void openAShell() throws Exception {
-        handler = new TerminalSocketHandler(new CloseTerminal(live, audit));
+        handler = new TerminalSocketHandler(new CloseTerminal(live, audit), new DetachTerminal(live, audit));
         held = live.reserve(sessionId, serviceId, accountId);
         held.bind(pty);
         socket = connect("socket-1");
@@ -189,15 +189,15 @@ class TerminalSocketHandlerTest {
     }
 
     @Test
-    @DisplayName("a dropped socket releases the session rather than leaving a shell running")
+    @DisplayName("a dropped socket detaches the session into the detach window rather than killing it immediately")
     void aDroppedSocketReleasesTheSession() throws Exception {
         // 1006: no close frame. A closed tab, a phone that lost the network, a tunnel that
-        // went away - the common case, and the one that used to leave a process running as
-        // the customer's own application until the node's idle timeout.
+        // went away: keep the shell alive in the detach window so the customer can reconnect.
         handler.afterConnectionClosed(socket.session, CloseStatus.NO_CLOSE_FRAME);
 
-        assertThat(live.open()).isZero();
-        assertThat(pty.closed).isTrue();
+        assertThat(live.open()).isOne();
+        assertThat(live.isDetached(serviceId, sessionId)).isTrue();
+        assertThat(pty.closed).isFalse();
         then(audit).should().record(any(AuditEntry.class));
     }
 

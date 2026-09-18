@@ -1,3 +1,4 @@
+import {useState} from 'react'
 import {Head, usePage} from '@inertiajs/react'
 
 import {useI18n} from '@/i18n'
@@ -11,6 +12,7 @@ import type {ServiceView} from '@/features/service/serviceTypes'
 
 import {AddDomainForm} from './AddDomainForm'
 import {DomainCard} from './DomainCard'
+import {PortTunnelBanner} from './PortTunnelBanner'
 import type {DomainView} from './domainTypes'
 
 /**
@@ -42,6 +44,11 @@ export default function ServiceDomainsPage() {
   const writable = mayWrite(viewerRole)
   const primary = domains.find((domain) => domain.primary) ?? null
   const attention = domains.filter((domain) => domain.atRisk)
+
+  const [selectedPort, setSelectedPort] = useState<number | undefined>(undefined)
+  const showTunnelBanner =
+    service.containerPort !== null &&
+    !domains.some((domain) => domain.targetPort === service.containerPort)
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,7 +87,19 @@ export default function ServiceDomainsPage() {
         </Card>
       ) : null}
 
-      <AddDomainForm serviceId={service.id} allowance={allowance} writable={writable} />
+      {showTunnelBanner && writable ? (
+        <PortTunnelBanner
+          port={service.containerPort!}
+          onSelectPort={(port) => setSelectedPort(port)}
+        />
+      ) : null}
+
+      <AddDomainForm
+        serviceId={service.id}
+        allowance={allowance}
+        writable={writable}
+        defaultTargetPort={selectedPort}
+      />
 
       {domains.length === 0 ? (
         <Card padded={false}>

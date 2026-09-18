@@ -129,5 +129,13 @@
   "domain.dns.field.type": "Loại",
   "domain.dns.field.name": "Tên",
   "domain.dns.field.value": "Giá trị",
-  "domain.dns.field.copy": "Sao chép {field} của bản ghi"
+  "domain.dns.field.copy": "Sao chép {field} của bản ghi",
+  "domain.tunnel_banner.title": "Phát hiện port {port} đang mở",
+  "domain.tunnel_banner.description": "Dịch vụ của bạn đang lắng nghe trên port {port}. Gán tên miền tùy chỉnh để route lưu lượng truy cập trực tiếp vào port này.",
+  "domain.tunnel_banner.action": "Cấu hình tên miền cho port {port}",
+  "domain.dns_check.button": "Kiểm tra DNS",
+  "domain.dns_check.checking": "Đang kiểm tra...",
+  "domain.dns_check.success": "Đã trỏ tới {address}",
+  "domain.dns_check.mismatch": "Đang trỏ tới {found}, cần trỏ tới {expected}",
+  "domain.dns_check.unresolved": "Tên miền chưa được phân giải trong hệ thống DNS"
 }

@@ -46,12 +46,14 @@ public class RecordDatabaseStatus {
 
     private static final Logger log = LoggerFactory.getLogger(RecordDatabaseStatus.class);
 
+    private final DatabaseEngineRepository engines;
     private final ManagedDatabaseRepository databases;
     private final TrackDatabaseSize sizes;
     private final EnforceDatabaseQuota quotas;
 
-    public RecordDatabaseStatus(ManagedDatabaseRepository databases, TrackDatabaseSize sizes,
-                                EnforceDatabaseQuota quotas) {
+    public RecordDatabaseStatus(DatabaseEngineRepository engines, ManagedDatabaseRepository databases,
+                                TrackDatabaseSize sizes, EnforceDatabaseQuota quotas) {
+        this.engines = engines;
         this.databases = databases;
         this.sizes = sizes;
         this.quotas = quotas;
@@ -71,36 +73,48 @@ public class RecordDatabaseStatus {
         for (ManagedDatabase database : databases.findAllOnNode(nodeId)) {
             held.put(database.id(), database);
         }
+        Map<UUID, DatabaseEngine> enginesOnNode = new HashMap<>();
+        for (DatabaseEngine engine : engines.findByNodeIdOrderByPort(nodeId)) {
+            enginesOnNode.put(engine.id(), engine);
+        }
 
         Map<UUID, EngineReport> perEngine = new HashMap<>();
         List<Transition> transitions = new ArrayList<>();
         int ignored = 0;
 
         for (DatabaseStatus status : statuses) {
-            UUID databaseId = parseId(status.getId());
-            ManagedDatabase database = databaseId == null ? null : held.get(databaseId);
-            if (database == null) {
+            UUID id = parseId(status.getId());
+            if (id == null) {
                 ignored++;
                 continue;
             }
-            EngineReport report = perEngine.computeIfAbsent(database.databaseEngineId(),
-                    key -> new EngineReport());
-            report.add(status);
+            ManagedDatabase database = held.get(id);
+            if (database != null) {
+                EngineReport report = perEngine.computeIfAbsent(database.databaseEngineId(),
+                        key -> new EngineReport());
+                report.add(status);
 
-            if (!status.getExists()) {
-                // Nothing is written. The engine is down or the database is mid-restore,
-                // and both are "not visible right now" rather than "gone".
-                continue;
-            }
-            Instant measuredAt = status.hasMeasuredAt()
-                    ? toInstant(status.getMeasuredAt()) : observedAt;
-            if (!sizes.record(nodeId, databaseId, status.getSizeBytes(), measuredAt)) {
+                if (!status.getExists()) {
+                    // Nothing is written. The engine is down or the database is mid-restore,
+                    // and both are "not visible right now" rather than "gone".
+                    continue;
+                }
+                Instant measuredAt = status.hasMeasuredAt()
+                        ? toInstant(status.getMeasuredAt()) : observedAt;
+                if (!sizes.record(nodeId, id, status.getSizeBytes(), measuredAt)) {
+                    ignored++;
+                    continue;
+                }
+                if (needsQuotaDecision(database, status.getSizeBytes())) {
+                    transitions.add(new Transition(id, status.getOverQuota(),
+                            status.getSizeBytes()));
+                }
+            } else if (enginesOnNode.containsKey(id)) {
+                // Direct engine container status from node
+                EngineReport report = perEngine.computeIfAbsent(id, key -> new EngineReport());
+                report.add(status);
+            } else {
                 ignored++;
-                continue;
-            }
-            if (needsQuotaDecision(database, status.getSizeBytes())) {
-                transitions.add(new Transition(databaseId, status.getOverQuota(),
-                        status.getSizeBytes()));
             }
         }
 

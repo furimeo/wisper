@@ -64,10 +64,18 @@ export function UploadDropOverlay({
         event.dataTransfer.dropEffect = sink.current.disabled ? 'none' : 'copy'
       }
     }
-    const onDragLeave = () => {
-      depth.current = Math.max(0, depth.current - 1)
-      if (depth.current === 0) {
+    const onDragLeave = (event: DragEvent) => {
+      if (
+        event.relatedTarget === null ||
+        (event.relatedTarget instanceof Node && !document.documentElement.contains(event.relatedTarget))
+      ) {
+        depth.current = 0
         setDragging(false)
+      } else {
+        depth.current = Math.max(0, depth.current - 1)
+        if (depth.current === 0) {
+          setDragging(false)
+        }
       }
     }
     const onDrop = (event: DragEvent) => {

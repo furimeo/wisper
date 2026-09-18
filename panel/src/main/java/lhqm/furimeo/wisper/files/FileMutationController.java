@@ -33,6 +33,7 @@ public class FileMutationController {
 
     private final AuthorizeFileAccess authorize;
     private final CreateFolder createFolder;
+    private final CreateFile createFile;
     private final RenamePath rename;
     private final RemovePath remove;
     private final ChangeFileMode chmod;
@@ -42,11 +43,12 @@ public class FileMutationController {
     private final ReportFileFailure failures;
 
     public FileMutationController(AuthorizeFileAccess authorize, CreateFolder createFolder,
-                                  RenamePath rename, RemovePath remove, ChangeFileMode chmod,
-                                  CompressPaths compress, ExpandArchive expand,
+                                  CreateFile createFile, RenamePath rename, RemovePath remove,
+                                  ChangeFileMode chmod, CompressPaths compress, ExpandArchive expand,
                                   SaveFileContent save, ReportFileFailure failures) {
         this.authorize = authorize;
         this.createFolder = createFolder;
+        this.createFile = createFile;
         this.rename = rename;
         this.remove = remove;
         this.chmod = chmod;
@@ -54,6 +56,23 @@ public class FileMutationController {
         this.expand = expand;
         this.save = save;
         this.failures = failures;
+    }
+
+    @PostMapping("/services/{serviceId}/files/file")
+    public String file(@PathVariable UUID serviceId,
+                       @RequestParam(name = "rootId", required = false) String rootId,
+                       @RequestParam(name = "path", required = false) String path,
+                       @RequestParam(name = "name") String name,
+                       HttpServletRequest request, RedirectAttributes flash) {
+        FileAccess access = authorize.toRead(serviceId, rootId, request);
+        try {
+            authorize.requireWritable(access, "files.create_file");
+            createFile.in(access, RelativePath.of(path), name);
+            InertiaFlash.success(flash, "Created " + name + ".");
+        } catch (RuntimeException refused) {
+            failures.of(access, "files.create_file", refused, flash);
+        }
+        return back(serviceId, access.rootId(), forRedirect(path));
     }
 
     @PostMapping("/services/{serviceId}/files/folder")

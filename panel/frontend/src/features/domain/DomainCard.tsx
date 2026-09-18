@@ -4,6 +4,7 @@ import {useI18n} from '@/i18n'
 import {Badge, Button, ButtonLink, Card, Icon, cx} from '@/shell'
 
 import {CertificateStatus} from './CertificateStatus'
+import {DnsCheckButton} from './DnsCheckButton'
 import {DnsRecordInstructions} from './DnsRecordInstructions'
 import {DomainStateBadge} from './DomainStateBadge'
 import {checkDomainNow, makePrimaryDomain, removeDomain} from './domainActions'
@@ -74,9 +75,16 @@ export function DomainCard({
         </ButtonLink>
 
         {writable && !domain.verified ? (
-          <Button onClick={() => checkDomainNow(serviceId, domain)}>
-            {t('domain.card.action.checkNow')}
-          </Button>
+          <>
+            <Button onClick={() => checkDomainNow(serviceId, domain)}>
+              {t('domain.card.action.checkNow')}
+            </Button>
+            <DnsCheckButton
+              serviceId={serviceId}
+              domainId={domain.id}
+              nodeAddress={nodeAddress}
+            />
+          </>
         ) : null}
 
         <Button

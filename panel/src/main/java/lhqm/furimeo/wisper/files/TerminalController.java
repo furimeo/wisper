@@ -1,5 +1,6 @@
 package lhqm.furimeo.wisper.files;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
@@ -39,12 +40,14 @@ public class TerminalController {
 
     private final AuthorizeTerminal authorize;
     private final OpenTerminal open;
+    private final LiveTerminals live;
     private final FilesSettings settings;
 
     public TerminalController(AuthorizeTerminal authorize, OpenTerminal open,
-                              FilesSettings settings) {
+                              LiveTerminals live, FilesSettings settings) {
         this.authorize = authorize;
         this.open = open;
+        this.live = live;
         this.settings = settings;
     }
 
@@ -91,5 +94,20 @@ public class TerminalController {
                               HttpServletRequest request) {
         TerminalAccess access = authorize.forService(serviceId, "terminal.open", request);
         return open.open(access, columns, rows);
+    }
+
+    /**
+     * Lists detached sessions for this service that the caller may reconnect to.
+     */
+    @GetMapping(path = "/services/{serviceId}/terminal/sessions",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public List<TerminalView> detachedSessions(@PathVariable UUID serviceId,
+                                               HttpServletRequest request) {
+        TerminalAccess access = authorize.toView(serviceId, request);
+        if (!access.membership().canWrite()) {
+            return List.of();
+        }
+        return live.detachedForService(serviceId, access.membership().accountId());
     }
 }

@@ -3,12 +3,14 @@ package lhqm.furimeo.wisper.domain;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,13 +55,15 @@ public class DomainController {
     private final VerifyDomainOwnership verification;
     private final SetPrimaryDomain setPrimary;
     private final RemoveDomain removeDomain;
+    private final CheckDomainDns checkDomainDns;
     private final RecordRefusal refusals;
 
     public DomainController(ResolveCurrentAccount currentAccount, ResolveMembership memberships,
                             ServiceRepository services, ListServiceDomains listing,
                             QuotaGuard quotas, AddDomain addDomain,
                             VerifyDomainOwnership verification, SetPrimaryDomain setPrimary,
-                            RemoveDomain removeDomain, RecordRefusal refusals) {
+                            RemoveDomain removeDomain, CheckDomainDns checkDomainDns,
+                            RecordRefusal refusals) {
         this.currentAccount = currentAccount;
         this.memberships = memberships;
         this.services = services;
@@ -69,6 +73,7 @@ public class DomainController {
         this.verification = verification;
         this.setPrimary = setPrimary;
         this.removeDomain = removeDomain;
+        this.checkDomainDns = checkDomainDns;
         this.refusals = refusals;
     }
 
@@ -197,6 +202,16 @@ public class DomainController {
         } catch (NumberFormatException notANumber) {
             throw new RequestRejected("targetPort", "A port is a number between 1 and 65535.");
         }
+    }
+
+    @GetMapping(path = "/services/{serviceId}/domains/{domainId}/dns-check",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public CheckDomainDns.Result dnsCheck(@PathVariable UUID serviceId,
+                                          @PathVariable UUID domainId) {
+        AccountRef account = currentAccount.require();
+        memberships.forService(account.id(), serviceId);
+        return checkDomainDns.check(serviceId, domainId);
     }
 
     private static String back(UUID serviceId) {

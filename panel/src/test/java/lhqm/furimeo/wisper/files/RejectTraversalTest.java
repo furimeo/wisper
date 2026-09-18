@@ -71,7 +71,7 @@ class RejectTraversalTest {
             DataSize.ofMegabytes(8), Duration.ofHours(24), 200, 1000, DataSize.ofMegabytes(2),
             Duration.ofMinutes(2), Duration.ofMinutes(30), Duration.ofMinutes(15),
             Duration.ofSeconds(20), Duration.ofMinutes(15), Duration.ofHours(4),
-            Duration.ofSeconds(20));
+            Duration.ofSeconds(20), Duration.ofMinutes(5));
 
     @Mock
     private NodeFiles nodeFiles;

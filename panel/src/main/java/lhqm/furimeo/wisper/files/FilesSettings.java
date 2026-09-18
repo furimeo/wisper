@@ -62,7 +62,8 @@ public record FilesSettings(
         @DefaultValue("20s") Duration terminalAttachTimeout,
         @DefaultValue("15m") Duration terminalIdleTimeout,
         @DefaultValue("4h") Duration terminalMaxDuration,
-        @DefaultValue("20s") Duration terminalKeepAlive) {
+        @DefaultValue("20s") Duration terminalKeepAlive,
+        @DefaultValue("5m") Duration terminalDetachWindow) {
 
     public FilesSettings {
         requirePositive("upload-chunk-size", uploadChunkSize.toBytes());
@@ -94,6 +95,7 @@ public record FilesSettings(
         requirePositive("terminal-idle-timeout", terminalIdleTimeout);
         requirePositive("terminal-max-duration", terminalMaxDuration);
         requirePositive("terminal-keep-alive", terminalKeepAlive);
+        requirePositive("terminal-detach-window", terminalDetachWindow);
     }
 
     /** The chunk size as the int a buffer needs. */

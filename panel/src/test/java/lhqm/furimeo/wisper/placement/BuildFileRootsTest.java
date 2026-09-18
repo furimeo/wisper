@@ -70,9 +70,7 @@ class BuildFileRootsTest {
     }
 
     @Test
-    void aSitesReleasesTreeIsNeverWritable() {
-        // An edit made in place would be silently reverted by the next deployment, which is
-        // worse than not being able to make it.
+    void aSitesReleasesTreeIsAReadOnlyRoot() {
         FileRoot releases = roots.from(placed(site), Map.of()).get(1);
 
         assertThat(releases.getKind()).isEqualTo(FileRootKind.FILE_ROOT_KIND_SITE);

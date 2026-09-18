@@ -3,7 +3,6 @@ import {useCallback, useEffect, useMemo, useState} from 'react'
 
 import {
   Card,
-  Checkbox,
   ErrorState,
   PageHeader,
   Spinner,
@@ -17,11 +16,12 @@ import type {ServiceLocation} from '@/features/service/serviceTypes'
 
 import {FileActionMenu} from './FileActionMenu'
 import type {MenuAnchor} from './FileActionMenu'
+import {FileChromeBar} from './FileChromeBar'
 import {FileList} from './FileList'
 import {FileOverlays} from './FileOverlays'
-import {FilePathBar} from './FilePathBar'
 import {FileSelectionBar} from './FileSelectionBar'
-import {FileToolbar} from './FileToolbar'
+import {FileStatusBar} from './FileStatusBar'
+import {NoStorageState} from './NoStorageState'
 import {UploadDropOverlay} from './UploadDropOverlay'
 import {deletePaths} from './deletePaths'
 import {actionStates} from './fileActions'
@@ -39,7 +39,7 @@ import {useFileShortcuts} from './useFileShortcuts'
 type FileManagerProps = {
   service: ServiceLocation
   roots: FileRootRef[]
-  root: FileRootRef
+  root: FileRootRef | null
   path: string
   parentPath: string
   canWrite: boolean
@@ -48,6 +48,7 @@ type FileManagerProps = {
   maxEditableBytes: number
   page: DirectoryPage
   unavailable: string | null
+  hasStorage?: boolean
 }
 
 /**
@@ -94,8 +95,24 @@ type FileManagerProps = {
  */
 export default function FileManagerPage() {
   const props = usePage<FileManagerProps>().props
-  const {service, roots, root, path, parentPath, canWrite, showHidden, maxEditableBytes} = props
-  const {page, unavailable} = props
+  if (props.hasStorage === false || !props.root) {
+    return <NoStorageState service={props.service} />
+  }
+  return <FileManagerBrowser {...props} root={props.root} />
+}
+
+function FileManagerBrowser({
+  service,
+  roots,
+  root,
+  path,
+  parentPath,
+  canWrite,
+  showHidden,
+  maxEditableBytes,
+  page,
+  unavailable,
+}: FileManagerProps & {root: FileRootRef}) {
   const serviceId = service.serviceId
 
   const [loaded, setLoaded] = useState<FileEntryView[]>(page.entries)
@@ -218,6 +235,9 @@ export default function FileManagerPage() {
       case 'newFolder':
         setOverlay({kind: 'newFolder'})
         return
+      case 'newFile':
+        setOverlay({kind: 'newFile'})
+        return
       case 'upload':
         setOverlay({kind: 'upload'})
         return
@@ -318,55 +338,62 @@ export default function FileManagerPage() {
       <PageHeader
         title={t('files.page.title')}
         description={t('files.page.page_desc', {root: root.label, service: service.name})}
-        actions={
-          <FileToolbar states={states} onAction={(kind) => act(kind)} refreshing={refreshing} />
-        }
       />
 
-      <FilePathBar
-        serviceId={serviceId}
-        roots={roots}
-        root={root}
-        path={path}
-        parentPath={parentPath}
-        showHidden={showHidden}
-        editing={editingPath}
-        onEditingChange={setEditingPath}
-      />
-
-      <FileSelectionBar
-        states={states}
-        count={selection.count}
-        onAction={(kind) => act(kind)}
-        onClear={clear}
-      />
-
-      {uploads.busy && overlay.kind !== 'upload' ? (
-        <button
-          type="button"
-          onClick={() => setOverlay({kind: 'upload'})}
-          className="flex items-center gap-3 rounded-xl border border-accent-500/40 bg-accent-500/10 px-3 py-2 text-left text-sm text-ink-800 dark:text-ink-100"
-        >
-          <Spinner />
-          <span className="flex-1">
-            {t('files.page.uploading_bar', {
-              count: pendingUploads.length,
-              percent: uploads.percent === null ? '' : ` · ${uploads.percent}%`,
-            })}
-          </span>
-          <span className="text-xs text-ink-600 dark:text-ink-300">{t('files.page.uploading_bar_show')}</span>
-        </button>
-      ) : null}
-
-      {unavailable ? (
-        <ErrorState
-          title={t('files.page.error_title')}
-          description={unavailable}
-          onRetry={refresh}
-          retryLabel={t('files.page.retry_label')}
+      <Card padded={false} className="overflow-hidden shadow-sm">
+        <FileChromeBar
+          serviceId={serviceId}
+          roots={roots}
+          root={root}
+          path={path}
+          parentPath={parentPath}
+          showHidden={showHidden}
+          onShowHiddenChange={(checked) =>
+            router.visit(browseHref(serviceId, root.id, path, checked))
+          }
+          states={states}
+          onAction={(kind) => act(kind)}
+          refreshing={refreshing}
+          editing={editingPath}
+          onEditingChange={setEditingPath}
         />
-      ) : (
-        <Card padded={false}>
+
+        <FileSelectionBar
+          states={states}
+          count={selection.count}
+          onAction={(kind) => act(kind)}
+          onClear={clear}
+        />
+
+        {uploads.busy && overlay.kind !== 'upload' ? (
+          <button
+            type="button"
+            onClick={() => setOverlay({kind: 'upload'})}
+            className="flex items-center gap-3 border-b border-accent-500/40 bg-accent-500/10 px-3 py-2 text-left text-sm text-ink-800 dark:text-ink-100"
+          >
+            <Spinner />
+            <span className="flex-1">
+              {t('files.page.uploading_bar', {
+                count: pendingUploads.length,
+                percent: uploads.percent === null ? '' : ` · ${uploads.percent}%`,
+              })}
+            </span>
+            <span className="text-xs text-ink-600 dark:text-ink-300">
+              {t('files.page.uploading_bar_show')}
+            </span>
+          </button>
+        ) : null}
+
+        {unavailable ? (
+          <div className="p-6">
+            <ErrorState
+              title={t('files.page.error_title')}
+              description={unavailable}
+              onRetry={refresh}
+              retryLabel={t('files.page.retry_label')}
+            />
+          </div>
+        ) : (
           <FileList
             entries={entries}
             total={page.total}
@@ -382,25 +409,12 @@ export default function FileManagerPage() {
             loadError={loadError}
             onLoadMore={loadMore}
             showingHidden={showHidden}
-            readOnlyNote={
-              canWrite
-                ? null
-                : t('files.page.read_only_note')
-            }
+            readOnlyNote={canWrite ? null : t('files.page.read_only_note')}
           />
-        </Card>
-      )}
+        )}
 
-      <div className="px-1">
-        <Checkbox
-          label={t('files.page.show_dotfiles')}
-          checked={showHidden}
-          onChange={(event) =>
-            router.visit(browseHref(serviceId, root.id, path, event.target.checked))
-          }
-          hint={t('files.page.show_dotfiles_hint')}
-        />
-      </div>
+        <FileStatusBar entries={entries} selected={selection.entries} />
+      </Card>
 
       <FileActionMenu
         open={menu !== null}

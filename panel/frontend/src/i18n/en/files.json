@@ -248,5 +248,19 @@
   "terminal.paste_dialog.cancel": "Cancel",
   "terminal.paste_dialog.send": "Send",
   "terminal.paste_dialog.text_label": "Text",
-  "terminal.paste_dialog.text_hint": "Sent to the shell exactly as it is, including the line breaks."
+  "terminal.paste_dialog.text_hint": "Sent to the shell exactly as it is, including the line breaks.",
+  "files.actions.new_file": "New file",
+  "files.status.total_items": "{count} {count, plural, one {item} other {items}}",
+  "files.status.selected_items": "{count} selected ({bytes})",
+  "files.new_file.title": "New file",
+  "files.new_file.description": "Create an empty file in this folder.",
+  "files.new_file.name_label": "File name",
+  "files.new_file.name_placeholder": "index.html",
+  "files.new_file.cancel": "Cancel",
+  "files.new_file.create": "Create",
+  "files.page.no_storage_title": "No storage attached",
+  "files.page.no_storage_desc": "This service has no storage volumes mounted. Attach a volume in Storage settings to explore and manage files.",
+  "terminal.page.detached_banner": "A previous shell session is still active (container {id}). You can resume your session without losing background processes.",
+  "terminal.page.resume_session": "Resume session",
+  "files.page.manage_storage": "Manage storage"
 }

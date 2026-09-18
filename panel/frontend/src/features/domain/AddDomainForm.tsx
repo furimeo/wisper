@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 
 import {useI18n} from '@/i18n'
 import {Button, Card, Checkbox, Input, Select, useFormFields} from '@/shell'
@@ -23,21 +23,30 @@ export function AddDomainForm({
   serviceId,
   allowance,
   writable,
+  defaultTargetPort,
 }: {
   serviceId: string
   /** `DOMAIN`. The button says why it is off rather than accepting the tap and refusing. */
   allowance: QuotaAllowance
   writable: boolean
+  defaultTargetPort?: number
 }) {
   const {t} = useI18n()
   const form = useFormFields({
     hostname: '',
     tlsMode: 'ON_DEMAND',
-    targetPort: '',
+    targetPort: defaultTargetPort ? String(defaultTargetPort) : '',
     forceHttps: true,
     redirectToHostname: '',
   })
-  const [advanced, setAdvanced] = useState(false)
+  const [advanced, setAdvanced] = useState(defaultTargetPort !== undefined)
+
+  useEffect(() => {
+    if (defaultTargetPort !== undefined) {
+      form.set('targetPort', String(defaultTargetPort))
+      setAdvanced(true)
+    }
+  }, [defaultTargetPort])
 
   const spent = allowance.limit > 0 && allowance.used >= allowance.limit
   const disabled = !writable || spent

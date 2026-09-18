@@ -13,6 +13,7 @@ import type {FileEntryView} from './fileTypes'
 export type Overlay =
   | {kind: 'none'}
   | {kind: 'newFolder'}
+  | {kind: 'newFile'}
   | {kind: 'upload'}
   | {kind: 'rename'; entry: FileEntryView}
   | {kind: 'move'; entries: FileEntryView[]}

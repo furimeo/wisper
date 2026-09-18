@@ -28,6 +28,7 @@ export type FileActionKind =
   | 'edit'
   | 'download'
   | 'newFolder'
+  | 'newFile'
   | 'upload'
   | 'rename'
   | 'move'
@@ -100,6 +101,12 @@ export function actionStates(
     {
       kind: 'newFolder',
       label: t('files.actions.new_folder'),
+      disabledReason: write,
+      tone: 'neutral',
+    },
+    {
+      kind: 'newFile',
+      label: t('files.actions.new_file'),
       disabledReason: write,
       tone: 'neutral',
     },

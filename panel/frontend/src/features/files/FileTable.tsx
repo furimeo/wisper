@@ -52,7 +52,10 @@ export function FileTable({
     } else if (event.ctrlKey || event.metaKey) {
       selection.toggle(index)
     } else {
-      selection.select(index)
+      const entry = entries[index]
+      if (entry) {
+        onOpen(entry)
+      }
     }
   }
 

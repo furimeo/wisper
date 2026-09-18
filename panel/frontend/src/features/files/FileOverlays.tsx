@@ -7,6 +7,7 @@ import {ArchiveDialog} from './ArchiveDialog'
 import {DirectorySizeDialog} from './DirectorySizeDialog'
 import {ExtractDialog} from './ExtractDialog'
 import {MoveDialog} from './MoveDialog'
+import {CreateFileDialog} from './CreateFileDialog'
 import {NewFolderDialog} from './NewFolderDialog'
 import {PermissionsDialog} from './PermissionsDialog'
 import {RenameDialog} from './RenameDialog'
@@ -71,6 +72,13 @@ export function FileOverlays({
 
       <NewFolderDialog
         open={overlay.kind === 'newFolder'}
+        onClose={onClose}
+        serviceId={serviceId}
+        rootId={rootId}
+        path={path}
+      />
+      <CreateFileDialog
+        open={overlay.kind === 'newFile'}
         onClose={onClose}
         serviceId={serviceId}
         rootId={rootId}

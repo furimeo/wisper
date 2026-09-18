@@ -59,6 +59,8 @@ export interface TerminalSessionState {
   close: () => void
   /** Try the socket again now, rather than waiting out the backoff. */
   reconnect: () => void
+  /** Reattach to an existing detached session. */
+  reattach: (existing: TerminalView) => void
 }
 
 /** Enough for a slow network to come back, short enough that nobody watches a dead screen. */
@@ -343,6 +345,20 @@ export function useTerminalSession(
     setGeneration((previous) => previous + 1)
   }, [])
 
+  const reattach = useCallback((existing: TerminalView) => {
+    setPhase('live')
+    setError(null)
+    setExit(null)
+    setReady(null)
+    setReconnecting(false)
+    attempts.current = 0
+    finished.current = false
+    queued.current = []
+    queuedBytes.current = 0
+    setSession(existing)
+    setGeneration((previous) => previous + 1)
+  }, [])
+
   return {
     phase,
     session,
@@ -355,6 +371,7 @@ export function useTerminalSession(
     resize,
     close,
     reconnect,
+    reattach,
   }
 }
 

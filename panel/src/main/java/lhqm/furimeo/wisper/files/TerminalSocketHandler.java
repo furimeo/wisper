@@ -38,10 +38,14 @@ public class TerminalSocketHandler extends BinaryWebSocketHandler {
     /** The sink this connection reads through, so its close can tell whether it still owns it. */
     private static final String SINK = TerminalSocketHandler.class.getName() + ".sink";
 
-    private final CloseTerminal closeTerminal;
+    private static final String INTENTIONAL_EXIT = TerminalSocketHandler.class.getName() + ".exit";
 
-    public TerminalSocketHandler(CloseTerminal closeTerminal) {
+    private final CloseTerminal closeTerminal;
+    private final DetachTerminal detachTerminal;
+
+    public TerminalSocketHandler(CloseTerminal closeTerminal, DetachTerminal detachTerminal) {
         this.closeTerminal = closeTerminal;
+        this.detachTerminal = detachTerminal;
     }
 
     @Override
@@ -94,17 +98,9 @@ public class TerminalSocketHandler extends BinaryWebSocketHandler {
     }
 
     /**
-     * The connection went away, so the shell goes with it.
-     *
-     * <p>A PTY nobody is reading is a process running as the customer's own application,
-     * and the node's idle timeout is fifteen minutes away. Ending it here is what makes a
-     * closed tab - the common case, and one the browser reports by dropping the socket -
-     * cost nothing.
-     *
-     * <p>Unless a newer connection has taken the shell over. A phone that moves from
-     * wi-fi to mobile data leaves a socket the panel has not noticed is dead; the browser
-     * reconnects, {@code attach} replaces the sink, and when the old connection's close
-     * finally arrives it must not take the shell somebody is now typing into.
+     * The connection went away. If the exit was intentional (Exit button), the shell ends.
+     * If unintentional (network drop, tab crash, reload), the shell is detached temporarily
+     * to allow reconnect.
      */
     @Override
     public void afterConnectionClosed(WebSocketSession socket, CloseStatus status) {
@@ -115,13 +111,21 @@ public class TerminalSocketHandler extends BinaryWebSocketHandler {
                 || !held.isAttachedTo(attached)) {
             return;
         }
-        log.debug("Terminal socket {} closed with {}; ending session {}", socket.getId(), status,
-                held.sessionId());
-        closeTerminal.close(access(socket), held.sessionId());
+        boolean intentional = Boolean.TRUE.equals(socket.getAttributes().get(INTENTIONAL_EXIT));
+        if (intentional) {
+            log.debug("Terminal socket {} closed with {}; ending session {}", socket.getId(), status,
+                    held.sessionId());
+            closeTerminal.close(access(socket), held.sessionId());
+        } else {
+            log.debug("Terminal socket {} dropped with {}; detaching session {}", socket.getId(), status,
+                    held.sessionId());
+            detachTerminal.detach(access(socket), held.sessionId());
+        }
     }
 
     /** The customer pressed the button. Ends the PTY, then the connection carrying it. */
     private void end(WebSocketSession socket, LiveTerminals.Held held) {
+        socket.getAttributes().put(INTENTIONAL_EXIT, Boolean.TRUE);
         closeTerminal.close(access(socket), held.sessionId());
         close(socket, CloseStatus.NORMAL.withReason("the shell ended"));
     }

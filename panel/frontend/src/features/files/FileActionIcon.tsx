@@ -18,6 +18,8 @@ import type {FileActionKind} from './fileActions'
 const PATHS: Record<FileActionKind, string> = {
   newFolder:
     'M3.5 6.8A1.3 1.3 0 0 1 4.8 5.5h3.4l1.9 2.2h9.1a1.3 1.3 0 0 1 1.3 1.3v8.2a1.3 1.3 0 0 1-1.3 1.3H4.8a1.3 1.3 0 0 1-1.3-1.3V6.8ZM12 11v5M9.5 13.5h5',
+  newFile:
+    'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm-2 9v6m-3-3h6',
   upload: 'M12 16.5v-12M7.5 9 12 4.5 16.5 9M4.5 15.5v3a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-3',
   download:
     'M12 3.5v12M7.5 11l4.5 4.5L16.5 11M4.5 15.5v3a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-3',

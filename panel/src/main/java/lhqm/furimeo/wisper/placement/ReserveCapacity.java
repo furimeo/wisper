@@ -58,7 +58,7 @@ public class ReserveCapacity {
         }
 
         NodeCapacity chosen = null;
-        double chosenPressure = Double.NEGATIVE_INFINITY;
+        double chosenPressure = Double.POSITIVE_INFINITY;
         List<String> shortfalls = new ArrayList<>();
         for (NodeCapacity candidate : candidates) {
             if (!candidate.fits(demand)) {
@@ -66,7 +66,7 @@ public class ReserveCapacity {
                 continue;
             }
             double pressure = candidate.pressureWith(demand);
-            if (chosen == null || isTighter(pressure, chosenPressure, candidate, chosen)) {
+            if (chosen == null || isLeastLoaded(pressure, chosenPressure, candidate, chosen)) {
                 chosen = candidate;
                 chosenPressure = pressure;
             }
@@ -130,11 +130,11 @@ public class ReserveCapacity {
      * node id breaks the tie, so the same fleet and the same service always resolve to the
      * same machine.
      */
-    private static boolean isTighter(double pressure, double incumbentPressure,
-                                     NodeCapacity candidate, NodeCapacity incumbent) {
+    private static boolean isLeastLoaded(double pressure, double incumbentPressure,
+                                         NodeCapacity candidate, NodeCapacity incumbent) {
         int byPressure = Double.compare(pressure, incumbentPressure);
         if (byPressure != 0) {
-            return byPressure > 0;
+            return byPressure < 0;
         }
         return candidate.nodeId().compareTo(incumbent.nodeId()) < 0;
     }

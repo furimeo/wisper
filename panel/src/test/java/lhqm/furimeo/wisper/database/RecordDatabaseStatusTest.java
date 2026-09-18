@@ -45,6 +45,9 @@ class RecordDatabaseStatusTest {
     private static final long QUOTA = 1_000_000L;
 
     @Mock
+    private DatabaseEngineRepository engines;
+
+    @Mock
     private ManagedDatabaseRepository databases;
 
     @Mock

@@ -17,7 +17,7 @@ import type {FileActionKind, FileActionState} from './fileActions'
  * on each row, and `FileSelectionBar` when several rows are picked. A control that is
  * disabled nine times out of ten is a control that has taught you to look past it.
  */
-const CREATE: FileActionKind[] = ['newFolder', 'upload']
+const CREATE: FileActionKind[] = ['newFolder', 'newFile', 'upload']
 
 export function FileToolbar({
   states,

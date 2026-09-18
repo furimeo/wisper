@@ -123,30 +123,32 @@ export function ServiceFacts({service}: {service: ServiceView}) {
         </CardFacts>
       </Card>
 
-      <Card
-        title={t('service.facts.limits_and_isolation')}
-        description={t('service.facts.limits_description')}
-      >
-        <CardFacts>
-          <CardFact label={t('service.facts.cpu')}>
-            {t('service.facts.cpu_millicores', {
-              millicores: service.cpuMillicores,
-              cores: formatCores(service.cpuMillicores),
-            })}
-          </CardFact>
-          <CardFact label={t('service.facts.memory')}>
-            <ByteSize bytes={service.memoryBytes} />
-          </CardFact>
-          <CardFact label={t('service.facts.disk')}>
-            <ByteSize bytes={service.diskBytes} />
-          </CardFact>
-          <CardFact label={t('service.facts.processes')}>{service.pidsLimit}</CardFact>
-          <CardFact label={t('service.facts.isolation')}>{isolationLabel(service.runtimeIsolation)}</CardFact>
-          <CardFact label={t('service.facts.placement_tags')}>
-            {service.requiredTags.length > 0 ? service.requiredTags.join(', ') : t('service.facts.any_node')}
-          </CardFact>
-        </CardFacts>
-      </Card>
+      {service.site ? null : (
+        <Card
+          title={t('service.facts.limits_and_isolation')}
+          description={t('service.facts.limits_description')}
+        >
+          <CardFacts>
+            <CardFact label={t('service.facts.cpu')}>
+              {t('service.facts.cpu_millicores', {
+                millicores: service.cpuMillicores,
+                cores: formatCores(service.cpuMillicores),
+              })}
+            </CardFact>
+            <CardFact label={t('service.facts.memory')}>
+              <ByteSize bytes={service.memoryBytes} />
+            </CardFact>
+            <CardFact label={t('service.facts.disk')}>
+              <ByteSize bytes={service.diskBytes} />
+            </CardFact>
+            <CardFact label={t('service.facts.processes')}>{service.pidsLimit}</CardFact>
+            <CardFact label={t('service.facts.isolation')}>{isolationLabel(service.runtimeIsolation)}</CardFact>
+            <CardFact label={t('service.facts.placement_tags')}>
+              {service.requiredTags.length > 0 ? service.requiredTags.join(', ') : t('service.facts.any_node')}
+            </CardFact>
+          </CardFacts>
+        </Card>
+      )}
     </>
   )
 }

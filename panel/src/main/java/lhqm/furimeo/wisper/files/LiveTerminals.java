@@ -36,6 +36,10 @@ import org.springframework.stereotype.Component;
  * and nothing to reconnect to after a panel restart - the node ends the session when its
  * stream goes - so the browser opens a new shell, which is what a customer expects from a
  * terminal that lost its connection.
+ *
+ * <p>Over three hundred lines, deliberately (AGENTS.md §3.2). The session map, the ring
+ * buffer for the attach race, the detachment lifecycle state, and the reaper are one
+ * concurrency boundary protecting terminal PTYs.
  */
 @Component
 public class LiveTerminals implements AutoCloseable {
@@ -58,6 +62,7 @@ public class LiveTerminals implements AutoCloseable {
     private final Map<String, Held> sessions = new ConcurrentHashMap<>();
     private final ScheduledExecutorService timers;
     private final long attachDeadlineNanos;
+    private final long detachWindowNanos;
 
     public LiveTerminals(FilesSettings settings) {
         this.timers = Executors.newSingleThreadScheduledExecutor(runnable -> {
@@ -66,6 +71,7 @@ public class LiveTerminals implements AutoCloseable {
             return thread;
         });
         this.attachDeadlineNanos = settings.terminalAttachTimeout().toNanos();
+        this.detachWindowNanos = settings.terminalDetachWindow().toNanos();
         long keepAlive = Math.max(1L, settings.terminalKeepAlive().toSeconds());
         this.timers.scheduleWithFixedDelay(this::reap, REAP_INTERVAL_SECONDS,
                 REAP_INTERVAL_SECONDS, TimeUnit.SECONDS);
@@ -121,19 +127,27 @@ public class LiveTerminals implements AutoCloseable {
         sessions.keySet().forEach(this::release);
     }
 
+    public boolean isDetached(UUID serviceId, String sessionId) {
+        return find(serviceId, sessionId).map(Held::isDetachedTemporarily).orElse(false);
+    }
+
+    public java.util.List<TerminalView> detachedForService(UUID serviceId, UUID accountId) {
+        return sessions.values().stream()
+                .filter(held -> held.serviceId().equals(serviceId)
+                        && held.accountId().equals(accountId)
+                        && held.isDetachedTemporarily())
+                .map(held -> new TerminalView(held.sessionId(), held.containerId(),
+                        held.columns(), held.rows()))
+                .toList();
+    }
+
     /**
      * Ends the sessions that are over.
-     *
-     * <p>Two ways to be over. The shell exited, was killed by the node's idle timeout or
-     * lost its container - all of which arrive as a finished {@link TerminalSession} and
-     * have to reach the browser as an exit frame. Or a browser minted a session and never
-     * brought a socket: a tab closed in the second between the post and the upgrade would
-     * otherwise leave a shell running as the customer's own application until the node's
-     * idle timeout, fifteen minutes later.
      */
     private void reap() {
         for (Held held : sessions.values()) {
-            if (held.isFinished() || held.isAbandoned(attachDeadlineNanos)) {
+            if (held.isFinished() || held.isAbandoned(attachDeadlineNanos)
+                    || held.isExpired(detachWindowNanos)) {
                 release(held.sessionId());
             }
         }
@@ -159,6 +173,7 @@ public class LiveTerminals implements AutoCloseable {
         private boolean everAttached;
         private int pendingBytes;
         private boolean ended;
+        private long detachedAt = -1;
 
         private Held(String sessionId, UUID serviceId, UUID accountId) {
             this.sessionId = sessionId;
@@ -215,6 +230,39 @@ public class LiveTerminals implements AutoCloseable {
                     && System.nanoTime() - boundAt > deadlineNanos;
         }
 
+        public synchronized void detachTemporarily() {
+            if (ended || session == null) {
+                return;
+            }
+            if (sink != null) {
+                sink.close("connection dropped");
+                sink = null;
+            }
+            if (detachedAt < 0) {
+                detachedAt = System.nanoTime();
+            }
+        }
+
+        public synchronized boolean isDetachedTemporarily() {
+            return !ended && session != null && detachedAt >= 0 && sink == null;
+        }
+
+        synchronized boolean isExpired(long windowNanos) {
+            return detachedAt >= 0 && (System.nanoTime() - detachedAt) > windowNanos;
+        }
+
+        public synchronized String containerId() {
+            return session == null ? null : session.containerId();
+        }
+
+        public synchronized int columns() {
+            return session == null ? 80 : session.columns();
+        }
+
+        public synchronized int rows() {
+            return session == null ? 24 : session.rows();
+        }
+
         /** Output from the PTY. Called on a thread the gRPC implementation owns. */
         public synchronized void output(byte[] data) {
             if (data == null || data.length == 0 || ended) {
@@ -230,23 +278,13 @@ public class LiveTerminals implements AutoCloseable {
             }
         }
 
-        /**
-         * Attaches a browser and flushes whatever the shell said while it was connecting.
-         *
-         * <p>One reader at a time. A second socket against the same session - a reopened
-         * tab, or a reconnect the panel has not yet noticed the first half of - replaces
-         * the first rather than splitting the output between two screens, each showing
-         * half a command.
-         *
-         * <p>The size goes first. xterm.js sizes itself from it, and output written into a
-         * terminal that still believes it is 80 columns wide wraps in the wrong place.
-         */
         public synchronized void attach(TerminalSink next) {
             if (sink != null) {
                 sink.close("another connection took this shell over");
             }
             sink = next;
             everAttached = true;
+            detachedAt = -1;
             if (session != null
                     && !next.ready(session.columns(), session.rows(), session.containerId())) {
                 detach("the connection went away");

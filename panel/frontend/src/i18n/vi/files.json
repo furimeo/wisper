@@ -248,5 +248,19 @@
   "terminal.paste_dialog.cancel": "Hủy",
   "terminal.paste_dialog.send": "Gửi",
   "terminal.paste_dialog.text_label": "Văn bản",
-  "terminal.paste_dialog.text_hint": "Được gửi nguyên văn tới shell, bao gồm cả các ký tự xuống dòng."
+  "terminal.paste_dialog.text_hint": "Được gửi nguyên văn tới shell, bao gồm cả các ký tự xuống dòng.",
+  "files.actions.new_file": "Tệp mới",
+  "files.status.total_items": "{count} mục",
+  "files.status.selected_items": "Đã chọn {count} ({bytes})",
+  "files.new_file.title": "Tệp mới",
+  "files.new_file.description": "Tạo một tệp trống trong thư mục này.",
+  "files.new_file.name_label": "Tên tệp",
+  "files.new_file.name_placeholder": "index.html",
+  "files.new_file.cancel": "Hủy",
+  "files.new_file.create": "Tạo tệp",
+  "files.page.no_storage_title": "Chưa gắn ổ lưu trữ",
+  "files.page.no_storage_desc": "Dịch vụ này chưa được gắn ổ đĩa lưu trữ nào. Hãy gắn volume trong cài đặt Storage để quản lý tệp tin.",
+  "terminal.page.detached_banner": "Phiên terminal trước vẫn đang chạy trong nền (container {id}). Bạn có thể tiếp tục phiên mà không làm gián đoạn tiến trình.",
+  "terminal.page.resume_session": "Tiếp tục phiên",
+  "files.page.manage_storage": "Quản lý ổ lưu trữ"
 }

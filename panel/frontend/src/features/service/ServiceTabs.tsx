@@ -6,15 +6,18 @@ import type {ServiceCounts} from './serviceTypes'
 
 export function ServiceTabs({
   serviceId,
+  kind,
   counts,
 }: {
   serviceId: string
+  kind?: 'APP' | 'SITE' | string
   /** Badges on the three tabs whose contents somebody counts. Only the overview has them. */
   counts?: ServiceCounts
 }) {
   const environment = counts ? counts.envVars + counts.secrets : null
+  const isSite = kind === 'SITE'
 
-  const items: TabItem[] = [
+  const allItems: TabItem[] = [
     {href: `/services/${serviceId}`, label: t('service.tabs.overview')},
     {href: `/services/${serviceId}/deployments`, label: t('service.tabs.deployments')},
     {
@@ -39,6 +42,16 @@ export function ServiceTabs({
     {href: `/services/${serviceId}/metrics`, label: t('service.tabs.metrics')},
     {href: `/services/${serviceId}/settings`, label: t('service.tabs.settings')},
   ]
+
+  const items = isSite
+    ? allItems.filter(
+        (tab) =>
+          !tab.href?.endsWith('/environment') &&
+          !tab.href?.endsWith('/volumes') &&
+          !tab.href?.endsWith('/tasks') &&
+          !tab.href?.endsWith('/terminal'),
+      )
+    : allItems
 
   return <Tabs label={t('service.tabs.sections_label')} items={items} />
 }

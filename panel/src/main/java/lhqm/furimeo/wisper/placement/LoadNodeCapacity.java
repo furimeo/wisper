@@ -77,6 +77,9 @@ public class LoadNodeCapacity {
                      GROUP BY de.node_id) e ON e.node_id = n.id
              WHERE n.schedulable
                AND n.lifecycle = 'ENROLLED'
+               AND (ns.connection_state IS NULL OR ns.connection_state = 'CONNECTED')
+               AND (ns.docker_healthy IS NULL OR ns.docker_healthy = true)
+               AND (ns.last_heartbeat_at IS NULL OR ns.last_heartbeat_at >= NOW() - INTERVAL '90 seconds')
             """;
 
     private static final String ORDER = " ORDER BY n.name, n.id";

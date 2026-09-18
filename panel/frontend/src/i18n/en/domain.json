@@ -138,5 +138,13 @@
   "domain.dns.field.type": "Type",
   "domain.dns.field.name": "Name",
   "domain.dns.field.value": "Value",
-  "domain.dns.field.copy": "Copy the record {field}"
+  "domain.dns.field.copy": "Copy the record {field}",
+  "domain.tunnel_banner.title": "Detected open port {port}",
+  "domain.tunnel_banner.description": "Your service is listening on port {port}. Map a custom domain to tunnel external traffic directly to this container port.",
+  "domain.tunnel_banner.action": "Configure domain for port {port}",
+  "domain.dns_check.button": "Check DNS",
+  "domain.dns_check.checking": "Resolving...",
+  "domain.dns_check.success": "Resolves to {address}",
+  "domain.dns_check.mismatch": "Resolves to {found}, expected {expected}",
+  "domain.dns_check.unresolved": "Domain does not resolve in DNS yet"
 }

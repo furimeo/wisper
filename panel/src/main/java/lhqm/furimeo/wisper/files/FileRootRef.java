@@ -64,6 +64,6 @@ public record FileRootRef(String id, FileRootKind kind, String label, boolean wr
      * sides.
      */
     public static FileRootRef site(UUID serviceId, String label, long quotaBytes) {
-        return new FileRootRef(serviceId.toString(), FileRootKind.SITE, label, false, quotaBytes);
+        return new FileRootRef(serviceId.toString(), FileRootKind.SITE, label, true, quotaBytes);
     }
 }
