@@ -49,6 +49,11 @@ export type ServiceFormValues = {
 
   runtimeIsolation: string
   isolationReason: string
+
+  createVolume: boolean
+  volumeName: string
+  volumeMountPath: string
+  volumeSizeMib: string
 }
 
 /** The new-service form, seeded from the draft the use-case would have applied itself. */
@@ -85,6 +90,11 @@ export function valuesFromDraft(draft: ServiceDraft): ServiceFormValues {
 
     runtimeIsolation: draft.runtimeIsolation,
     isolationReason: draft.isolationReason ?? '',
+
+    createVolume: true,
+    volumeName: 'data',
+    volumeMountPath: draft.workingDir || '/app',
+    volumeSizeMib: '5120',
   }
 }
 
@@ -128,5 +138,10 @@ export function valuesFromService(service: ServiceView): ServiceFormValues {
 
     runtimeIsolation: service.runtimeIsolation,
     isolationReason: service.isolationReason ?? '',
+
+    createVolume: false,
+    volumeName: '',
+    volumeMountPath: '',
+    volumeSizeMib: '',
   }
 }

@@ -90,6 +90,42 @@ export default function ServiceOverviewPage() {
 
       <IsolationWarning service={service} />
 
+      {service.app && service.command?.includes('sleep infinity') ? (
+        <Card title={t('service.overview.bot_mode_title')}>
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-ink-700 dark:text-ink-300">
+              {t('service.overview.bot_mode_desc')}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <ButtonLink
+                href={`/services/${service.id}/files`}
+                variant="secondary"
+                size="sm"
+                icon={<Icon name="projects" />}
+              >
+                {t('service.overview.bot_mode_files_btn')}
+              </ButtonLink>
+              <ButtonLink
+                href={`/services/${service.id}/terminal`}
+                variant="secondary"
+                size="sm"
+                icon={<Icon name="monitor" />}
+              >
+                {t('service.overview.bot_mode_terminal_btn')}
+              </ButtonLink>
+              <ButtonLink
+                href={`/services/${service.id}/settings`}
+                variant="secondary"
+                size="sm"
+                icon={<Icon name="settings" />}
+              >
+                {t('service.overview.bot_mode_settings_btn')}
+              </ButtonLink>
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
       <ServiceStatePanel service={service} status={status} writable={writable} />
 
       <ServiceFacts service={service} />

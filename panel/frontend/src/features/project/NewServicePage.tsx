@@ -1,7 +1,7 @@
 import {Head, usePage} from '@inertiajs/react'
 
 import {t} from '@/i18n'
-import {Button, ButtonLink, Card, Input, PageHeader, mayWrite, useFormFields} from '@/shell'
+import {Button, ButtonLink, Card, Checkbox, Input, PageHeader, mayWrite, useFormFields} from '@/shell'
 import type {MemberRole} from '@/shell'
 
 import {QuotaMeter} from '@/features/org/QuotaMeter'
@@ -143,6 +143,44 @@ export default function NewServicePage() {
               restartPolicies={restartPolicies}
               disabled={!writable}
             />
+          </Card>
+        ) : null}
+
+        {kind === 'APP' ? (
+          <Card
+            title={t('project.newService.storageTitle')}
+            description={t('project.newService.storageDesc')}
+          >
+            <div className="flex flex-col gap-4">
+              <Checkbox
+                {...form.check('createVolume')}
+                label={t('project.newService.createVolumeLabel')}
+                disabled={!writable}
+              />
+              {form.data.createVolume ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Input
+                    {...form.bind('volumeMountPath')}
+                    label={t('project.newService.volumeMountPath')}
+                    required
+                    disabled={!writable}
+                    placeholder="/app"
+                    hint={t('project.newService.volumeMountPathHint')}
+                  />
+                  <Input
+                    {...form.bind('volumeSizeMib')}
+                    label={t('project.newService.volumeSizeMib')}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={4194304}
+                    required
+                    disabled={!writable}
+                    hint={t('project.newService.volumeSizeHint')}
+                  />
+                </div>
+              ) : null}
+            </div>
           </Card>
         ) : null}
 

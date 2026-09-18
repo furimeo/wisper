@@ -97,6 +97,7 @@ public class VolumeController {
                          @RequestParam(name = "readOnly", defaultValue = "false") boolean readOnly,
                          @RequestParam(name = "backupEnabled", defaultValue = "true")
                          boolean backupEnabled,
+                         @RequestParam(name = "returnTo", required = false) String returnTo,
                          HttpServletRequest request, RedirectAttributes flash) {
         AccountRef account = currentAccount.require();
         AuditActor actor = AuditActor.account(account.id(), account.email(), request);
@@ -109,6 +110,9 @@ public class VolumeController {
         } catch (RequestRejected | QuotaExceeded | PermissionDenied refused) {
             refusals.of(actor, "volume.create", target(serviceId), membership.organizationId(),
                     refused, flash);
+        }
+        if (returnTo != null && returnTo.startsWith("/services/" + serviceId)) {
+            return "redirect:" + returnTo;
         }
         return back(serviceId);
     }

@@ -262,5 +262,7 @@
   "files.page.no_storage_desc": "This service has no storage volumes mounted. Attach a volume in Storage settings to explore and manage files.",
   "terminal.page.detached_banner": "A previous shell session is still active (container {id}). You can resume your session without losing background processes.",
   "terminal.page.resume_session": "Resume session",
-  "files.page.manage_storage": "Manage storage"
+  "files.page.manage_storage": "Manage storage",
+  "files.page.quick_init_storage": "Initialize Storage (/app · 5 GiB)",
+  "files.page.quick_init_desc": "Create a default 5 GiB data volume mounted at /app so you can upload files and code immediately."
 }

@@ -262,5 +262,7 @@
   "files.page.no_storage_desc": "Dịch vụ này chưa được gắn ổ đĩa lưu trữ nào. Hãy gắn volume trong cài đặt Storage để quản lý tệp tin.",
   "terminal.page.detached_banner": "Phiên terminal trước vẫn đang chạy trong nền (container {id}). Bạn có thể tiếp tục phiên mà không làm gián đoạn tiến trình.",
   "terminal.page.resume_session": "Tiếp tục phiên",
-  "files.page.manage_storage": "Quản lý ổ lưu trữ"
+  "files.page.manage_storage": "Quản lý ổ lưu trữ",
+  "files.page.quick_init_storage": "Khởi tạo nhanh ổ lưu trữ (/app · 5 GiB)",
+  "files.page.quick_init_desc": "Tạo ổ đĩa dữ liệu mặc định 5 GiB gắn tại /app để bạn có thể tải lên tệp tin và mã nguồn ngay lập tức."
 }

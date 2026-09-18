@@ -82,6 +82,13 @@
   "project.newService.sourceDescApp": "Tùy chọn đối với ứng dụng: cách mã nguồn của bạn được đóng gói vào image runtime của ngôn ngữ.",
   "project.newService.limitsTitle": "Hạn mức tài nguyên",
   "project.newService.limitsDesc": "Được thực thi bởi node thông qua cgroups.",
+  "project.newService.storageTitle": "Ổ đĩa lưu trữ",
+  "project.newService.storageDesc": "Gắn ổ đĩa dữ liệu để tệp tin tải lên, mã nguồn và cơ sở dữ liệu không bị mất sau khi khởi động lại.",
+  "project.newService.createVolumeLabel": "Gắn ổ đĩa lưu trữ cho ứng dụng (Khuyến nghị)",
+  "project.newService.volumeMountPath": "Đường dẫn gắn ổ đĩa (Mount path)",
+  "project.newService.volumeMountPathHint": "Vị trí thư mục xuất hiện trong container. Mặc định theo thư mục làm việc (ví dụ: /app hoặc /root).",
+  "project.newService.volumeSizeMib": "Dung lượng ổ đĩa (MiB)",
+  "project.newService.volumeSizeHint": "Hạn mức dung lượng cho ổ đĩa này. 5120 MiB = 5 GiB.",
   "project.newService.isolationTitle": "Mức độ cách ly",
   "project.newService.submit": "Tạo dịch vụ",
   "project.newService.cancel": "Hủy"

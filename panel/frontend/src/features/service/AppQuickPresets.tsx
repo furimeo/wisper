@@ -40,29 +40,27 @@ export const APP_QUICK_PRESETS: QuickPreset[] = [
     badge: 'Lightweight',
   },
   {
+    id: 'python-bot',
+    label: 'Python Bot / Worker',
+    image: 'python:3.12-slim',
+    command: 'sleep infinity',
+    workingDir: '/app',
+    badge: 'Bot / Worker',
+  },
+  {
+    id: 'node-bot',
+    label: 'Node.js Bot / Worker',
+    image: 'node:22-alpine',
+    command: 'sleep infinity',
+    workingDir: '/app',
+    badge: 'Bot / Worker',
+  },
+  {
     id: 'nginx',
     label: 'Nginx Web Server',
     image: 'nginx:alpine',
     port: '80',
     workingDir: '/usr/share/nginx/html',
-    badge: 'Web App',
-  },
-  {
-    id: 'node',
-    label: 'Node.js 22 Runtime',
-    image: 'node:22-alpine',
-    command: 'node server.js',
-    port: '3000',
-    workingDir: '/app',
-    badge: 'Web App',
-  },
-  {
-    id: 'python',
-    label: 'Python 3.12 Runtime',
-    image: 'python:3.12-slim',
-    command: 'python -m http.server 8000',
-    port: '8000',
-    workingDir: '/app',
     badge: 'Web App',
   },
 ]
@@ -81,6 +79,7 @@ export function AppQuickPresets({
       command: preset.command ?? '',
       containerPort: preset.port ?? form.data.containerPort,
       workingDir: preset.workingDir ?? form.data.workingDir,
+      volumeMountPath: preset.workingDir ?? form.data.volumeMountPath,
     })
   }
 

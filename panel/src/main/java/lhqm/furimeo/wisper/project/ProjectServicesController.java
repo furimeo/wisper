@@ -32,6 +32,7 @@ import lhqm.furimeo.wisper.org.ResolveMembership;
 import lhqm.furimeo.wisper.service.BuildPreset;
 import lhqm.furimeo.wisper.service.CommandLine;
 import lhqm.furimeo.wisper.service.CreateService;
+import lhqm.furimeo.wisper.service.CreateVolume;
 import lhqm.furimeo.wisper.service.RestartPolicy;
 import lhqm.furimeo.wisper.service.RuntimeIsolation;
 import lhqm.furimeo.wisper.service.ServiceDraft;
@@ -62,17 +63,20 @@ public class ProjectServicesController {
     private final ProjectRepository projects;
     private final QuotaGuard quotas;
     private final CreateService createService;
+    private final CreateVolume createVolume;
     private final RecordRefusal refusals;
 
     public ProjectServicesController(ResolveCurrentAccount currentAccount,
                                      ResolveMembership memberships, ProjectRepository projects,
                                      QuotaGuard quotas, CreateService createService,
+                                     CreateVolume createVolume,
                                      RecordRefusal refusals) {
         this.currentAccount = currentAccount;
         this.memberships = memberships;
         this.projects = projects;
         this.quotas = quotas;
         this.createService = createService;
+        this.createVolume = createVolume;
         this.refusals = refusals;
     }
 
@@ -123,6 +127,19 @@ public class ProjectServicesController {
         }
         try {
             var created = createService.create(actor, membership, projectId, form.toDraft());
+            if (Boolean.TRUE.equals(form.createVolume()) && created.isApp()) {
+                String vName = form.volumeName() == null || form.volumeName().isBlank()
+                        ? "data"
+                        : form.volumeName().strip();
+                String vMount = form.volumeMountPath() == null || form.volumeMountPath().isBlank()
+                        ? (form.workingDir() == null || form.workingDir().isBlank() ? "/app" : form.workingDir().strip())
+                        : form.volumeMountPath().strip();
+                long vSizeMib = form.volumeSizeMib() == null || form.volumeSizeMib() <= 0
+                        ? 5120L
+                        : form.volumeSizeMib();
+                createVolume.create(actor, membership, created.id(), vName, vMount,
+                        vSizeMib * 1_048_576L, false, true);
+            }
             InertiaFlash.success(flash, created.name() + " is ready. Start it when you are.");
             return "redirect:/services/" + created.id();
         } catch (RequestRejected | QuotaExceeded | PermissionDenied refused) {
@@ -175,7 +192,12 @@ public class ProjectServicesController {
             @Size(max = 500) String requiredTags,
 
             RuntimeIsolation runtimeIsolation,
-            @Size(max = 500) String isolationReason) {
+            @Size(max = 500) String isolationReason,
+
+            Boolean createVolume,
+            @Size(max = 63) String volumeName,
+            @Size(max = 500) String volumeMountPath,
+            Long volumeSizeMib) {
 
         /** Turns the flat form into the value the use-case validates and stores. */
         ServiceDraft toDraft() {

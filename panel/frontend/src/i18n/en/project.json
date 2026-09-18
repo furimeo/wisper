@@ -85,6 +85,13 @@
   "project.newService.sourceDescApp": "Optional for an app: how your code gets into a language-runtime image.",
   "project.newService.limitsTitle": "Limits",
   "project.newService.limitsDesc": "Enforced by the node through cgroups.",
+  "project.newService.storageTitle": "Persistent Storage",
+  "project.newService.storageDesc": "Attach a disk volume so uploaded files, code, and databases persist across restarts.",
+  "project.newService.createVolumeLabel": "Attach persistent storage volume (Recommended)",
+  "project.newService.volumeMountPath": "Mount path",
+  "project.newService.volumeMountPathHint": "Where this disk appears inside the container. Defaults to working directory (e.g. /app or /root).",
+  "project.newService.volumeSizeMib": "Volume size (MiB)",
+  "project.newService.volumeSizeHint": "Storage quota for this volume. 5120 MiB = 5 GiB.",
   "project.newService.isolationTitle": "Isolation",
   "project.newService.submit": "Create service",
   "project.newService.cancel": "Cancel"

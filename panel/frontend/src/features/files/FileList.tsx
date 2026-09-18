@@ -88,14 +88,29 @@ export function FileList({
 
   if (entries.length === 0) {
     return (
-      <EmptyState
-        title={t('files.list.empty_title')}
-        description={
-          showingHidden
-            ? t('files.list.empty_desc_all')
-            : t('files.list.empty_desc_hidden')
-        }
-      />
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <EmptyState
+          title={t('files.list.empty_title')}
+          description={
+            showingHidden
+              ? t('files.list.empty_desc_all')
+              : t('files.list.empty_desc_hidden')
+          }
+        />
+        {context.canWrite && !context.unavailable ? (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Button size="sm" onClick={() => onAction('upload', [])}>
+              {t('files.actions.upload')}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => onAction('newFile', [])}>
+              {t('files.actions.new_file')}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => onAction('newFolder', [])}>
+              {t('files.actions.new_folder')}
+            </Button>
+          </div>
+        ) : null}
+      </div>
     )
   }
 
