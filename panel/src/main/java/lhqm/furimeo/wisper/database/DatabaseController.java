@@ -66,6 +66,7 @@ public class DatabaseController {
     private final SetDatabaseQuota setQuota;
     private final QuotaGuard quotas;
     private final RecordRefusal refusals;
+    private final lhqm.furimeo.wisper.project.ListProjects projects;
 
     public DatabaseController(ResolveCurrentAccount currentAccount,
                               ResolveMembership memberships,
@@ -73,7 +74,8 @@ public class DatabaseController {
                               ProvisionDatabase provisionDatabase,
                               RotateDatabasePassword rotatePassword, DropDatabase dropDatabase,
                               ShowConnectionString connectionStrings, SetDatabaseQuota setQuota,
-                              QuotaGuard quotas, RecordRefusal refusals) {
+                              QuotaGuard quotas, RecordRefusal refusals,
+                              lhqm.furimeo.wisper.project.ListProjects projects) {
         this.currentAccount = currentAccount;
         this.memberships = memberships;
         this.databases = databases;
@@ -85,6 +87,7 @@ public class DatabaseController {
         this.setQuota = setQuota;
         this.quotas = quotas;
         this.refusals = refusals;
+        this.projects = projects;
     }
 
     /**
@@ -92,7 +95,8 @@ public class DatabaseController {
      *
      * <p>Props: {@code databases} - a {@link ManagedDatabaseView} each, ordered by
      * organization then project then name; {@code engines} - the two {@link EngineKind}
-     * values, so the create form does not hard-code them.
+     * values, so the create form does not hard-code them; {@code projects} - every project
+     * visible to this account so database creation is possible even with 0 databases.
      *
      * <p>Renders {@code features/database/DatabaseListPage.tsx}.
      */
@@ -101,6 +105,7 @@ public class DatabaseController {
         AccountRef account = currentAccount.require();
         model.addAttribute("databases", listing.visibleTo(account.id()));
         model.addAttribute("engines", EngineKind.values());
+        model.addAttribute("projects", projects.visibleTo(account.id()));
         return "database/DatabaseList";
     }
 

@@ -9,6 +9,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import lhqm.furimeo.wisper.domain.Domain;
+import lhqm.furimeo.wisper.domain.DomainRepository;
 import lhqm.furimeo.wisper.org.AccountRef;
 import lhqm.furimeo.wisper.org.Membership;
 import lhqm.furimeo.wisper.org.ResolveCurrentAccount;
@@ -40,12 +42,13 @@ public class ServiceController {
     private final SecretRepository secrets;
     private final VolumeRepository volumes;
     private final CronTaskRepository tasks;
+    private final DomainRepository domains;
 
     public ServiceController(ResolveCurrentAccount currentAccount, ResolveMembership memberships,
                              ServiceRepository services, ListServicesInProject serviceStatus,
                              ProjectRepository projects, EnvVarRepository envVars,
                              SecretRepository secrets, VolumeRepository volumes,
-                             CronTaskRepository tasks) {
+                             CronTaskRepository tasks, DomainRepository domains) {
         this.currentAccount = currentAccount;
         this.memberships = memberships;
         this.services = services;
@@ -55,6 +58,7 @@ public class ServiceController {
         this.secrets = secrets;
         this.volumes = volumes;
         this.tasks = tasks;
+        this.domains = domains;
     }
 
     /**
@@ -83,11 +87,14 @@ public class ServiceController {
         counts.put("volumes", volumes.countByServiceId(serviceId));
         counts.put("scheduledTasks", tasks.countByServiceId(serviceId));
 
+        Domain primary = domains.findPrimaryOf(serviceId).orElse(null);
+
         model.addAttribute("service", ServiceView.of(service));
         model.addAttribute("status", serviceStatus.one(serviceId).orElse(null));
         model.addAttribute("project", project);
         model.addAttribute("viewerRole", membership.role());
         model.addAttribute("counts", counts);
+        model.addAttribute("primaryHostname", primary != null ? primary.hostname() : null);
         return "service/ServiceOverview";
     }
 }

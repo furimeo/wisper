@@ -80,6 +80,7 @@
   "database.conn.title": "Connection details",
   "database.conn.description": "Shown on this screen only. Reloading the page loses them, and the panel keeps the password encrypted - ask again and it is a fresh audit entry, not a fresh password.",
   "database.conn.uri": "Connection URI",
+  "database.conn.env": "Environment variable",
   "database.conn.jdbc": "JDBC URL",
   "database.conn.host": "Host",
   "database.conn.port": "Port",
@@ -91,6 +92,8 @@
   "database.conn.showPassword": "Show the password",
   "database.conn.copyUri": "Copy the URI",
   "database.conn.copyUriAria": "Copy the full connection URI including the password",
+  "database.conn.copyEnv": "Copy .env",
+  "database.conn.copyEnvAria": "Copy DATABASE_URL configuration for environment files",
   "database.conn.secretNotice": "Put it in your service's secrets, not in a repository. A secret set on a service is not shown again either.",
 
   "database.actions.title": "Connecting to it",

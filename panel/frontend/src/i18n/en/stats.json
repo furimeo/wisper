@@ -20,6 +20,8 @@
   "stats.serviceLogs.scheduledRunBadge": "Scheduled run",
   "stats.serviceLogs.emptyTitle": "Nothing is running this service",
   "stats.serviceLogs.emptyDesc": "Logs are read from the container, so there has to be one. Start {name} and this page will follow its output from the first line - the panel does not keep a copy, so there is nothing here from before it was placed on a node.",
+  "stats.serviceLogs.emptyTitleSite": "Static sites have no runtime container",
+  "stats.serviceLogs.emptyDescSite": "{name} is served directly by the edge web server without a container. To inspect build and compilation output, view the logs for each release in Deployments.",
   "stats.serviceLogs.goToService": "Go to the service",
   "stats.serviceLogs.deployments": "Deployments",
   "stats.serviceLogs.footer": "This is a tail, not an archive. The panel keeps no copy of container output, so what is on screen is what the node still holds - build logs are the exception and live on their deployment.",

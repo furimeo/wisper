@@ -39,20 +39,28 @@ export default function ServiceLogsPage() {
 
   const stream = useLogStream(service.serviceId, source, subjectId, tailLines, placed)
 
+  const isSite = service.kind === 'SITE'
+
   return (
     <div className="flex flex-col gap-4">
       <Head title={t('stats.serviceLogs.title', {name: service.name})} />
-      <ServiceTabs serviceId={service.serviceId} />
+      <ServiceTabs serviceId={service.serviceId} kind={service.kind} />
 
       <PageHeader
         title={t('stats.serviceLogs.header')}
         description={
-          cron
-            ? t('stats.serviceLogs.descCron')
-            : t('stats.serviceLogs.descContainer', {name: service.name, tailLines})
+          isSite
+            ? t('stats.serviceLogs.emptyDescSite', {name: service.name})
+            : cron
+              ? t('stats.serviceLogs.descCron')
+              : t('stats.serviceLogs.descContainer', {name: service.name, tailLines})
         }
         actions={
-          cron ? (
+          isSite ? (
+            <ButtonLink href={`/services/${service.serviceId}/deployments`} variant="primary">
+              {t('stats.serviceLogs.deployments')}
+            </ButtonLink>
+          ) : cron ? (
             <ButtonLink href={`/services/${service.serviceId}/logs`} variant="secondary">
               {t('stats.serviceLogs.actionContainer')}
             </ButtonLink>
@@ -67,7 +75,21 @@ export default function ServiceLogsPage() {
         </div>
       ) : null}
 
-      {placed ? (
+      {isSite ? (
+        <Card title={t('stats.serviceLogs.emptyTitleSite')}>
+          <p className="text-sm text-ink-700 dark:text-ink-300">
+            {t('stats.serviceLogs.emptyDescSite', {name: service.name})}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <ButtonLink href={`/services/${service.serviceId}`} variant="secondary">
+              {t('stats.serviceLogs.goToService')}
+            </ButtonLink>
+            <ButtonLink href={`/services/${service.serviceId}/deployments`} variant="secondary">
+              {t('stats.serviceLogs.deployments')}
+            </ButtonLink>
+          </div>
+        </Card>
+      ) : placed ? (
         <LogConsole stream={stream} placed={placed} />
       ) : (
         <Card title={t('stats.serviceLogs.emptyTitle')}>

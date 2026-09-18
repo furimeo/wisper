@@ -91,16 +91,26 @@ export function ServiceShortcuts({
     },
     {
       href: `/services/${id}/metrics`,
-      label: t('service.shortcuts.metrics'),
+      label: t('service.tabs.metrics'),
       icon: 'node',
       hint: t('service.shortcuts.metrics_hint'),
     },
   ]
 
+  const visibleShortcuts = service.site
+    ? shortcuts.filter(
+        (s) =>
+          !s.href.endsWith('/environment') &&
+          !s.href.endsWith('/volumes') &&
+          !s.href.endsWith('/tasks') &&
+          !s.href.endsWith('/terminal'),
+      )
+    : shortcuts
+
   return (
     <Card title={t('service.shortcuts.title')} padded={false}>
       <ul className="grid grid-cols-1 divide-y divide-ink-200 sm:grid-cols-2 sm:divide-y-0 dark:divide-ink-800">
-        {shortcuts.map((shortcut) => (
+        {visibleShortcuts.map((shortcut) => (
           <li key={shortcut.href}>
             <Link
               href={shortcut.href}

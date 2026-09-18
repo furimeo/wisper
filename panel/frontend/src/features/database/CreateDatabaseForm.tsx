@@ -32,14 +32,24 @@ export interface ProjectChoice {
   label: string
 }
 
-/** One entry per project the customer already has a database in, organization included. */
-export function projectChoices(databases: ManagedDatabaseView[]): ProjectChoice[] {
+/** Converts visible projects or existing databases into selectable choices. */
+export function projectChoices(
+  source: ManagedDatabaseView[] | {id: string; name: string; organizationName: string}[],
+): ProjectChoice[] {
   const choices = new Map<string, ProjectChoice>()
-  for (const database of databases) {
-    choices.set(database.projectId, {
-      id: database.projectId,
-      label: `${database.organizationName} · ${database.projectName}`,
-    })
+  for (const item of source) {
+    if ('projectId' in item) {
+      const database = item as ManagedDatabaseView
+      choices.set(database.projectId, {
+        id: database.projectId,
+        label: `${database.organizationName} · ${database.projectName}`,
+      })
+    } else {
+      choices.set(item.id, {
+        id: item.id,
+        label: `${item.organizationName} · ${item.name}`,
+      })
+    }
   }
   return [...choices.values()].sort((left, right) => left.label.localeCompare(right.label))
 }

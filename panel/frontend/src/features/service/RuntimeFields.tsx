@@ -2,6 +2,7 @@ import {t} from '@/i18n'
 import {Input, Select} from '@/shell'
 import type {FormFields} from '@/shell'
 
+import {AppQuickPresets} from './AppQuickPresets'
 import type {ServiceFormValues} from './serviceFormValues'
 import type {RestartPolicy} from './serviceTypes'
 import {restartPolicyHint, restartPolicyLabel} from './serviceVocabulary'
@@ -19,9 +20,15 @@ export function RuntimeFields({
   showProbeInterval?: boolean
 }) {
   const policy = form.data.restartPolicy as RestartPolicy
+  const isBaseLinux = /^(ubuntu|debian|alpine|centos|archlinux|fedora)(:.*)?$/i.test(form.data.image.trim())
+  const needsKeepAlive = isBaseLinux && !form.data.command.trim()
 
   return (
     <div className="flex flex-col gap-4">
+      {!showProbeInterval ? (
+        <AppQuickPresets form={form} disabled={disabled} />
+      ) : null}
+
       <Input
         {...form.bind('image')}
         label={t('service.runtime.image_label')}
@@ -33,15 +40,32 @@ export function RuntimeFields({
         hint={t('service.runtime.image_hint')}
       />
 
-      <Input
-        {...form.bind('command')}
-        label={t('service.runtime.command_label')}
-        disabled={disabled}
-        maxLength={2000}
-        autoComplete="off"
-        placeholder={t('service.runtime.command_placeholder')}
-        hint={t('service.runtime.command_hint')}
-      />
+      <div className="flex flex-col gap-1">
+        <Input
+          {...form.bind('command')}
+          label={t('service.runtime.command_label')}
+          disabled={disabled}
+          maxLength={2000}
+          autoComplete="off"
+          placeholder={t('service.runtime.command_placeholder')}
+          hint={t('service.runtime.command_hint')}
+        />
+        {needsKeepAlive ? (
+          <div className="flex items-center justify-between rounded-lg border border-accent-500/30 bg-accent-500/10 px-3 py-2 text-xs">
+            <span className="text-ink-700 dark:text-ink-300">
+              {t('service.runtime.base_os_warning')}
+            </span>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => form.set('command', 'sleep infinity')}
+              className="font-medium text-accent-600 hover:underline dark:text-accent-400"
+            >
+              {t('service.runtime.apply_keepalive')}
+            </button>
+          </div>
+        ) : null}
+      </div>
 
       <Input
         {...form.bind('entrypoint')}

@@ -20,16 +20,18 @@ type ServiceOverviewProps = {
   project: Project
   viewerRole: MemberRole
   counts: ServiceCounts
+  primaryHostname?: string | null
 }
 
 export default function ServiceOverviewPage() {
-  const {service, status, project, viewerRole, counts} = usePage<ServiceOverviewProps>().props
+  const {service, status, project, viewerRole, counts, primaryHostname} =
+    usePage<ServiceOverviewProps>().props
   const writable = mayWrite(viewerRole)
 
   return (
     <div className="flex flex-col gap-4">
       <Head title={service.name} />
-      <ServiceTabs serviceId={service.id} counts={counts} />
+      <ServiceTabs serviceId={service.id} kind={service.kind} counts={counts} />
 
       <PageHeader
         title={service.name}
@@ -39,13 +41,42 @@ export default function ServiceOverviewPage() {
           slug: service.slug,
         })}
         actions={
-          <ButtonLink
-            href={`/services/${service.id}/deployments`}
-            variant="secondary"
-            icon={<Icon name="jobs" />}
-          >
-            {t('service.overview.deployments_button')}
-          </ButtonLink>
+          <div className="flex flex-wrap items-center gap-2">
+            {primaryHostname ? (
+              <ButtonLink
+                href={`https://${primaryHostname}`}
+                target="_blank"
+                rel="noreferrer"
+                variant="primary"
+                icon={<Icon name="external" />}
+              >
+                {t('service.overview.open_website')}
+              </ButtonLink>
+            ) : null}
+            {service.app ? (
+              <ButtonLink
+                href={`/services/${service.id}/terminal`}
+                variant="secondary"
+                icon={<Icon name="monitor" />}
+              >
+                {t('service.overview.terminal_button')}
+              </ButtonLink>
+            ) : null}
+            <ButtonLink
+              href={`/services/${service.id}/files`}
+              variant="secondary"
+              icon={<Icon name="projects" />}
+            >
+              {t('service.overview.files_button')}
+            </ButtonLink>
+            <ButtonLink
+              href={`/services/${service.id}/deployments`}
+              variant="secondary"
+              icon={<Icon name="jobs" />}
+            >
+              {t('service.overview.deployments_button')}
+            </ButtonLink>
+          </div>
         }
       />
 

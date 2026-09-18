@@ -14,6 +14,7 @@ import {
   PageHeader,
 } from '@/shell'
 
+import type {ProjectSummary} from '@/features/project/projectTypes'
 import {CreateDatabaseForm, projectChoices} from './CreateDatabaseForm'
 import {DatabaseStateBadge} from './DatabaseStateBadge'
 import type {EngineKind, ManagedDatabaseView} from './databaseTypes'
@@ -34,13 +35,16 @@ import {useLiveDatabases} from './useLiveDatabases'
 type DatabaseListProps = {
   databases: ManagedDatabaseView[]
   engines: EngineKind[]
+  projects?: ProjectSummary[]
 }
 
 export default function DatabaseListPage() {
-  const {databases, engines} = usePage<DatabaseListProps>().props
+  const {databases, engines, projects: availableProjects} = usePage<DatabaseListProps>().props
   const [creating, setCreating] = useState(false)
 
-  const projects = projectChoices(databases)
+  const projects = availableProjects && availableProjects.length > 0
+    ? projectChoices(availableProjects)
+    : projectChoices(databases)
   useLiveDatabases(
     ['databases'],
     databases.some((database) => database.inFlight),

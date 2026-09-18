@@ -77,6 +77,7 @@
   "database.conn.title": "Thông tin kết nối",
   "database.conn.description": "Chỉ hiển thị trên màn hình này. Tải lại trang sẽ ẩn thông tin và panel lưu mật khẩu dưới dạng mã hóa - việc yêu cầu xem lại sẽ tạo một bản ghi audit mới thay vì cấp mật khẩu mới.",
   "database.conn.uri": "URI kết nối",
+  "database.conn.env": "Biến môi trường (.env)",
   "database.conn.jdbc": "JDBC URL",
   "database.conn.host": "Máy chủ (Host)",
   "database.conn.port": "Cổng (Port)",
@@ -88,6 +89,8 @@
   "database.conn.showPassword": "Hiện mật khẩu",
   "database.conn.copyUri": "Sao chép URI",
   "database.conn.copyUriAria": "Sao chép toàn bộ URI kết nối bao gồm mật khẩu",
+  "database.conn.copyEnv": "Sao chép .env",
+  "database.conn.copyEnvAria": "Sao chép cấu hình DATABASE_URL cho tệp biến môi trường",
   "database.conn.secretNotice": "Hãy lưu vào mục Secrets của dịch vụ, không commit vào repository. Secret đã cấu hình trên dịch vụ cũng sẽ không được hiển thị lại.",
 
   "database.actions.title": "Kết nối tới cơ sở dữ liệu",

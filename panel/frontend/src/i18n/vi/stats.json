@@ -20,6 +20,8 @@
   "stats.serviceLogs.scheduledRunBadge": "Lần chạy theo lịch",
   "stats.serviceLogs.emptyTitle": "Không có gì đang chạy service này",
   "stats.serviceLogs.emptyDesc": "Nhật ký được đọc trực tiếp từ container, nên cần có một container đang hoạt động. Hãy khởi chạy {name} và trang này sẽ theo dõi đầu ra từ dòng đầu tiên - panel không lưu bản sao nên không có gì trước khi được gán vào node.",
+  "stats.serviceLogs.emptyTitleSite": "Trang tĩnh không sử dụng container runtime",
+  "stats.serviceLogs.emptyDescSite": "{name} được phân phát trực tiếp bởi máy chủ web ở tầng biên (edge) mà không cần container. Để xem nhật ký quá trình build và đóng gói, vui lòng xem tại lịch sử triển khai trong mục Deployments.",
   "stats.serviceLogs.goToService": "Đi tới service",
   "stats.serviceLogs.deployments": "Các lần triển khai",
   "stats.serviceLogs.footer": "Đây là luồng theo dõi trực tiếp, không phải bản lưu trữ. Panel không lưu trữ đầu ra của container, vì vậy những gì trên màn hình là những gì node còn giữ - nhật ký build là ngoại lệ và được lưu tại trang triển khai tương ứng.",

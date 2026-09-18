@@ -91,6 +91,11 @@ export function jdbcUrl(connection: ConnectionString): string {
   return `jdbc:${SCHEMES[engine]}://${host}:${port}/${database}`
 }
 
+/** Standard .env assignment for web frameworks. */
+export function envVariable(connection: ConnectionString): string {
+  return `DATABASE_URL="${connectionUri(connection)}"`
+}
+
 /** The address with no credential in it, for a list row. Mirrors `.address()`. */
 export function databaseAddress(database: ManagedDatabaseView): string {
   return `${database.host}:${database.port}/${database.name}`

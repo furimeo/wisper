@@ -4,7 +4,7 @@ import {t} from '@/i18n'
 import {Button, CopyButton, Icon} from '@/shell'
 
 import type {ConnectionString} from './databaseTypes'
-import {connectionUri, jdbcUrl, redactedUri} from './databaseVocabulary'
+import {connectionUri, envVariable, jdbcUrl, redactedUri} from './databaseVocabulary'
 
 /**
  * The credentials, on the one render they exist.
@@ -47,6 +47,7 @@ export function ConnectionDetails({connection}: {connection: ConnectionString}) 
 
           <div className="mt-3 flex flex-col gap-3">
             <Line label={t('database.conn.uri')} value={uri} masked={!shown} shownValue={redactedUri(connection)} />
+            <Line label={t('database.conn.env')} value={envVariable(connection)} masked={!shown} shownValue={`DATABASE_URL="${redactedUri(connection)}"`} />
             <Line label={t('database.conn.jdbc')} value={jdbcUrl(connection)} />
 
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -77,6 +78,12 @@ export function ConnectionDetails({connection}: {connection: ConnectionString}) 
                 value={uri}
                 label={t('database.conn.copyUri')}
                 describedAs={t('database.conn.copyUriAria')}
+                className="w-full sm:w-auto"
+              />
+              <CopyButton
+                value={envVariable(connection)}
+                label={t('database.conn.copyEnv')}
+                describedAs={t('database.conn.copyEnvAria')}
                 className="w-full sm:w-auto"
               />
             </div>
