@@ -18,10 +18,14 @@ import lhqm.furimeo.wisper.org.MemberRole;
 import lhqm.furimeo.wisper.org.Membership;
 import lhqm.furimeo.wisper.org.Organization;
 import lhqm.furimeo.wisper.org.OrganizationRepository;
+import lhqm.furimeo.wisper.org.RequestRejected;
 import lhqm.furimeo.wisper.project.CreateProject;
 import lhqm.furimeo.wisper.project.Project;
 import lhqm.furimeo.wisper.project.ProjectRepository;
 import lhqm.furimeo.wisper.project.Slug;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 1-click fast server provisioning for commercial reseller and billing dashboards.
@@ -34,6 +38,7 @@ import lhqm.furimeo.wisper.project.Slug;
 @Component
 public class FastProvisionServer {
 
+    private static final Logger log = LoggerFactory.getLogger(FastProvisionServer.class);
     private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#%";
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -116,8 +121,15 @@ public class FastProvisionServer {
 
         String initialStatus = "STOPPED";
         if (Boolean.TRUE.equals(request.autoStart())) {
-            startService.start(actor, membership, service.id());
-            initialStatus = "RUNNING";
+            try {
+                startService.start(actor, membership, service.id());
+                initialStatus = "RUNNING";
+            } catch (RequestRejected noNode) {
+                // No schedulable node was found. The service is created and stays STOPPED.
+                // The customer can start it once a node becomes available.
+                log.warn("autoStart skipped for service {} — placement rejected: {}",
+                        service.id(), noNode.getMessage());
+            }
         }
 
         Map<String, String> urls = Map.of(

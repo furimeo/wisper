@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +30,8 @@ import lhqm.furimeo.wisper.auth.SuspendAccount;
 import lhqm.furimeo.wisper.org.MemberRole;
 import lhqm.furimeo.wisper.org.Membership;
 import lhqm.furimeo.wisper.org.PermissionDenied;
+import lhqm.furimeo.wisper.org.QuotaExceeded;
+import lhqm.furimeo.wisper.org.RequestRejected;
 import lhqm.furimeo.wisper.org.ResolveMembership;
 import lhqm.furimeo.wisper.project.ListProjects;
 import lhqm.furimeo.wisper.project.ProjectSummary;
@@ -258,5 +261,35 @@ public class CommercialApiController {
         if (principal == null || principal.role() != PlatformRole.ADMIN) {
             throw new PermissionDenied("admin.operation", MemberRole.VIEWER, "Platform administrator privileges");
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Domain-exception → clean JSON responses for API callers
+    // -------------------------------------------------------------------------
+
+    @ExceptionHandler(RequestRejected.class)
+    public ResponseEntity<?> onRequestRejected(RequestRejected ex) {
+        Map<String, String> body = ex.field() != null
+                ? Map.of("message", ex.getMessage(), "field", ex.field())
+                : Map.of("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
+    }
+
+    @ExceptionHandler(QuotaExceeded.class)
+    public ResponseEntity<?> onQuotaExceeded(QuotaExceeded ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> onIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<?> onNotFound(NotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", ex.getMessage()));
     }
 }
