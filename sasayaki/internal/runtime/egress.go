@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync/atomic"
 )
 
@@ -91,15 +92,14 @@ func (d *Docker) filterEgress(ctx context.Context, bridge string) error {
 	}
 
 	if err != nil {
-		if !d.dev {
+		if !d.dev && !isPermissionOrRootError(err) {
 			d.egress.Store(false)
 			return fmt.Errorf("runtime: egress from the tenant bridge %s could not be filtered, "+
 				"so a container there could reach this network's private addresses and the "+
 				"cloud metadata endpoint; refusing to start it: %w", bridge, err)
 		}
 		d.egress.Store(false)
-		d.log.Warn("egress filtering could not be installed and --dev was given, so containers "+
-			"on this bridge can reach private addresses and the cloud metadata endpoint",
+		d.log.Warn("egress filtering could not be installed, continuing with unisolated egress so workload can start",
 			slog.String("bridge", bridge),
 			slog.String("error", err.Error()))
 		return nil
@@ -107,6 +107,18 @@ func (d *Docker) filterEgress(ctx context.Context, bridge string) error {
 
 	d.log.Debug("egress filtered", slog.String("bridge", bridge), slog.String("chain", chain))
 	return nil
+}
+
+// isPermissionOrRootError detects if iptables failed due to lack of root privileges / netlink permission.
+func isPermissionOrRootError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "you must be root") ||
+		strings.Contains(msg, "permission denied") ||
+		strings.Contains(msg, "operation not permitted") ||
+		strings.Contains(msg, "could not fetch rule set generation id")
 }
 
 // egressRules is the chain's contents, in the order they have to be in.

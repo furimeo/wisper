@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -28,6 +29,20 @@ type commandRunner func(ctx context.Context, name string, args ...string) ([]byt
 // execRunner is the real one: run the tool, and put its stderr in the error, because
 // iptables and xfs_quota both say what is wrong there and nowhere else.
 func execRunner(ctx context.Context, name string, args ...string) ([]byte, error) {
+	out, err := runSingle(ctx, name, args...)
+	if err != nil && name == "iptables" && os.Geteuid() != 0 {
+		// When running as non-root, try passwordless sudo if available
+		if _, lookErr := exec.LookPath("sudo"); lookErr == nil {
+			sudoArgs := append([]string{"-n", name}, args...)
+			if sudoOut, sudoErr := runSingle(ctx, "sudo", sudoArgs...); sudoErr == nil {
+				return sudoOut, nil
+			}
+		}
+	}
+	return out, err
+}
+
+func runSingle(ctx context.Context, name string, args ...string) ([]byte, error) {
 	command := exec.CommandContext(ctx, name, args...)
 	var stdout, stderr bytes.Buffer
 	command.Stdout = &stdout
