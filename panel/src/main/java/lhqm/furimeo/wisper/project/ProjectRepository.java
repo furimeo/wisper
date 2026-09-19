@@ -1,9 +1,12 @@
 package lhqm.furimeo.wisper.project;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Reads and writes the {@code project} table.
@@ -22,4 +25,12 @@ public interface ProjectRepository extends ListCrudRepository<Project, UUID> {
     Optional<Project> findByIdAndOrganizationId(UUID id, UUID organizationId);
 
     boolean existsByOrganizationIdAndSlug(UUID organizationId, String slug);
+
+    @Query("SELECT * FROM project WHERE organization_id = :organizationId AND slug = :slug")
+    Optional<Project> findByOrganizationIdAndSlug(@Param("organizationId") UUID organizationId,
+                                                  @Param("slug") String slug);
+
+    @Query("SELECT * FROM project WHERE organization_id = :organizationId AND archived_at IS NULL ORDER BY created_at ASC")
+    List<Project> findActiveInOrganization(@Param("organizationId") UUID organizationId);
 }
+
