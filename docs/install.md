@@ -63,7 +63,7 @@ sudo mkdir -p /opt/wisper /etc/wisper
 cd /opt/wisper
 
 # Fetch latest panel jar
-curl -fsSL -o wisper.jar https://github.com/furimeo/wisper/releases/latest/download/wisper-0.1.8.jar
+curl -fsSL -o wisper.jar https://github.com/furimeo/wisper/releases/latest/download/wisper-0.1.9.jar
 ```
 
 ### 1.4 Generate Encryption Key & Environment
