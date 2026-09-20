@@ -70,6 +70,7 @@ export function UploadDialog({
   refusalReason: string
 }) {
   const picker = useRef<HTMLInputElement>(null)
+  const folderPicker = useRef<HTMLInputElement>(null)
   const finished = uploads.items.filter(
     (item) => item.status === 'done' || item.status === 'cancelled',
   )
@@ -118,15 +119,48 @@ export function UploadDialog({
                 event.target.value = ''
               }}
             />
+            <input
+              ref={folderPicker}
+              type="file"
+              // @ts-expect-error -- webkitdirectory is a non-standard attribute that lets
+              // the picker select a folder; the DOM property exists at runtime.
+              webkitdirectory=""
+              directory=""
+              multiple
+              className="hidden"
+              onChange={(event) => {
+                const chosen = event.target.files
+                if (chosen && chosen.length > 0) {
+                  // Files from a directory picker carry webkitRelativePath, e.g.
+                  // "myproject/src/main.go". The folder's name is included, so the
+                  // tree is reconstructed under the current directory.
+                  uploads.addWithPaths(
+                    Array.from(chosen).map((file) => ({
+                      file,
+                      relativePath: (file as File & {webkitRelativePath: string}).webkitRelativePath,
+                    })),
+                  )
+                }
+                event.target.value = ''
+              }}
+            />
             <FileActionIcon kind="upload" className="size-6 text-ink-400" />
             <p className="text-sm text-ink-600 dark:text-ink-400">
               {t('files.upload.drop_or_pick')}
             </p>
-            <Button variant="secondary" onClick={() => picker.current?.click()}>
-              {t('files.upload.choose_files')}
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button variant="secondary" onClick={() => picker.current?.click()}>
+                {t('files.upload.choose_files')}
+              </Button>
+              <Button variant="secondary" onClick={() => folderPicker.current?.click()}>
+                {t('files.upload.choose_folder')}
+              </Button>
+            </div>
             <p className="max-w-prose text-xs text-ink-500 dark:text-ink-400">
               {t('files.upload.chunked_notice')}
+            </p>
+            <p className="max-w-prose text-xs text-ink-500 dark:text-ink-400">
+              {t('files.page.folder_upload_hint')}
             </p>
           </div>
         ) : (

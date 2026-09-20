@@ -17,21 +17,21 @@ import {cx} from '@/shell'
  * nothing at all, which reads as a broken page; the overlay turns red and says why, and
  * the drop is discarded.
  *
- * A dropped *folder* is refused with the way to do it instead. Directory upload would mean
- * creating the tree as it goes and there is no endpoint that does that, so rather than
- * uploading the loose files and quietly dropping the structure, the panel says to compress
- * it and offers the unzip that finishes the job.
+ * A dropped *folder* is walked: the entries are handed to the caller, which recurses into
+ * them and uploads every file beneath with its relative path, so the tree is reconstructed
+ * on the node. Empty directories are not created - they have no files to carry - which is
+ * the same trade every browser-based uploader makes.
  */
 export function UploadDropOverlay({
   onFiles,
-  onFolders,
+  onFolderEntries,
   disabled,
   disabledReason,
   destination,
 }: {
   onFiles: (files: File[]) => void
-  /** The names of anything dropped that was a directory, for the caller to explain. */
-  onFolders: (names: string[]) => void
+  /** The directory entries a drop included, for the caller to walk and upload. */
+  onFolderEntries: (entries: FileSystemEntry[]) => void
   disabled: boolean
   disabledReason: string
   /** Where the files would land, shown so a drag onto the wrong folder is visible. */
@@ -41,8 +41,8 @@ export function UploadDropOverlay({
   const depth = useRef(0)
   // The listeners outlive the render that created them, and the destination folder changes
   // underneath them as the customer navigates.
-  const sink = useRef({onFiles, onFolders, disabled})
-  sink.current = {onFiles, onFolders, disabled}
+  const sink = useRef({onFiles, onFolderEntries, disabled})
+  sink.current = {onFiles, onFolderEntries, disabled}
 
   useEffect(() => {
     const onDragEnter = (event: DragEvent) => {
@@ -90,7 +90,7 @@ export function UploadDropOverlay({
       }
       const {files, folders} = split(event.dataTransfer)
       if (folders.length > 0) {
-        sink.current.onFolders(folders)
+        sink.current.onFolderEntries(folders)
       }
       if (files.length > 0) {
         sink.current.onFiles(files)
@@ -150,15 +150,17 @@ function carriesFiles(event: DragEvent): boolean {
 }
 
 /**
- * The files, and the names of anything that was a directory.
+ * The files, and the directory entries a drop included.
  *
  * `webkitGetAsEntry` is the only way to tell the two apart before reading them: a dropped
  * folder arrives in `dataTransfer.files` as a zero-byte entry with the folder's name, and
- * uploading that produces an empty file with no error anywhere.
+ * uploading that produces an empty file with no error anywhere. The directory entries are
+ * returned as `FileSystemEntry` objects so the caller can recurse into them and collect the
+ * files with their relative paths.
  */
-function split(transfer: DataTransfer): {files: File[]; folders: string[]} {
+function split(transfer: DataTransfer): {files: File[]; folders: FileSystemEntry[]} {
   const files: File[] = []
-  const folders: string[] = []
+  const folders: FileSystemEntry[] = []
 
   if (transfer.items && transfer.items.length > 0) {
     for (const item of Array.from(transfer.items)) {
@@ -168,7 +170,7 @@ function split(transfer: DataTransfer): {files: File[]; folders: string[]} {
       const entry = item.webkitGetAsEntry?.()
       const file = item.getAsFile()
       if (entry?.isDirectory) {
-        folders.push(entry.name)
+        folders.push(entry)
       } else if (file) {
         files.push(file)
       }

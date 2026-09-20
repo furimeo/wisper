@@ -65,6 +65,9 @@ class FastProvisionServerTest {
     private CreateProject createProject;
 
     @Mock
+    private ServiceRepository serviceRepository;
+
+    @Mock
     private CreateService createService;
 
     @Mock
@@ -83,7 +86,7 @@ class FastProvisionServerTest {
     void setUp() {
         fastProvisionServer = new FastProvisionServer(
                 accounts, registerUser, organizations, createOrganization,
-                projects, createProject, createService, createVolume,
+                projects, createProject, serviceRepository, createService, createVolume,
                 setEnvVar, startService);
     }
 

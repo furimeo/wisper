@@ -7,6 +7,7 @@ import {
   currentUploads,
   dismissUpload,
   enqueueUpload,
+  enqueueUploadAt,
   onUploadStored,
   resumeUpload,
   subscribeToUploads,
@@ -36,6 +37,8 @@ export interface ChunkedUpload {
   percent: number | null
   /** Queue files into the directory currently being browsed. */
   add: (files: Iterable<File>) => void
+  /** Queue files with explicit relative paths, for folder upload. */
+  addWithPaths: (files: Iterable<{file: File; relativePath: string}>) => void
   cancel: (id: string) => void
   resume: (id: string) => void
   dismiss: (id: string) => void
@@ -77,17 +80,36 @@ export function useChunkedUpload(
     [serviceId, rootId, directory],
   )
 
-  const busy = items.some((item) => item.status === 'queued' || item.status === 'uploading')
+  const addWithPaths = useCallback(
+    (files: Iterable<{file: File; relativePath: string}>) => {
+      for (const {file, relativePath} of files) {
+        const path = directory ? `${directory}/${relativePath}` : relativePath
+        enqueueUploadAt(serviceId, rootId, path, file)
+      }
+    },
+    [serviceId, rootId, directory],
+  )
+
+  // Anything that has not reached a terminal state keeps the bar alive. An interrupted
+  // upload is still pending: the customer expects to see it carrying on, not for the bar
+  // to vanish the moment a flaky connection parks a chunk. Only `done`, `failed` and
+  // `cancelled` are over.
+  const busy = items.some(
+    (item) => item.status === 'queued' || item.status === 'uploading' || item.status === 'interrupted',
+  )
 
   const percent = useMemo(() => {
-    const running = items.filter(
+    // The whole queue counts, including interrupted: a file that has 240 MB on the node
+    // is 240 MB through, whether the radio dropped a second ago or not. Failed and
+    // cancelled files are excluded so a refusal does not drag the bar down.
+    const active = items.filter(
       (item) => item.status !== 'cancelled' && item.status !== 'failed',
     )
-    const total = running.reduce((sum, item) => sum + item.totalBytes, 0)
+    const total = active.reduce((sum, item) => sum + item.totalBytes, 0)
     if (!busy || total <= 0) {
       return null
     }
-    const sent = running.reduce((sum, item) => sum + item.sentBytes, 0)
+    const sent = active.reduce((sum, item) => sum + item.sentBytes, 0)
     return Math.min(100, Math.round((sent / total) * 100))
   }, [items, busy])
 
@@ -96,6 +118,7 @@ export function useChunkedUpload(
     busy,
     percent,
     add,
+    addWithPaths,
     cancel: cancelUpload,
     resume: resumeUpload,
     dismiss: dismissUpload,

@@ -35,6 +35,7 @@ import type {SortKey} from './fileSorting'
 import type {DirectoryPage, FileEntryView, FileRootRef} from './fileTypes'
 import {useChunkedUpload} from './useChunkedUpload'
 import {useFileShortcuts} from './useFileShortcuts'
+import {walkEntries} from './walkEntry'
 
 type FileManagerProps = {
   service: ServiceLocation
@@ -329,6 +330,12 @@ function FileManagerBrowser({
       : t('files.page.upload_refusal_static_site')
 
   const pendingUploads = uploads.items.filter((item) => item.status !== 'done')
+  // Whether anything is actively transferring, vs. everything parked on interrupted.
+  // The bar's sentence follows this: "Uploading N files" while bytes are moving,
+  // "N files waiting to resume" once a flaky connection has stalled every one.
+  const transferring = uploads.items.some(
+    (item) => item.status === 'queued' || item.status === 'uploading',
+  )
 
   return (
     <div className="flex flex-col gap-3">
@@ -369,14 +376,23 @@ function FileManagerBrowser({
           <button
             type="button"
             onClick={() => setOverlay({kind: 'upload'})}
-            className="flex items-center gap-3 border-b border-accent-500/40 bg-accent-500/10 px-3 py-2 text-left text-sm text-ink-800 dark:text-ink-100"
+            className={
+              transferring
+                ? 'flex items-center gap-3 border-b border-accent-500/40 bg-accent-500/10 px-3 py-2 text-left text-sm text-ink-800 dark:text-ink-100'
+                : 'flex items-center gap-3 border-b border-degraded/40 bg-degraded/10 px-3 py-2 text-left text-sm text-ink-800 dark:text-ink-100'
+            }
           >
-            <Spinner />
+            {transferring ? <Spinner /> : null}
             <span className="flex-1">
-              {t('files.page.uploading_bar', {
-                count: pendingUploads.length,
-                percent: uploads.percent === null ? '' : ` · ${uploads.percent}%`,
-              })}
+              {transferring
+                ? t('files.page.uploading_bar', {
+                    count: pendingUploads.length,
+                    percent: uploads.percent === null ? '' : ` · ${uploads.percent}%`,
+                  })
+                : t('files.page.waiting_bar', {
+                    count: pendingUploads.length,
+                    percent: uploads.percent === null ? '' : ` · ${uploads.percent}%`,
+                  })}
             </span>
             <span className="text-xs text-ink-600 dark:text-ink-300">
               {t('files.page.uploading_bar_show')}
@@ -436,14 +452,25 @@ function FileManagerBrowser({
           uploads.add(files)
           setOverlay({kind: 'upload'})
         }}
-        onFolders={(names) =>
-          toast.error(
-            t('files.page.folder_dropped_error', {
-              names: names.join(', '),
-              verb: names.length === 1 ? t('files.page.verb_is') : t('files.page.verb_are'),
-            }),
-          )
-        }
+        onFolderEntries={(entries) => {
+          // Walk the dropped folder(s) and enqueue every file beneath with its relative
+          // path. The node reconstructs the directory tree at completion, so a dropped
+          // `myproject/` becomes `/current/myproject/...` on the other side. The walk is
+          // async (the entry API is callback-based), so we open the dialog now and let the
+          // rows appear as they are discovered.
+          setOverlay({kind: 'upload'})
+          void walkEntries(entries)
+            .then((files) => {
+              if (files.length === 0) {
+                toast.info(t('files.page.folder_empty_notice'))
+                return
+              }
+              uploads.addWithPaths(files)
+            })
+            .catch(() => {
+              toast.error(t('files.page.folder_read_error'))
+            })
+        }}
         disabled={!canWrite || unavailable !== null}
         disabledReason={uploadRefusal}
         destination={path}

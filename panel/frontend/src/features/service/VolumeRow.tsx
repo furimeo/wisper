@@ -1,5 +1,5 @@
 import {t} from '@/i18n'
-import {Badge, ByteSize, Icon, RelativeTime, cx} from '@/shell'
+import {Badge, ByteSize, CopyButton, Icon, RelativeTime, cx} from '@/shell'
 
 import type {Volume} from './serviceTypes'
 
@@ -24,6 +24,11 @@ export function VolumeRow({
           <code className="truncate font-mono text-sm font-medium text-ink-900 dark:text-ink-100">
             {volume.mountPath}
           </code>
+          <CopyButton
+            value={volume.mountPath}
+            size="sm"
+            describedAs={t('service.volumes.copy_mount_path')}
+          />
           {volume.readOnly ? <Badge tone="neutral">{t('service.volumes.read_only_badge')}</Badge> : null}
           {volume.backupEnabled ? null : <Badge tone="degraded">{t('service.volumes.no_backups_badge')}</Badge>}
         </span>
@@ -34,7 +39,7 @@ export function VolumeRow({
             <>
               {' · '}
               <span className={full ? 'text-degraded' : undefined}>
-                <ByteSize bytes={used} /> {t('service.shortcuts.set') === 'set' ? 'used' : 'đã dùng'}
+                <ByteSize bytes={used} /> {t('service.volumes.used_word')}
               </span>
             </>
           ) : (

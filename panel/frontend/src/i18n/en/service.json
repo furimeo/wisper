@@ -312,7 +312,10 @@
   "service.variables.empty_title": "No variables yet",
   "service.variables.empty_description": "Anything the workload reads from its environment goes here - a port, a log level, the address of something it talks to. Values that must not be readable belong in the secrets list below.",
   "service.variables.add_first": "Add the first one",
-  "service.variables.count_label": "{count} {count, plural, one {variable} other {variables}}",
+  "service.variables.count_label": {
+    "one": "{count} variable",
+    "other": "{count} variables"
+  },
   "service.variables.hide_values": "Hide values",
   "service.variables.show_values": "Show values",
   "service.variables.copy_value": "Copy the value of {name}",
@@ -343,7 +346,10 @@
   "service.secrets.empty_title": "No secrets yet",
   "service.secrets.empty_description": "Anything you would not want on the screen behind you - a database password, an API key, a signing secret. It goes into the container's environment exactly like a plain variable; the difference is that nothing here can read it back.",
   "service.secrets.add_first": "Add the first one",
-  "service.secrets.count_label": "{count} {count, plural, one {secret} other {secrets}}, values not readable",
+  "service.secrets.count_label": {
+    "one": "{count} secret, values not readable",
+    "other": "{count} secrets, values not readable"
+  },
   "service.secrets.last_changed": "Last changed",
   "service.secrets.set_prefix": "Set",
   "service.secrets.unchanged_suffix": "and unchanged since",
@@ -375,7 +381,10 @@
   "service.volumes.read_only_notice": "You have read access to this organization, so the controls on this page are off.",
   "service.volumes.archived_notice": "This service is archived. Its volumes are intact and nothing was deleted - restore the project from its settings screen to change them again.",
   "service.volumes.attached_card_title": "Attached",
-  "service.volumes.attached_card_desc": "{count} {count, plural, one {volume} other {volumes}} on this service.",
+  "service.volumes.attached_card_desc": {
+    "one": "{count} volume on this service.",
+    "other": "{count} volumes on this service."
+  },
   "service.volumes.empty_title": "No volumes attached",
   "service.volumes.empty_desc": "Everything the container writes outside a volume is lost the next time it is recreated - on a redeploy, an image change, a node reboot. Anything you want to keep goes on a volume.",
   "service.volumes.attach_first": "Attach the first one",
@@ -389,6 +398,8 @@
   "service.volumes.not_measured_aria": "{name} has not been measured by a node yet",
   "service.volumes.measured_at": "Measured {time}",
   "service.volumes.files_count": "{count} files",
+  "service.volumes.used_word": "used",
+  "service.volumes.copy_mount_path": "Copy mount path",
   "service.volumes.dialog_attach_title": "Attach a volume",
   "service.volumes.dialog_edit_desc": "Mounted at {mountPath}. The quota is what the node enforces on the directory.",
   "service.volumes.dialog_new_desc": "A directory on the node that survives restarts, redeploys and image changes.",

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.time.Instant;
@@ -26,9 +27,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lhqm.furimeo.wisper.auth.Account;
 import lhqm.furimeo.wisper.auth.AccountRepository;
+import lhqm.furimeo.wisper.auth.AdminSetPassword;
 import lhqm.furimeo.wisper.auth.ApiScope;
 import lhqm.furimeo.wisper.auth.ApiTokenPrincipal;
+import lhqm.furimeo.wisper.auth.CredentialRejected;
 import lhqm.furimeo.wisper.auth.PlatformRole;
 import lhqm.furimeo.wisper.auth.ReactivateAccount;
 import lhqm.furimeo.wisper.auth.SuspendAccount;
@@ -90,6 +94,9 @@ class CommercialApiControllerTest {
     @Mock
     private ReactivateAccount reactivateAccount;
 
+    @Mock
+    private AdminSetPassword adminSetPassword;
+
     private CommercialApiController controller;
     private HttpServletRequest httpRequest;
 
@@ -110,7 +117,7 @@ class CommercialApiControllerTest {
                 fastProvisionServer, services, volumes, locateService,
                 listServicesInProject, listProjects, startService, stopService,
                 restartService, deleteService, memberships, accounts,
-                suspendAccount, reactivateAccount);
+                suspendAccount, reactivateAccount, adminSetPassword);
     }
 
     @Test
@@ -218,6 +225,86 @@ class CommercialApiControllerTest {
                 null, null, null, null, null, null, null, null, null, null);
 
         assertThatThrownBy(() -> controller.provision(customerPrincipal, req, httpRequest))
+                .isInstanceOf(PermissionDenied.class);
+    }
+
+    @Test
+    void adminCanResetPasswordByAccountId() {
+        UUID targetId = UUID.randomUUID();
+        Account account = Account.create("cust@example.com", "Cust", "encoded-hash",
+                PlatformRole.CUSTOMER, Instant.now());
+        given(adminSetPassword.run(eq(targetId), eq("new-strong-password"), any())).willReturn(account);
+
+        ResponseEntity<?> response = controller.resetPassword(
+                adminPrincipal, targetId, Map.of("password", "new-strong-password"), httpRequest);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertThat(body).containsKeys("accountId", "email", "message");
+        assertThat(body.get("email")).isEqualTo("cust@example.com");
+        verify(adminSetPassword).run(eq(targetId), eq("new-strong-password"), any());
+    }
+
+    @Test
+    void resetPasswordRejectsBlankPassword() {
+        UUID targetId = UUID.randomUUID();
+        assertThatThrownBy(() -> controller.resetPassword(
+                adminPrincipal, targetId, Map.of("password", "   "), httpRequest))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(adminSetPassword, never()).run(any(), any(), any());
+    }
+
+    @Test
+    void resetPasswordSurfacesCredentialRejectedAsUnprocessable() {
+        UUID targetId = UUID.randomUUID();
+        given(adminSetPassword.run(eq(targetId), any(String.class), any()))
+                .willThrow(CredentialRejected.of("newPassword", "Use at least 12 characters."));
+
+        // @ExceptionHandler only intercepts through Spring MVC, not a direct method call.
+        // The controller lets CredentialRejected propagate, which the DispatcherServlet
+        // would turn into a 422 — verified in an integration test, not here.
+        assertThatThrownBy(() -> controller.resetPassword(
+                adminPrincipal, targetId, Map.of("password", "short"), httpRequest))
+                .isInstanceOf(CredentialRejected.class)
+                .hasFieldOrPropertyWithValue("field", "newPassword");
+    }
+
+    @Test
+    void adminCanResetPasswordByEmail() {
+        Account account = Account.create("cust@example.com", "Cust", "encoded-hash",
+                PlatformRole.CUSTOMER, Instant.now());
+        // The controller passes email.strip() — "Cust@Example.com" — to runByEmail,
+        // which normalises internally. The stub matches the raw stripped value.
+        given(adminSetPassword.runByEmail(eq("Cust@Example.com"), eq("new-strong-password"), any()))
+                .willReturn(account);
+
+        ResponseEntity<?> response = controller.resetPasswordByEmail(
+                adminPrincipal,
+                Map.of("email", "Cust@Example.com", "password", "new-strong-password"),
+                httpRequest);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertThat(body.get("email")).isEqualTo("cust@example.com");
+        verify(adminSetPassword).runByEmail(eq("Cust@Example.com"), eq("new-strong-password"), any());
+    }
+
+    @Test
+    void resetPasswordByEmailRequiresAdmin() {
+        assertThatThrownBy(() -> controller.resetPasswordByEmail(
+                customerPrincipal,
+                Map.of("email", "cust@example.com", "password", "new-strong-password"),
+                httpRequest))
+                .isInstanceOf(PermissionDenied.class);
+    }
+
+    @Test
+    void resetPasswordByAccountIdRequiresAdmin() {
+        assertThatThrownBy(() -> controller.resetPassword(
+                customerPrincipal, UUID.randomUUID(),
+                Map.of("password", "new-strong-password"), httpRequest))
                 .isInstanceOf(PermissionDenied.class);
     }
 }

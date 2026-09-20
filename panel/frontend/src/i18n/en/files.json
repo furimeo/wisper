@@ -34,13 +34,24 @@
   "files.page.upload_refusal_readonly": "You have read access to this organization, so uploading is off.",
   "files.page.upload_refusal_static_site": "This is a static site's releases tree. Its files come from the last build, and anything written here would be replaced by the next deployment.",
   "files.page.uploading_bar_show": "Show",
-  "files.page.uploading_bar": "Uploading {count} {count, plural, one {file} other {files}}{percent}",
+  "files.page.uploading_bar": {
+    "one": "Uploading {count} file{percent}",
+    "other": "Uploading {count} files{percent}"
+  },
+  "files.page.waiting_bar": {
+    "one": "{count} file waiting to resume{percent}",
+    "other": "{count} files waiting to resume{percent}"
+  },
   "files.page.error_title": "These files cannot be listed right now",
   "files.page.retry_label": "Try again",
   "files.page.read_only_note": "This tree is read-only for you, so the operations that would change it are switched off.",
   "files.page.show_dotfiles": "Show dotfiles",
   "files.page.show_dotfiles_hint": "Hidden by default: what a customer came to see is their own files, and this is one tap.",
+  "files.browser.show_hidden": "Show hidden files",
   "files.page.folder_dropped_error": "{names} {verb} a folder. Compress it first, upload the archive, then use Extract on it - that keeps the structure and survives a dropped connection, which a folder of loose files would not.",
+  "files.page.folder_empty_notice": "That folder is empty, so there was nothing to upload.",
+  "files.page.folder_read_error": "The browser would not read that folder. Try compressing it and uploading the archive instead.",
+  "files.page.folder_upload_hint": "You can also drop a folder, or pick one below - its structure is reconstructed on the server.",
   "files.page.verb_is": "is",
   "files.page.verb_are": "are",
   "files.page.load_more_error": "The rest of this folder did not arrive. The node may have gone away.",
@@ -57,7 +68,10 @@
   "files.list.load_error_title": "The rest of this folder did not arrive",
   "files.list.load_error_retry": "Try again",
   "files.list.showing_of": "Showing {shown} of {total}",
-  "files.list.count_entries": "{count} {count, plural, one {entry} other {entries}}",
+  "files.list.count_entries": {
+    "one": "{count} entry",
+    "other": "{count} entries"
+  },
   "files.list.sorted_note": " · sorted within what has loaded so far",
   "files.list.load_more": "Load more",
   "files.table.caption": "Files in this folder",
@@ -134,6 +148,7 @@
   "files.upload.close": "Close",
   "files.upload.drop_or_pick": "Drop files anywhere on the page, or pick them here.",
   "files.upload.choose_files": "Choose files",
+  "files.upload.choose_folder": "Choose folder",
   "files.upload.chunked_notice": "Uploads are sent in chunks and carry on by themselves after a dropped connection - they resume from where they stopped rather than starting again.",
   "files.upload.progress_aria": "{percent}% of {name} uploaded",
   "files.upload.bytes_progress": "{sent} of {total}",
@@ -241,8 +256,14 @@
   "terminal.page.loading_terminal": "Loading the terminal",
   "terminal.page.paste_button": "Paste",
   "terminal.page.no_shell_running": "No shell is running. Opening this page does not start one - a terminal left open in a background tab is a process inside your container, so it is always something you ask for.",
-  "terminal.page.duration_minutes": "{count} {count, plural, one {minute} other {minutes}}",
-  "terminal.page.duration_hours": "{count} {count, plural, one {hour} other {hours}}",
+  "terminal.page.duration_minutes": {
+    "one": "{count} minute",
+    "other": "{count} minutes"
+  },
+  "terminal.page.duration_hours": {
+    "one": "{count} hour",
+    "other": "{count} hours"
+  },
   "terminal.paste_dialog.title": "Paste into the shell",
   "terminal.paste_dialog.description": "Your browser did not give the panel access to the clipboard, so paste it here instead.",
   "terminal.paste_dialog.cancel": "Cancel",
@@ -250,7 +271,10 @@
   "terminal.paste_dialog.text_label": "Text",
   "terminal.paste_dialog.text_hint": "Sent to the shell exactly as it is, including the line breaks.",
   "files.actions.new_file": "New file",
-  "files.status.total_items": "{count} {count, plural, one {item} other {items}}",
+  "files.status.total_items": {
+    "one": "{count} item",
+    "other": "{count} items"
+  },
   "files.status.selected_items": "{count} selected ({bytes})",
   "files.new_file.title": "New file",
   "files.new_file.description": "Create an empty file in this folder.",

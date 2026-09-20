@@ -127,6 +127,23 @@ export function enqueueUpload(
   file: File,
 ): void {
   const path = directory ? `${directory}/${file.name}` : file.name
+  enqueueUploadAt(serviceId, rootId, path, file)
+}
+
+/**
+ * Queues one file at an explicit destination path, which may include subdirectories.
+ *
+ * Used by folder upload: `path` is `directory/relativePath`, e.g.
+ * `myproject/src/main.go`. The node creates every parent directory at completion
+ * (`upload_complete.go` calls `MkdirAll` on the parent), so a tree of files sent
+ * one at a time reconstructs the folder structure on the other side.
+ */
+export function enqueueUploadAt(
+  serviceId: string,
+  rootId: string,
+  path: string,
+  file: File,
+): void {
   const identity: UploadIdentity = {
     serviceId,
     rootId,

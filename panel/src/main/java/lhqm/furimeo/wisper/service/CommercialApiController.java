@@ -22,8 +22,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lhqm.furimeo.wisper.audit.AuditActor;
 import lhqm.furimeo.wisper.auth.Account;
 import lhqm.furimeo.wisper.auth.AccountRepository;
+import lhqm.furimeo.wisper.auth.AdminSetPassword;
 import lhqm.furimeo.wisper.auth.ApiScope;
 import lhqm.furimeo.wisper.auth.ApiTokenPrincipal;
+import lhqm.furimeo.wisper.auth.CredentialRejected;
 import lhqm.furimeo.wisper.auth.PlatformRole;
 import lhqm.furimeo.wisper.auth.ReactivateAccount;
 import lhqm.furimeo.wisper.auth.SuspendAccount;
@@ -61,6 +63,7 @@ public class CommercialApiController {
     private final AccountRepository accounts;
     private final SuspendAccount suspendAccount;
     private final ReactivateAccount reactivateAccount;
+    private final AdminSetPassword adminSetPassword;
 
     public CommercialApiController(
             FastProvisionServer fastProvisionServer,
@@ -76,7 +79,8 @@ public class CommercialApiController {
             ResolveMembership memberships,
             AccountRepository accounts,
             SuspendAccount suspendAccount,
-            ReactivateAccount reactivateAccount) {
+            ReactivateAccount reactivateAccount,
+            AdminSetPassword adminSetPassword) {
         this.fastProvisionServer = fastProvisionServer;
         this.services = services;
         this.volumes = volumes;
@@ -91,6 +95,7 @@ public class CommercialApiController {
         this.accounts = accounts;
         this.suspendAccount = suspendAccount;
         this.reactivateAccount = reactivateAccount;
+        this.adminSetPassword = adminSetPassword;
     }
 
     @PostMapping(path = {"/provision", "/orders"})
@@ -233,6 +238,47 @@ public class CommercialApiController {
         return ResponseEntity.ok(Map.of("accountId", reactivated.id(), "status", reactivated.status().name()));
     }
 
+    @PostMapping("/accounts/{accountId}/password")
+    public ResponseEntity<?> resetPassword(
+            @AuthenticationPrincipal ApiTokenPrincipal principal,
+            @PathVariable UUID accountId,
+            @RequestBody Map<String, String> body,
+            HttpServletRequest httpRequest) {
+        requireAdmin(principal);
+        AuditActor actor = resolveActor(principal, httpRequest);
+        String password = body.get("password");
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Password cannot be blank.");
+        }
+        Account updated = adminSetPassword.run(accountId, password.strip(), actor);
+        return ResponseEntity.ok(Map.of(
+                "accountId", updated.id(),
+                "email", updated.email(),
+                "message", "Password updated successfully."));
+    }
+
+    @PostMapping("/accounts/password-by-email")
+    public ResponseEntity<?> resetPasswordByEmail(
+            @AuthenticationPrincipal ApiTokenPrincipal principal,
+            @RequestBody Map<String, String> body,
+            HttpServletRequest httpRequest) {
+        requireAdmin(principal);
+        AuditActor actor = resolveActor(principal, httpRequest);
+        String email = body.get("email");
+        String password = body.get("password");
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be blank.");
+        }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Password cannot be blank.");
+        }
+        Account updated = adminSetPassword.runByEmail(email.strip(), password.strip(), actor);
+        return ResponseEntity.ok(Map.of(
+                "accountId", updated.id(),
+                "email", updated.email(),
+                "message", "Password updated successfully."));
+    }
+
     private AuditActor resolveActor(ApiTokenPrincipal principal, HttpServletRequest request) {
         if (principal == null) {
             throw new PermissionDenied("commercial.api", MemberRole.VIEWER, "API Token authentication required");
@@ -291,5 +337,11 @@ public class CommercialApiController {
     public ResponseEntity<?> onNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(CredentialRejected.class)
+    public ResponseEntity<?> onCredentialRejected(CredentialRejected ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(Map.of("message", ex.getMessage(), "field", ex.field()));
     }
 }

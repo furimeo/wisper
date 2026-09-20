@@ -107,7 +107,10 @@
   "deploy.retention.app_title": "Rolling back",
   "deploy.retention.app_body": "An app is deployed as an image, so nothing on the node is swept and every successful deployment in this list stays available to roll back to. Rolling back restarts the exact digest that was running, not whatever the tag points at today.",
   "deploy.retention.app_restorable_none": "There is no earlier successful deployment to go back to yet.",
-  "deploy.retention.app_restorable_count": "{count} {count, plural, one {release} other {releases}} to roll back to.",
+  "deploy.retention.app_restorable_count": {
+    "one": "{count} release to roll back to.",
+    "other": "{count} releases to roll back to."
+  },
   "deploy.retention.site_title": "Release retention",
   "deploy.retention.change": "Change",
   "deploy.retention.site_body": "The node keeps the last {count} release{suffix} of this site on disk. Anything older is deleted from the node and drops out of this list, because a rollback to a directory that is gone would fail.",
@@ -115,7 +118,10 @@
   "deploy.retention.nothing_published": "Nothing published yet",
   "deploy.retention.can_rollback_to": "Can roll back to",
   "deploy.retention.none_yet": "None yet",
-  "deploy.retention.releases_count": "{count} {count, plural, one {release} other {releases}}",
+  "deploy.retention.releases_count": {
+    "one": "{count} release",
+    "other": "{count} releases"
+  },
   "deploy.retention.footnote": "The live release is never swept, and neither is the one a live rollback points back at - so a site serving release #3 after six later deploys keeps #3 whatever the limit says.",
   "deploy.start.reason_read_only": "You have read access to this organization, so you cannot start a deployment.",
   "deploy.start.reason_spent": "This organization has used all {limit} of today's deployments. The count resets on the hour, twenty-four hours after each one was started.",

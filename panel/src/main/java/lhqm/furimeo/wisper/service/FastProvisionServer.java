@@ -3,6 +3,7 @@ package lhqm.furimeo.wisper.service;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -48,6 +49,7 @@ public class FastProvisionServer {
     private final CreateOrganization createOrganization;
     private final ProjectRepository projects;
     private final CreateProject createProject;
+    private final ServiceRepository serviceRepository;
     private final CreateService createService;
     private final CreateVolume createVolume;
     private final SetEnvVar setEnvVar;
@@ -57,14 +59,15 @@ public class FastProvisionServer {
             AccountRepository accounts, RegisterUser registerUser,
             OrganizationRepository organizations, CreateOrganization createOrganization,
             ProjectRepository projects, CreateProject createProject,
-            CreateService createService, CreateVolume createVolume,
-            SetEnvVar setEnvVar, StartService startService) {
+            ServiceRepository serviceRepository, CreateService createService,
+            CreateVolume createVolume, SetEnvVar setEnvVar, StartService startService) {
         this.accounts = accounts;
         this.registerUser = registerUser;
         this.organizations = organizations;
         this.createOrganization = createOrganization;
         this.projects = projects;
         this.createProject = createProject;
+        this.serviceRepository = serviceRepository;
         this.createService = createService;
         this.createVolume = createVolume;
         this.setEnvVar = setEnvVar;
@@ -216,6 +219,20 @@ public class FastProvisionServer {
         String workingDir = req.workingDir() != null && !req.workingDir().isBlank()
                 ? req.workingDir().strip()
                 : "/app";
+
+        // Derive slug the same way CreateService does, so we can check idempotency.
+        String derivedSlug = Slug.of(req.serviceSlug(), req.serviceName());
+
+        // Idempotency: if a service with this slug already exists in the project,
+        // return it rather than hitting QuotaExceeded on a retry. This happens when
+        // a previous provisioning attempt created the service but the billing dashboard
+        // crashed before it could persist the result locally.
+        Optional<Service> existing = serviceRepository.findByProjectIdAndSlug(projId, derivedSlug);
+        if (existing.isPresent()) {
+            log.info("Commercial provisioning: reusing existing service {} in project {}",
+                    existing.get().id(), projId);
+            return existing.get();
+        }
 
         ServiceDraft draft = new ServiceDraft(
                 req.serviceName(), req.serviceSlug(), req.kind(), image, cmd, List.of(),
