@@ -3,6 +3,19 @@
 All notable changes to wisper are documented here. The panel and the node
 daemon are versioned together — a tag `vX.Y.Z` builds both.
 
+## v0.1.14 — 2026-09-20
+
+### Fixed
+
+- **Upload root cause: node session ID rejected by `checkIdentifier`.**
+  `UploadTicket.nodeSessionId()` used `serviceId + ":" + sessionId` — 73
+  chars containing a colon. The node's `checkIdentifier` only allows
+  letters, digits, `-`, `_`, `.` and max 64 chars, so every chunk was
+  rejected with `UNKNOWN_SESSION` → 422. Uploads never worked. Changed to
+  `serviceId.substring(0,8) + "_" + sessionId` (45 chars, valid chars).
+  This is a panel-only fix — no sasayaki update needed; the node's `RootID`
+  check in `beginSession` already prevents cross-tenant access.
+
 ## v0.1.13 — 2026-09-20
 
 ### Fixed

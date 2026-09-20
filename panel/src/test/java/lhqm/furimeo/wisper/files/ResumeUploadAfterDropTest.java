@@ -158,7 +158,7 @@ class ResumeUploadAfterDropTest {
         begin.start(access, SESSION, RelativePath.of("dump.sql"), TOTAL, CHECKSUM, false);
 
         assertThat(captureRequest().getResume().getSessionId())
-                .isEqualTo(SERVICE + ":" + SESSION);
+                .isEqualTo(SERVICE.toString().substring(0, 8) + "_" + SESSION);
     }
 
     @Test
@@ -265,7 +265,7 @@ class ResumeUploadAfterDropTest {
     private static FileEvent knownState(ByteRange received, long total) {
         return FileEvent.newBuilder()
                 .setState(UploadState.newBuilder()
-                        .setSessionId(SERVICE + ":" + SESSION)
+                        .setSessionId(SERVICE.toString().substring(0, 8) + "_" + SESSION)
                         .setKnown(true)
                         .setTotalBytes(total)
                         .addReceived(received)
@@ -276,7 +276,7 @@ class ResumeUploadAfterDropTest {
     private static FileEvent ack(long index, long received) {
         return FileEvent.newBuilder()
                 .setAck(UploadAck.newBuilder()
-                        .setSessionId(SERVICE + ":" + SESSION)
+                        .setSessionId(SERVICE.toString().substring(0, 8) + "_" + SESSION)
                         .setChunkIndex(index)
                         .setReceivedBytes(received)
                         .setNextOffset(received))

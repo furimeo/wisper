@@ -79,9 +79,17 @@ public record UploadTicket(
                 totalBytes, contentSha256, chunkSize, overwrite, actorLabel, startedAt, at);
     }
 
-    /** The id the node knows this upload by, namespaced so two tenants cannot collide. */
+    /**
+     * The id the node knows this upload by, namespaced so two tenants cannot collide.
+     *
+     * <p>Uses the first 8 hex chars of the service UUID as a prefix, joined with
+     * {@code _}: {@code 03e93925_6afe0024-...}. This stays inside the node's
+     * {@code checkIdentifier} rules (letters, digits, {@code -}, {@code _}, {@code .},
+     * max 64 chars) — the previous {@code serviceId + ":" + sessionId} was 73 chars
+     * and contained a colon, both of which the node rejected on every chunk.
+     */
     public String nodeSessionId() {
-        return serviceId + ":" + sessionId;
+        return serviceId.toString().substring(0, 8) + "_" + sessionId;
     }
 
     /** How many chunks the whole file is, given the size the client was told. */
