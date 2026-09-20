@@ -2,10 +2,14 @@ package lhqm.furimeo.wisper.files;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +18,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lhqm.furimeo.wisper.node.NodeOffline;
+import lhqm.furimeo.wisper.proto.v1.FileErrorCode;
 
 /**
  * Chunked upload with resume: {@code /services/{id}/files/uploads/**}.
@@ -163,5 +169,49 @@ public class FileUploadController {
         } catch (IOException unreadable) {
             throw new UncheckedIOException("The uploaded chunk could not be read", unreadable);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Exception → JSON responses for the upload fetch client
+    // -------------------------------------------------------------------------
+
+    @ExceptionHandler(FileOperationFailed.class)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> onFileOperationFailed(FileOperationFailed ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("message", ex.detail(), "code", ex.code().name()));
+    }
+
+    @ExceptionHandler(FileOperationTimedOut.class)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> onFileOperationTimedOut(FileOperationTimedOut ex) {
+        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UploadSessionUnknown.class)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> onUploadSessionUnknown(UploadSessionUnknown ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("message", "Session expired. The upload will resume from where it stopped."));
+    }
+
+    @ExceptionHandler(PathRejected.class)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> onPathRejected(PathRejected ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(NodeOffline.class)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> onNodeOffline(NodeOffline ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("message", ex.getMessage()));
     }
 }

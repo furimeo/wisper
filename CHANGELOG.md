@@ -3,6 +3,23 @@
 All notable changes to wisper are documented here. The panel and the node
 daemon are versioned together — a tag `vX.Y.Z` builds both.
 
+## v0.1.13 — 2026-09-20
+
+### Fixed
+
+- **Upload 422 errors now return JSON, not HTML.** When the node rejected a
+  chunk (`FileOperationFailed`) or the session was unknown, the panel
+  returned an HTML error page. The browser's `fetch` client could not parse
+  it, so the customer saw "The panel answered 422" instead of the real
+  reason. Upload endpoints now have `@ExceptionHandler` methods that return
+  JSON (`{message, code}`) for `FileOperationFailed`, `FileOperationTimedOut`,
+  `UploadSessionUnknown`, `PathRejected` and `NodeOffline`.
+
+- **Client recovery for 409/422-UNKNOWN_SESSION.** When the panel restarts
+  mid-upload and the session registry is lost, the client now reopens the
+  session and resumes from where the node left off instead of marking the
+  upload as permanently failed.
+
 ## v0.1.12 — 2026-09-20
 
 ### Fixed

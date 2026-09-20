@@ -311,10 +311,32 @@ async function run(job: Job): Promise<void> {
       patch(job.item.id, {status: 'cancelled', message: 'Cancelled.'})
       return
     }
-    if (failure instanceof FileRequestFailed && !isTransient(failure.status)) {
-      // The panel refused it, and will refuse it again. Say what it said.
-      patch(job.item.id, {status: 'failed', message: failure.message})
-      return
+    if (failure instanceof FileRequestFailed) {
+      // 409 Conflict = session unknown (panel restarted or swept). Not a failure —
+      // the client reopens the session on the next pump and the node picks up from
+      // whatever it already holds.
+      if (failure.status === 409) {
+        patch(job.item.id, {
+          status: 'queued',
+          message: 'Reopening session after restart. Nothing was lost.',
+        })
+        pump()
+        return
+      }
+      // 422 with UNKNOWN_SESSION from the node means the same thing — start again.
+      if (failure.status === 422 && /UNKNOWN_SESSION/i.test(failure.message)) {
+        patch(job.item.id, {
+          status: 'queued',
+          message: 'Session expired on the node. Starting again.',
+        })
+        pump()
+        return
+      }
+      if (!isTransient(failure.status)) {
+        // The panel refused it, and will refuse it again. Say what it said.
+        patch(job.item.id, {status: 'failed', message: failure.message})
+        return
+      }
     }
     patch(job.item.id, {
       status: 'interrupted',
