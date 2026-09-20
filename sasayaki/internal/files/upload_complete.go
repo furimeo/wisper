@@ -122,15 +122,18 @@ func (h *Host) placeUpload(ctx context.Context, root *openRoot, session state.Up
 		return failed
 	}
 
-	if actual := hex.EncodeToString(digest.Sum(nil)); !strings.EqualFold(actual, session.ContentSHA256) {
-		_ = directory.Remove(temporary)
-		// The bytes on disk are not the file the browser meant to send, and every chunk
-		// of them is already recorded as received - so there is nothing left to retry
-		// against. The session goes, and the customer uploads again from a clean start.
-		h.forget(ctx, session.SessionID)
-		return refuse(wisperpb.FileErrorCode_FILE_ERROR_CODE_CHECKSUM_MISMATCH, destination,
-			"the assembled file hashes to %s and was declared as %q; upload it again",
-			actual, session.ContentSHA256)
+	// An empty declared checksum means the client could not hash the whole file
+	// before starting (a 3 GB file on a phone). Per-chunk checksums still ran on
+	// every chunk, so corruption is caught — the whole-file check is skipped
+	// rather than compared against an empty string that can never match.
+	if session.ContentSHA256 != "" {
+		if actual := hex.EncodeToString(digest.Sum(nil)); !strings.EqualFold(actual, session.ContentSHA256) {
+			_ = directory.Remove(temporary)
+			h.forget(ctx, session.SessionID)
+			return refuse(wisperpb.FileErrorCode_FILE_ERROR_CODE_CHECKSUM_MISMATCH, destination,
+				"the assembled file hashes to %s and was declared as %q; upload it again",
+				actual, session.ContentSHA256)
+		}
 	}
 
 	return h.publish(ctx, directory, temporary, name, session.Overwrite, destination)

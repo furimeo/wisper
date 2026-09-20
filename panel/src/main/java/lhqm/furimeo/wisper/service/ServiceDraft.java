@@ -89,7 +89,7 @@ public record ServiceDraft(
         requiredTags = requiredTags == null ? List.of() : List.copyOf(requiredTags);
 
         restartPolicy = restartPolicy == null ? RestartPolicy.ALWAYS : restartPolicy;
-        runtimeIsolation = runtimeIsolation == null ? RuntimeIsolation.RUNSC : runtimeIsolation;
+        runtimeIsolation = runtimeIsolation == null ? RuntimeIsolation.RUNC : runtimeIsolation;
         healthCheckIntervalSeconds = healthCheckIntervalSeconds == null
                 ? DEFAULT_HEALTH_INTERVAL_SECONDS : healthCheckIntervalSeconds;
         keepReleases = keepReleases == null ? DEFAULT_KEEP_RELEASES : keepReleases;

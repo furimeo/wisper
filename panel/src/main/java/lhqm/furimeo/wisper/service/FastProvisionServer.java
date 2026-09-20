@@ -240,7 +240,7 @@ public class FastProvisionServer {
                 null, null, null, true, req.cpuMillicores() != null ? req.cpuMillicores() : 500L,
                 req.memoryBytes() != null ? req.memoryBytes() : 268_435_456L,
                 req.volumeSizeBytes() != null ? req.volumeSizeBytes() : 5_368_709_120L,
-                null, List.of(), RuntimeIsolation.RUNSC, null);
+                null, List.of(), RuntimeIsolation.RUNC, null);
 
         return createService.create(actor, membership, projId, draft);
     }
@@ -250,7 +250,7 @@ public class FastProvisionServer {
             return CommandLine.parse(req.command());
         }
         if (req.kind() == ServiceKind.APP) {
-            return List.of("sleep", "infinity");
+            return List.of("tail", "-f", "/dev/null");
         }
         return List.of();
     }

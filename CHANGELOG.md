@@ -3,6 +3,38 @@
 All notable changes to wisper are documented here. The panel and the node
 daemon are versioned together — a tag `vX.Y.Z` builds both.
 
+## v0.1.15 — 2026-09-20
+
+### Fixed
+
+- **Container filesystem broken — apt-get, pip, npm could not resolve anything.**
+  Three root causes found and fixed:
+
+  1. **No DNS**: `HostConfig` relied on Docker's embedded resolver at
+     `127.0.0.11`, but the egress filter blocks `127.0.0.0/8`. Every DNS
+     query was dropped — `apt-get update` failed with "could not resolve
+     host". Added explicit `DNS: [8.8.8.8, 1.1.1.1]` to every container.
+
+  2. **gVisor runsc broke apt-get**: `runsc` restricts syscalls that
+     `dpkg`/`apt-get` need. Changed the default runtime from `RUNSC` to
+     `RUNC` for commercially provisioned services — gVisor is still
+     available when explicitly requested, but the default has to be the
+     runtime that works with the images people actually use.
+
+  3. **`sleep infinity` as keepalive**: a `sleep` process does not respond
+     to signals cleanly and is not an init system. Changed to
+     `tail -f /dev/null` which is the standard container keepalive — it
+     stays alive, responds to SIGTERM immediately, and does not hold
+     resources.
+
+- **Upload checksum mismatch on files without declared hash.** `placeUpload`
+  always compared the assembled file's SHA-256 against the declared hash,
+  even when the client sent no whole-file hash (the empty-string case).
+  The empty string can never match a real hash → every upload of a file the
+  browser couldn't pre-hash (anything large) failed at completion. Now
+  skips the whole-file check when `ContentSHA256` is empty — per-chunk
+  checksums still catch corruption.
+
 ## v0.1.14 — 2026-09-20
 
 ### Fixed

@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"net/netip"
 	"strconv"
 	"sync"
 
@@ -115,6 +116,13 @@ func (d *Docker) hostConfigFor(
 		PortBindings:  published,
 		Mounts:        mounts,
 
+		// Explicit DNS rather than relying on Docker's embedded resolver at 127.0.0.11.
+		// The egress filter blocks 127.0.0.0/8 (the host's loopback, where an
+		// unauthenticated admin port lives), and Docker's embedded resolver sits inside
+		// that range — so without explicit DNS, a container's DNS queries are dropped
+		// and apt-get / pip / npm can resolve nothing.
+		DNS: mustParseDNS("8.8.8.8", "1.1.1.1"),
+
 		// Removal is this daemon's decision, taken by the reconcile loop when a workload
 		// leaves the spec. A container the engine deleted on exit would take its logs
 		// and its exit code with it, and the customer asking why their job stopped would
@@ -143,4 +151,18 @@ func networkingFor(workload spec.Workload) *network.NetworkingConfig {
 			workload.TenantNetwork: {Aliases: aliases},
 		},
 	}
+}
+
+// mustParseDNS converts IP strings to netip.Addr for the HostConfig.DNS field.
+// Panics on invalid IPs — these are hardcoded constants, not user input.
+func mustParseDNS(ips ...string) []netip.Addr {
+	result := make([]netip.Addr, len(ips))
+	for i, ip := range ips {
+		addr, err := netip.ParseAddr(ip)
+		if err != nil {
+			panic(fmt.Sprintf("runtime: invalid DNS server %q: %v", ip, err))
+		}
+		result[i] = addr
+	}
+	return result
 }
