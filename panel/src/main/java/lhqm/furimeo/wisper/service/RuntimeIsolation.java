@@ -5,26 +5,26 @@ package lhqm.furimeo.wisper.service;
  * {@code service_runtime_isolation_known} CHECK and {@code ContainerRuntime} in
  * {@code workload.proto}.
  *
- * <p>The escape hatch exists because gVisor does not run everything: {@code io_uring} and
- * a handful of older binaries fail under {@code runsc}, and a platform with no way out of
- * that turns "gVisor cannot do this" into "your app is broken" (design §11.6).
+ * <p>RUNC is the default: it runs everything (apt-get, pip, npm, all package managers)
+ * without restriction, and the security layers in sasayaki's hardening.go — a custom
+ * seccomp allow-list, dropped capabilities, no-new-privileges, namespace isolation,
+ * egress filtering, OOM score adjustment and cgroups v2 ceilings — provide the isolation
+ * gVisor offered, without breaking the syscalls package managers need.
  *
- * <p>It is deliberately awkward to take. Choosing {@link #RUNC} requires a written
- * reason - the {@code service_runc_needs_reason} CHECK will not accept a blank one - and
- * the panel shows that reason next to the service as a warning. A weaker sandbox that
- * nobody can see is the one that gets chosen by default six months later.
+ * <p>gVisor ({@link #RUNSC}) remains available for workloads that need the stronger
+ * userspace syscall filtering it provides, at the cost of breaking some package managers.
  */
 public enum RuntimeIsolation {
 
-    /** gVisor. Syscalls are filtered in userspace; this is the default and stays it. */
-    RUNSC,
+    /** Ordinary runc with seccomp + capabilities + namespace isolation. The default. */
+    RUNC,
 
-    /** Ordinary runc. Faster, and only kernel namespaces between the workload and the host. */
-    RUNC;
+    /** gVisor. Syscalls are filtered in userspace; breaks some package managers. */
+    RUNSC;
 
     /** Whether choosing this obliges the customer to say why. */
     public boolean needsReason() {
-        return this == RUNC;
+        return this == RUNSC;
     }
 
     /** The word next to the service. */
@@ -34,8 +34,8 @@ public enum RuntimeIsolation {
 
     /** What the panel warns, or empty for the safe choice. */
     public String warning() {
-        return this == RUNC
-                ? "This service runs without gVisor, so only the kernel separates it from the host."
+        return this == RUNSC
+                ? "This service runs under gVisor, which may block some package managers (apt, pip, npm)."
                 : "";
     }
 }

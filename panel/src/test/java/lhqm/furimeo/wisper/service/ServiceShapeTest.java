@@ -181,9 +181,9 @@ class ServiceShapeTest {
     // ---- rules both kinds share ----------------------------------------------------
 
     @Test
-    void turningGvisorOffNeedsAReasonTheCustomerWrites() {
+    void choosingGvisorNeedsAReasonTheCustomerWrites() {
         ServiceDraft draft = draft(ServiceKind.APP).image("node:22")
-                .isolation(RuntimeIsolation.RUNC, null).build();
+                .isolation(RuntimeIsolation.RUNSC, null).build();
 
         assertThatExceptionOfType(RequestRejected.class)
                 .isThrownBy(() -> ServiceShape.validated(draft))
@@ -191,7 +191,7 @@ class ServiceShapeTest {
 
         assertThatNoException().isThrownBy(() -> ServiceShape.validated(
                 draft(ServiceKind.APP).image("node:22")
-                        .isolation(RuntimeIsolation.RUNC, "io_uring is not supported under runsc")
+                        .isolation(RuntimeIsolation.RUNSC, "needs userspace syscall filtering")
                         .build()));
     }
 
@@ -254,7 +254,7 @@ class ServiceShapeTest {
         assertThat(defaults.pidsLimit()).isEqualTo(256);
         assertThat(defaults.keepReleases()).isEqualTo(5);
         assertThat(defaults.healthCheckIntervalSeconds()).isEqualTo(30);
-        assertThat(defaults.runtimeIsolation()).isEqualTo(RuntimeIsolation.RUNSC);
+        assertThat(defaults.runtimeIsolation()).isEqualTo(RuntimeIsolation.RUNC);
         assertThat(defaults.restartPolicy()).isEqualTo(RestartPolicy.ALWAYS);
     }
 
@@ -277,7 +277,7 @@ class ServiceShapeTest {
         private String outputDir;
         private String repositoryUrl;
         private String credential;
-        private RuntimeIsolation isolation = RuntimeIsolation.RUNSC;
+        private RuntimeIsolation isolation = RuntimeIsolation.RUNC;
         private String isolationReason;
         private Long cpu;
         private Long memory;

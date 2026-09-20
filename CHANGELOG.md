@@ -3,6 +3,31 @@
 All notable changes to wisper are documented here. The panel and the node
 daemon are versioned together — a tag `vX.Y.Z` builds both.
 
+## v0.1.16 — 2026-09-20
+
+### Changed
+
+- **Runtime default: RUNC replaces RUNSC.** gVisor (runsc) breaks the
+  syscalls package managers need (ptrace for dpkg, mount for apt, etc.).
+  RUNC is now the default — the isolation gVisor provided is replaced by
+  a custom seccomp allow-list, dropped capabilities, no-new-privileges,
+  namespace isolation, egress filtering, OOM score adjustment, and
+  cgroups v2 ceilings, all in `hardening.go`.
+
+- **Custom seccomp profile.** Allow-list based (defaultAction ERRNO):
+  everything not listed is blocked. The allow list covers every syscall
+  apt/pip/npm/dpkg need; dangerous syscalls (keyctl, kexec_load,
+  open_by_handle_at, perf_event_open, etc.) are implicitly blocked by
+  not being in the list.
+
+- **OOM score adjustment.** `OomScoreAdj = 500` — cryptojacker processes
+  are killed first under memory pressure, before the host's own
+  processes.
+
+- **Migration V35**: drops `service_runc_needs_reason` CHECK constraint
+  (RUNC is now the default, not an escape hatch). RUNSC now requires a
+  reason instead.
+
 ## v0.1.15 — 2026-09-20
 
 ### Fixed

@@ -180,8 +180,8 @@ public final class ServiceShape {
     private static void checkIsolation(ServiceDraft draft) {
         if (draft.runtimeIsolation().needsReason() && draft.isolationReason() == null) {
             throw new RequestRejected("isolationReason",
-                    "Turning gVisor off needs a reason, and the panel shows it next to the "
-                            + "service. Say which workload cannot run under runsc.");
+                    "Choosing gVisor needs a reason, and the panel shows it next to the "
+                            + "service. Say why this workload needs userspace syscall filtering.");
         }
     }
 
