@@ -1,0 +1,24 @@
+# Local backups, binaries and secrets are outside ChatGPT code review access.
+backups/
+*.jar
+*.war
+build/
+.gradle/
+node_modules/
+dist/
+*.sql.gz
+*.sql.zip
+*.dump
+*.sqlite
+*.sqlite3
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+*.log
+*.key
+*.token
+.env*
+panel.env*
+!panel.env.example
