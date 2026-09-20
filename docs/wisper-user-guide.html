@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Hướng dẫn sử dụng Wisper Panel — Dành cho người mới bắt đầu</title>
+    <style>
+        :root {
+            --brand: #6366f1;
+            --brand-light: #818cf8;
+            --brand-bg: #eef2ff;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --ink: #1e293b;
+            --ink-soft: #475569;
+            --ink-light: #94a3b8;
+            --surface: #ffffff;
+            --surface-raised: #f8fafc;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --brand: #818cf8;
+                --brand-light: #a5b4fc;
+                --brand-bg: #1e1b4b;
+                --ink: #f1f5f9;
+                --ink-soft: #cbd5e1;
+                --ink-light: #64748b;
+                --surface: #1e293b;
+                --surface-raised: #334155;
+                --border: #475569;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--surface-raised);
+            color: var(--ink);
+            line-height: 1.7;
+            padding-bottom: 60px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
+            color: white;
+            padding: 48px 20px 40px;
+            text-align: center;
+        }
+        .hero h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+        .hero p { font-size: 16px; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+
+        .container { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+
+        /* Table of contents */
+        .toc {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin: 24px 0;
+        }
+        .toc h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-light); margin-bottom: 12px; }
+        .toc ol { list-style: none; counter-reset: toc; }
+        .toc li { counter-increment: toc; margin-bottom: 6px; }
+        .toc a {
+            color: var(--brand);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toc a::before {
+            content: counter(toc);
+            background: var(--brand-bg);
+            color: var(--brand);
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700;
+            flex-shrink: 0;
+        }
+        .toc a:hover { text-decoration: underline; }
+
+        /* Section */
+        section { margin-bottom: 40px; scroll-margin-top: 20px; }
+        section > h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        section > h2 .num {
+            background: var(--brand);
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        h3 { font-size: 17px; font-weight: 600; margin: 20px 0 10px; color: var(--ink); }
+        p { margin-bottom: 12px; }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: var(--radius-sm);
+            padding: 14px 16px 14px 48px;
+            margin: 16px 0;
+            font-size: 14px;
+            position: relative;
+        }
+        .callout::before {
+            position: absolute;
+            left: 14px; top: 14px;
+            font-size: 20px;
+            line-height: 1;
+        }
+        .callout.tip { background: var(--brand-bg); border: 1px solid var(--brand-light); color: var(--ink); }
+        .callout.tip::before { content: "💡"; }
+        .callout.warn { background: #fef3c7; border: 1px solid var(--warning); color: var(--ink); }
+        @media (prefers-color-scheme: dark) { .callout.warn { background: #422006; } }
+        .callout.warn::before { content: "⚠️"; }
+        .callout.ok { background: #dcfce7; border: 1px solid var(--success); color: var(--ink); }
+        @media (prefers-color-scheme: dark) { .callout.ok { background: #052e16; } }
+        .callout.ok::before { content: "✅"; }
+
+        /* Mock UI */
+        .mock {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            position: relative;
+        }
+        .mock-bar {
+            background: var(--surface-raised);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 12px;
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: var(--ink-light);
+        }
+        .mock-dots { display: flex; gap: 5px; }
+        .mock-dots span {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--border);
+        }
+        .mock-body { padding: 16px; }
+
+        /* Fake buttons in mock */
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 13px; font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+        .btn-primary { background: var(--brand); color: white; }
+        .btn-primary:hover { background: var(--brand-light); }
+        .btn-secondary { background: var(--surface-raised); color: var(--ink); border-color: var(--border); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-ghost { background: transparent; color: var(--ink-soft); }
+
+        /* Tab bar mock */
+        .tabs { display: flex; gap: 2px; border-bottom: 2px solid var(--border); margin: -16px -16px 16px; padding: 0 16px; }
+        .tab {
+            padding: 10px 14px;
+            font-size: 13px; font-weight: 500;
+            color: var(--ink-light);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tab:hover { color: var(--ink-soft); }
+        .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+        /* File list mock */
+        .file-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: background 0.15s;
+        }
+        .file-row:hover { background: var(--surface-raised); }
+        .file-icon { font-size: 18px; flex-shrink: 0; }
+        .file-name { flex: 1; min-width: 0; }
+        .file-meta { font-size: 12px; color: var(--ink-light); }
+
+        /* Status badge */
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 12px; font-weight: 600;
+        }
+        .badge-running { background: #dcfce7; color: #15803d; }
+        .badge-stopped { background: #f1f5f9; color: #64748b; }
+        @media (prefers-color-scheme: dark) {
+            .badge-running { background: #052e16; color: #4ade80; }
+            .badge-stopped { background: #334155; color: #94a3b8; }
+        }
+        .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .dot-running { background: var(--success); animation: pulse 2s infinite; }
+        .dot-stopped { background: var(--ink-light); }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Terminal mock */
+        .terminal {
+            background: #0f172a;
+            color: #a3e635;
+            font-family: 'Fira Code', 'SF Mono', Menlo, monospace;
+            font-size: 13px;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            min-height: 100px;
+            line-height: 1.6;
+        }
+        .terminal .prompt { color: #60a5fa; }
+        .terminal .cursor {
+            display: inline-block;
+            width: 8px; height: 16px;
+            background: #a3e635;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Pointer animation */
+        .pointer-anim {
+            position: absolute;
+            width: 24px; height: 24px;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+        }
+        .pointer-anim svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .pointer-anim.animate {
+            animation: pointerMove 2.5s ease-in-out forwards;
+        }
+        @keyframes pointerMove {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .pointer-anim .click-ring {
+            position: absolute;
+            top: -4px; left: -4px;
+            width: 32px; height: 32px;
+            border: 2px solid var(--brand);
+            border-radius: 50%;
+            opacity: 0;
+        }
+        .pointer-anim.animate .click-ring {
+            animation: clickRing 2.5s ease-in-out forwards;
+        }
+        @keyframes clickRing {
+            0%, 60% { opacity: 0; transform: scale(0.5); }
+            65% { opacity: 1; transform: scale(1); }
+            75% { opacity: 0.5; transform: scale(1.5); }
+            85%, 100% { opacity: 0; transform: scale(2); }
+        }
+
+        /* Steps */
+        .steps { list-style: none; counter-reset: step; }
+        .steps > li {
+            counter-increment: step;
+            position: relative;
+            padding-left: 44px;
+            margin-bottom: 16px;
+        }
+        .steps > li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0; top: 0;
+            width: 28px; height: 28px;
+            background: var(--brand-bg);
+            color: var(--brand);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700;
+        }
+        .steps > li::after {
+            content: "";
+            position: absolute;
+            left: 13px; top: 28px;
+            width: 2px; height: calc(100% - 12px);
+            background: var(--border);
+        }
+        .steps > li:last-child::after { display: none; }
+        .steps > li > strong { display: block; margin-bottom: 4px; }
+
+        /* Highlight box */
+        .highlight {
+            border: 2px solid var(--brand);
+            border-radius: var(--radius-sm);
+            position: relative;
+            transition: all 0.3s;
+        }
+        .highlight.glow {
+            animation: glow 1s ease-in-out;
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+            50% { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3); }
+        }
+
+        /* Progress bar */
+        .progress-track {
+            background: var(--border);
+            border-radius: 999px;
+            height: 8px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .progress-fill {
+            background: var(--brand);
+            height: 100%;
+            border-radius: 999px;
+            width: 0;
+            transition: width 0.8s ease;
+        }
+        .progress-fill.animated { width: 100%; }
+
+        /* Volume card */
+        .volume-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            margin: 8px 0;
+        }
+        .volume-path {
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--brand);
+            background: var(--brand-bg);
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* Env var row */
+        .env-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .env-key { font-family: monospace; font-weight: 600; color: var(--brand); min-width: 120px; }
+        .env-val { color: var(--ink-soft); }
+        .env-secret { background: #fef3c7; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+        @media (prefers-color-scheme: dark) { .env-secret { background: #422006; } }
+
+        /* Code */
+        code {
+            font-family: 'Fira Code', 'SF Mono', Menlo, monospace;
+            background: var(--surface-raised);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--brand);
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--ink-light);
+            font-size: 13px;
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 22px; }
+            section > h2 { font-size: 18px; }
+            .mock-body { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>🚀 Hướng dẫn Wisper Panel</h1>
+    <p>Máy chủ ảo của bạn — chạy bot, ứng dụng, container — toàn bộ điều khiển trong tầm tay. Hướng dẫn này viết cho người chưa bao giờ dùng server.</p>
+</div>
+
+<div class="container">
+
+<div class="toc">
+    <h2>Mục lục</h2>
+    <ol>
+        <li><a href="#login">Đăng nhập vào Wisper</a></li>
+        <li><a href="#overview">Tổng quan màn hình chính</a></li>
+        <li><a href="#start-stop">Bật / Tắt / Khởi động lại máy chủ</a></li>
+        <li><a href="#files">Quản lý tệp tin (Upload, Tải, Sửa)</a></li>
+        <li><a href="#upload">Tải tệp và thư mục lên</a></li>
+        <li><a href="#terminal">Terminal — gõ lệnh trực tiếp</a></li>
+        <li><a href="#volumes">Ổ cứng (Volume) — lưu dữ liệu lâu dài</a></li>
+        <li><a href="#env">Biến môi trường & Secret</a></li>
+        <li><a href="#domains">Tên miền (Domain)</a></li>
+        <li><a href="#logs">Xem log & Theo dõi hiệu năng</a></li>
+        <li><a href="#settings">Cài đặt máy chủ</a></li>
+        <li><a href="#password">Đổi mật khẩu Wisper</a></li>
+    </ol>
+</div>
+
+<!-- ==================== 1. LOGIN ==================== -->
+<section id="login">
+    <h2><span class="num">1</span> Đăng nhập vào Wisper</h2>
+
+    <p>Bạn mua máy chủ từ Dashboard NVN. Wisper Panel là nơi bạn điều khiển máy chủ đó trực tiếp — như một chiếc máy tính ảo chạy trên nền Linux.</p>
+
+    <div class="steps">
+        <li>
+            <strong>Mở Wisper Panel</strong>
+            Từ Dashboard NVN, ấn nút <span style="color:var(--brand);font-weight:600;">"Mở Panel Wisper"</span> trên thẻ máy chủ. Trình duyệt mở Wisper Panel trong tab mới.
+        </li>
+        <li>
+            <strong>Nhập email và mật khẩu</strong>
+            Email chính là email bạn đăng ký trên NVN. Mật khẩu do bạn tự đặt (xem mục 12 bên dưới).
+        </li>
+        <li>
+            <strong>Bấm "Sign in"</strong>
+            <div class="mock" style="max-width:340px;">
+                <div class="mock-body">
+                    <div style="margin-bottom:12px;">
+                        <div style="font-size:13px;color:var(--ink-light);margin-bottom:4px;">Email</div>
+                        <div style="border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;color:var(--ink-light);">ban@email.com</div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <div style="font-size:13px;color:var(--ink-light);margin-bottom:4px;">Mật khẩu</div>
+                        <div style="border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;color:var(--ink-light);">••••••••••••</div>
+                    </div>
+                    <div style="position:relative;display:inline-block;">
+                        <button class="btn btn-primary" id="btn-login">Sign in</button>
+                        <div class="pointer-anim" data-target="btn-login" data-x="35" data-y="-2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2">
+                                <path d="M4 4l7 16 2-7 7-2z" fill="#6366f1"/>
+                            </svg>
+                            <div class="click-ring"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </li>
+    </div>
+
+    <div class="callout tip">
+        Nếu bạn chưa đặt mật khẩu Wisper, vào Dashboard NVN → <strong>Profile</strong> → <strong>Tài khoản Wisper Cloud Panel</strong> → bấm "Đổi mật khẩu Wisper" để tạo.
+    </div>
+</section>
+
+<!-- ==================== 2. OVERVIEW ==================== -->
+<section id="overview">
+    <h2><span class="num">2</span> Tổng quan màn hình chính</h2>
+
+    <p>Sau khi đăng nhập, bạn thấy danh sách máy chủ. Mỗi máy chủ có:</p>
+
+    <div class="mock">
+        <div class="mock-bar">
+            <div class="mock-dots"><span></span><span></span><span></span></div>
+            <span>Wisper Panel — Máy chủ của tôi</span>
+        </div>
+        <div class="mock-body">
+            <!-- Tab bar -->
+            <div class="tabs">
+                <div class="tab active">Tổng quan</div>
+                <div class="tab">Files</div>
+                <div class="tab">Terminal</div>
+                <div class="tab">Volumes</div>
+                <div class="tab">Environment</div>
+                <div class="tab">Logs</div>
+            </div>
+            <!-- Status -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                <span class="badge badge-running"><span class="dot dot-running"></span> Đang chạy</span>
+                <span style="font-weight:600;font-size:15px;">My Discord Bot</span>
+            </div>
+            <p style="font-size:13px;color:var(--ink-soft);margin-bottom:16px;">
+                512 MB RAM · 0.5 vCPU · 5 GB SSD · 1 coin/giờ
+            </p>
+            <!-- Quick actions -->
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <button class="btn btn-primary" id="btn-open-panel">📂 Quản lý Files</button>
+                <button class="btn btn-secondary">🖥️ Terminal</button>
+                <button class="btn btn-secondary">⚙️ Cài đặt</button>
+            </div>
+        </div>
+    </div>
+
+    <h3>Các tab chính</h3>
+    <div class="steps">
+        <li><strong>Tổng quan</strong> — xem trạng thái máy chủ (đang chạy hay tắt), RAM, CPU, nút bật/tắt.</li>
+        <li><strong>Files</strong> — quản lý tệp tin: upload, tải, sửa, xóa, nén, giải nén. Đây là <em>cách duy nhất</em> truy cập tệp — không có SFTP.</li>
+        <li><strong>Terminal</strong> — gõ lệnh Linux trực tiếp trong máy chủ, như mở CMD trên Windows.</li>
+        <li><strong>Volumes</strong> — ổ cứng ảo để lưu dữ liệu lâu dài (container có thể bị xóa nhưng volume vẫn giữ).</li>
+        <li><strong>Environment</strong> — biến môi trường (như cấu hình) và secret (như mật khẩu, token — giấu không cho xem lại).</li>
+        <li><strong>Logs</strong> — xem log máy chủ chạy ra gì, lỗi gì.</li>
+        <li><strong>Metrics</strong> — biểu đồ CPU, RAM, mạng theo thời gian.</li>
+    </div>
+</section>
+
+<!-- ==================== 3. START / STOP ==================== -->
+<section id="start-stop">
+    <h2><span class="num">3</span> Bật / Tắt / Khởi động lại máy chủ</h2>
+
+    <p>Vào tab <strong>Tổng quan</strong>. Bạn thấy 3 nút:</p>
+
+    <div class="mock">
+        <div class="mock-body">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <span class="badge badge-running"><span class="dot dot-running"></span> Đang chạy</span>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;position:relative;">
+                <div style="position:relative;display:inline-block;">
+                    <button class="btn btn-success" id="btn-start">▶ Bật máy chủ</button>
+                    <div class="pointer-anim" data-target="btn-start" data-x="30" data-y="-2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M4 4l7 16 2-7 7-2z" fill="#22c55e"/></svg>
+                        <div class="click-ring"></div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary">⏹ Tạm dừng</button>
+                <button class="btn btn-secondary">🔄 Khởi động lại</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="steps">
+        <li><strong>Bật</strong> — máy chủ bắt đầu chạy. Mất ~5-10 giây.</li>
+        <li><strong>Tạm dừng</strong> — máy chủ dừng lại, dữ liệu vẫn giữ nguyên. Không tốn coin khi tắt.</li>
+        <li><strong>Khởi động lại</strong> — tắt rồi bật lại ngay. Dùng khi sửa code cần chạy lại.</li>
+    </div>
+
+    <div class="callout tip">
+        Máy chủ tự động tính phí theo giờ khi đang <strong>bật</strong>. Khi tắt thì <strong>không tốn coin</strong>. Dữ liệu trên ổ cứng (Volume) vẫn giữ nguyên khi tắt.
+    </div>
+</section>
+
+<!-- ==================== 4. FILES ==================== -->
+<section id="files">
+    <h2><span class="num">4</span> Quản lý tệp tin</h2>
+
+    <p>Tab <strong>Files</strong> là nơi bạn quản lý mọi tệp tin trên máy chủ — giống như File Explorer trên Windows.</p>
+
+    <div class="mock">
+        <div class="mock-body" style="padding:0;">
+            <!-- Path bar -->
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;font-size:13px;">
+                <span style="color:var(--ink-light);">📁 app</span>
+                <span style="color:var(--ink-light);">/</span>
+                <span style="color:var(--ink-light);">src</span>
+            </div>
+            <!-- Toolbar -->
+            <div style="padding:8px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;">
+                <div style="position:relative;display:inline-block;">
+                    <button class="btn btn-primary" id="btn-upload" style="font-size:12px;padding:5px 10px;">📤 Upload</button>
+                    <div class="pointer-anim" data-target="btn-upload" data-x="25" data-y="-2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M4 4l7 16 2-7 7-2z" fill="#6366f1"/></svg>
+                        <div class="click-ring"></div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" style="font-size:12px;padding:5px 10px;">📁 Thư mục mới</button>
+                <button class="btn btn-secondary" style="font-size:12px;padding:5px 10px;">📄 Tệp mới</button>
+            </div>
+            <!-- File list -->
+            <div style="padding:8px;">
+                <div class="file-row">
+                    <span class="file-icon">📁</span>
+                    <span class="file-name">node_modules</span>
+                    <span class="file-meta">14:30</span>
+                </div>
+                <div class="file-row">
+                    <span class="file-icon">📄</span>
+                    <span class="file-name">index.js</span>
+                    <span class="file-meta">2.1 KB · 14:32</span>
+                </div>
+                <div class="file-row">
+                    <span class="file-icon">📄</span>
+                    <span class="file-name">package.json</span>
+                    <span class="file-meta">480 B · 14:30</span>
+                </div>
+                <div class="file-row">
+                    <span class="file-icon">📦</span>
+                    <span class="file-name">backup.zip</span>
+                    <span class="file-meta">12 MB · 14:25</span>
+                </div>
+            </div>
+            <!-- Status bar -->
+            <div style="padding:8px 14px;border-top:1px solid var(--border);font-size:12px;color:var(--ink-light);">
+                3 mục
+            </div>
+        </div>
+    </div>
+
+    <h3>Các thao tác</h3>
+    <div class="steps">
+        <li><strong>Upload</strong> — bấm nút Upload, chọn tệp. Hoặc <strong>kéo thả</strong> tệp từ máy tính vào trang.</li>
+        <li><strong>Tải về</strong> — bấm phải chuột vào tệp → chọn "Download".</li>
+        <li><strong>Sửa tệp</strong> — bấm đúp vào tệp (nếu nhỏ). Sửa trực tiếp trên trình duyệt, bấm Save.</li>
+        <li><strong>Đổi tên</strong> — bấm phải → "Rename".</li>
+        <li><strong>Xóa</strong> — bấm phải → "Delete". Không thể hoàn tác.</li>
+        <li><strong>Nén</strong> — bấm phải → "Compress" → tạo file .zip.</li>
+        <li><strong>Giải nén</strong> — bấm phải vào file .zip → "Extract".</li>
+        <li><strong>Di chuyển</strong> — chọn nhiều tệp → "Move" → chọn thư mục đích.</li>
+    </div>
+
+    <div class="callout tip">
+        Bạn có thể <strong>kéo thả cả thư mục</strong> vào trang — cấu trúc thư mục con sẽ được tạo lại trên server tự động.
+    </div>
+</section>
+
+<!-- ==================== 5. UPLOAD ==================== -->
+<section id="upload">
+    <h2><span class="num">5</span> Tải tệp và thư mục lên</h2>
+
+    <p>Có 3 cách tải lên:</p>
+
+    <div class="steps">
+        <li>
+            <strong>Nút Upload</strong>
+            Bấm nút <code>📤 Upload</code> ở thanh công cụ → chọn tệp từ máy tính → tải lên tự động.
+        </li>
+        <li>
+            <strong>Kéo thả tệp</strong>
+            Kéo tệp từ máy tính thả vào bất kỳ đâu trên trang. Một vùng màu tím hiện ra báo bạn thả được.
+        </li>
+        <li>
+            <strong>Kéo thả thư mục</strong>
+            Kéo cả thư mục từ máy tính thả vào. Hệ thống sẽ đọc tất cả tệp bên trong và tạo lại cấu trúc thư mục trên server.
+        </li>
+    </div>
+
+    <h3>Tải lên bị đứt mạng?</h3>
+    <div class="callout ok">
+        Không sao cả! Wisper tải tệp theo từng phần (chunk). Nếu mạng đứt giữa chừng, khi có mạng lại nó tự động tiếp tục từ nơi dừng — không phải tải lại từ đầu.
+    </div>
+
+    <div class="mock">
+        <div class="mock-body">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <span style="font-weight:600;font-size:14px;">bot.py</span>
+                <span class="badge" style="background:var(--brand-bg);color:var(--brand);">Đang tải lên</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="upload-bar"></div>
+            </div>
+            <div style="font-size:12px;color:var(--ink-light);margin-top:4px;">
+                840 KB trên 1.4 MB · 60%
+            </div>
+        </div>
+    </div>
+
+    <div class="callout tip">
+        Nếu mạng yếu, thanh tiến trình có thể hiện <strong>"Đang chờ tiếp tục"</strong> (màu vàng) — cứ để đó, khi có mạng nó tự chạy tiếp.
+    </div>
+</section>
+
+<!-- ==================== 6. TERMINAL ==================== -->
+<section id="terminal">
+    <h2><span class="num">6</span> Terminal — gõ lệnh trực tiếp</h2>
+
+    <p>Terminal giống như mở CMD trên Windows, nhưng chạy Linux bên trong máy chủ của bạn. Bạn gõ lệnh, nó chạy ngay.</p>
+
+    <div class="mock">
+        <div class="mock-body" style="padding:0;">
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:14px;font-weight:600;">🖥️ Terminal</span>
+                <div style="position:relative;display:inline-block;">
+                    <button class="btn btn-primary" id="btn-terminal" style="font-size:12px;">Bắt đầu Terminal</button>
+                    <div class="pointer-anim" data-target="btn-terminal" data-x="35" data-y="-2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M4 4l7 16 2-7 7-2z" fill="#6366f1"/></svg>
+                        <div class="click-ring"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="terminal">
+                <div><span class="prompt">root@wisper:~$</span> ls -la</div>
+                <div style="color:#94a3b8;">total 24</div>
+                <div style="color:#94a3b8;">drwxr-xr-x  3 root root 4096 Sep 20 14:30 .</div>
+                <div style="color:#94a3b8;">drwxr-xr-x  3 root root 4096 Sep 20 14:30 ..</div>
+                <div style="color:#94a3b8;">-rw-r--r--  1 root root  280 Sep 20 14:32 index.js</div>
+                <div style="color:#94a3b8;">-rw-r--r--  1 root root  480 Sep 20 14:30 package.json</div>
+                <div><span class="prompt">root@wisper:~$</span> <span class="cursor"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="steps">
+        <li><strong>Mở tab Terminal</strong> — nhưng Terminal chưa chạy ngay. Cần bấm nút "Bắt đầu Terminal".</li>
+        <li><strong>Gõ lệnh</strong> — như trên Linux thật. Ví dụ: <code>ls</code> xem tệp, <code>cd</code> vào thư mục, <code>python3 bot.py</code> chạy bot.</li>
+        <li><strong>Trên điện thoại</strong> — có thanh phím phụ ở dưới: Tab, Ctrl, mũi tên, và nút Dán.</li>
+    </div>
+
+    <div class="callout warn">
+        Terminal tự tắt sau một thời gian không dùng. Không ảnh hưởng máy chủ — chỉ shell tắt thôi. Bấm "Bắt đầu Terminal" lại là được.
+    </div>
+</section>
+
+<!-- ==================== 7. VOLUMES ==================== -->
+<section id="volumes">
+    <h2><span class="num">7</span> Ổ cứng (Volume) — lưu dữ liệu lâu dài</h2>
+
+    <p>Volume giống như ổ cứng ngoài — dữ liệu trên đó vẫn giữ ngay cả khi container bị xóa và tạo lại.</p>
+
+    <div class="mock">
+        <div class="mock-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <span style="font-weight:600;font-size:15px;">Volumes</span>
+                <div style="position:relative;display:inline-block;">
+                    <button class="btn btn-primary" id="btn-attach-vol" style="font-size:12px;">＋ Gắn ổ cứng</button>
+                    <div class="pointer-anim" data-target="btn-attach-vol" data-x="30" data-y="-2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M4 4l7 16 2-7 7-2z" fill="#6366f1"/></svg>
+                        <div class="click-ring"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="volume-card">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <span style="font-weight:600;">data</span>
+                    <span style="font-size:12px;color:var(--ink-light);">· 5 GB</span>
+                    <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);">📋 Copy</button>
+                </div>
+                <div class="volume-path">/app/data</div>
+                <div style="margin-top:10px;">
+                    <div class="progress-track" style="height:6px;">
+                        <div class="progress-fill" style="width:32%;"></div>
+                    </div>
+                    <div style="font-size:12px;color:var(--ink-light);margin-top:4px;">1.6 GB đã dùng / 5 GB</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="steps">
+        <li><strong>Bấm "Gắn ổ cứng"</strong> — đặt tên, chọn dung lượng (tối thiểu 1 MB, tối đa 4 TB), chọn đường dẫn gắn (ví dụ <code>/app/data</code>).</li>
+        <li><strong>Copy đường dẫn</strong> — bấm nút 📋 cạnh đường dẫn gắn. Dán vào Terminal hoặc code để truy cập dữ liệu.</li>
+        <li><strong>Dữ liệu an toàn</strong> — khi container bị xóa/tạo lại, volume vẫn giữ nguyên. Cài lại bot không mất data.</li>
+    </div>
+
+    <div class="callout tip">
+        Volume mặc định là ổ chứa dữ liệu — gắn vào <code>/app</code> thì toàn bộ tệp trong <code>/app</code> được lưu lâu dài. Gắn vào <code>/app/data</code> thì chỉ thư mục <code>data</code> được lưu.
+    </div>
+</section>
+
+<!-- ==================== 8. ENVIRONMENT ==================== -->
+<section id="env">
+    <h2><span class="num">8</span> Biến môi trường & Secret</h2>
+
+    <p>Tab <strong>Environment</strong> — nơi bạn đặt cấu hình cho bot/ứng dụng, như token Discord, mật khẩu database, cổng chạy.</p>
+
+    <div class="mock">
+        <div class="mock-body">
+            <h3 style="margin-top:0;">Biến môi trường</h3>
+            <div class="env-row">
+                <span class="env-key">PORT</span>
+                <span class="env-val">8080</span>
+            </div>
+            <div class="env-row">
+                <span class="env-key">NODE_ENV</span>
+                <span class="env-val">production</span>
+            </div>
+            <h3>Secret (giấu giá trị)</h3>
+            <div class="env-row">
+                <span class="env-key">DISCORD_TOKEN</span>
+                <span class="env-secret">🔒 hidden</span>
+                <button class="btn btn-ghost" style="font-size:11px;margin-left:auto;">Thay giá trị</button>
+            </div>
+            <div class="env-row" style="border-bottom:none;">
+                <span class="env-key">DB_PASSWORD</span>
+                <span class="env-secret">🔒 hidden</span>
+                <button class="btn btn-ghost" style="font-size:11px;margin-left:auto;">Thay giá trị</button>
+            </div>
+        </div>
+    </div>
+
+    <h3>Khác biệt</h3>
+    <div class="steps">
+        <li><strong>Biến môi trường</strong> — giá trị hiện rõ, ai cũng xem được. Dùng cho cấu hình không nhạy cảm (PORT, NODE_ENV...).</li>
+        <li><strong>Secret</strong> — giá trị bị ẩn, đặt xong không xem lại được. Chỉ thay thế bằng giá trị mới. Dùng cho token, mật khẩu.</li>
+    </div>
+
+    <div class="callout tip">
+        Sau khi thêm/sửa biến, bấm <strong>Khởi động lại</strong> máy chủ để áp dụng.
+    </div>
+</section>
+
+<!-- ==================== 9. DOMAINS ==================== -->
+<section id="domains">
+    <h2><span class="num">9</span> Tên miền (Domain)</h2>
+
+    <p>Tab <strong>Domains</strong> — gắn tên miền vào máy chủ để truy cập từ Internet.</p>
+
+    <div class="steps">
+        <li><strong>Thêm domain</strong> — nhập tên miền (ví dụ <code>bot.example.com</code>). Wisper tự xin chứng chỉ TLS (HTTPS).</li>
+        <li><strong>Trỏ DNS</strong> — cấu hình DNS trỏ về IP node. Hệ thống tự động cấp HTTPS.</li>
+        <li><strong>Wildcard</strong> — hỗ trợ <code>*.example.com</code> cho nhiều subdomain.</li>
+    </div>
+
+    <div class="callout ok">
+        HTTPS tự động — không cần Let's Encrypt hay cấu hình SSL thủ công.
+    </div>
+</section>
+
+<!-- ==================== 10. LOGS & METRICS ==================== -->
+<section id="logs">
+    <h2><span class="num">10</span> Xem log & Theo dõi hiệu năng</h2>
+
+    <h3>Logs</h3>
+    <p>Tab <strong>Logs</strong> — xem máy chủ đang in ra gì. Giống như mở console — lỗi, warning, info đều hiện.</p>
+
+    <div class="terminal" style="font-size:12px;">
+        <div style="color:#f59e0b;">[WARN] Bot đang kết nối lại Discord...</div>
+        <div style="color:#22c55e;">[INFO] Đã kết nối Discord thành công</div>
+        <div style="color:#a3e635;">[INFO] Bot online, serving 3 guilds</div>
+    </div>
+
+    <h3>Metrics</h3>
+    <p>Tab <strong>Metrics</strong> — biểu đồ CPU, RAM, network theo thời gian thực.</p>
+
+    <div class="callout tip">
+        Nếu bot chạy chậm, vào Metrics xem có phải hết RAM không. Nếu CPU luôn 100%, cần nâng gói.
+    </div>
+</section>
+
+<!-- ==================== 11. SETTINGS ==================== -->
+<section id="settings">
+    <h2><span class="num">11</span> Cài đặt máy chủ</h2>
+
+    <p>Tab <strong>Settings</strong> — đổi cấu hình máy chủ:</p>
+
+    <div class="steps">
+        <li><strong>Lệnh chạy</strong> — lệnh khi máy chủ bật (ví dụ <code>python3 bot.py</code> hoặc <code>node index.js</code>).</li>
+        <li><strong>Image</strong> — image Docker (ví dụ <code>python:3.12-slim</code>, <code>node:22</code>).</li>
+        <li><strong>RAM / CPU</strong> — giới hạn tài nguyên.</li>
+        <li><strong>Giới hạn process</strong> — số tối đa process (chống fork bomb).</li>
+        <li><strong>Auto-restart</strong> — tự khởi động lại khi crash.</li>
+        <li><strong>Xóa máy chủ</strong> — xóa vĩnh viễn. Dữ liệu trên volume vẫn còn cho đến khi purge.</li>
+    </div>
+
+    <div class="callout warn">
+        Xóa máy chủ là <strong>không thể hoàn tác</strong>. Dữ liệu trên volume vẫn còn nhưng container, log, env bị mất.
+    </div>
+</section>
+
+<!-- ==================== 12. PASSWORD ==================== -->
+<section id="password">
+    <h2><span class="num">12</span> Đặt / Đổi mật khẩu Wisper</h2>
+
+    <p>Mật khẩu Wisper khác mật khẩu Dashboard NVN. Bạn đặt mật khẩu Wisper từ trang Profile trên NVN.</p>
+
+    <div class="steps">
+        <li><strong>Vào Dashboard NVN</strong> → bấm ảnh đại diện → <strong>Profile</strong>.</li>
+        <li><strong>Tìm mục "Tài khoản Wisper Cloud Panel"</strong> — ở giữa trang.</li>
+        <li>
+            <strong>Bấm "Đổi mật khẩu Wisper"</strong>
+            <div class="mock" style="max-width:380px;">
+                <div class="mock-body">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                        <span style="font-size:20px;">🔑</span>
+                        <span style="font-weight:600;font-size:14px;">Tài khoản Wisper Cloud Panel</span>
+                    </div>
+                    <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px;">
+                        Dùng để đăng nhập trực tiếp vào Wisper Panel.
+                    </p>
+                    <div style="position:relative;display:inline-block;">
+                        <button class="btn btn-secondary" id="btn-change-pass">🔑 Đổi mật khẩu Wisper</button>
+                        <div class="pointer-anim" data-target="btn-change-pass" data-x="40" data-y="-2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M4 4l7 16 2-7 7-2z" fill="#6366f1"/></svg>
+                            <div class="click-ring"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </li>
+        <li><strong>Nhập mật khẩu mới</strong> — tối thiểu 12 ký tự. Có nút tạo ngẫu nhiên.</li>
+        <li><strong>Lưu</strong> — mật khẩu cập nhật trên Wisper ngay. Dùng để đăng nhập Wisper Panel.</li>
+    </div>
+
+    <div class="callout ok">
+        Mật khẩu Wisper mã hóa bằng BCrypt — an toàn. Khi đổi mật khẩu, tất cả phiên đăng nhập cũ tự động hết hiệu lực.
+    </div>
+</section>
+
+<footer>
+    <p>Wisper Panel — Nền tảng máy chủ ảo hóa container an toàn · Tài liệu này cập nhật cho v0.1.16</p>
+    <p style="margin-top:8px;">Câu hỏi? Vào Discord NVN Official — link ở Dashboard.</p>
+</footer>
+
+</div>
+
+<script>
+// Pointer animation: triggers on scroll into view
+(function() {
+    'use strict';
+
+    const pointers = document.querySelectorAll('.pointer-anim');
+    const observed = new WeakSet();
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !observed.has(entry.target)) {
+                observed.add(entry.target);
+                // Small delay so it feels natural
+                setTimeout(() => {
+                    entry.target.classList.add('animate');
+                }, 400);
+            }
+        });
+    }, { threshold: 0.5, rootMargin: '0px 0px -100px 0px' });
+
+    pointers.forEach(p => observer.observe(p));
+
+    // Animate upload progress bar on scroll
+    const uploadBar = document.getElementById('upload-bar');
+    if (uploadBar) {
+        const barObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => uploadBar.classList.add('animated'), 300);
+                    barObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        barObserver.observe(uploadBar);
+    }
+
+    // Smooth scroll for TOC links
+    document.querySelectorAll('.toc a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = document.querySelector(link.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+})();
+</script>
+
+</body>
+</html>
