@@ -174,7 +174,7 @@ export function FileList({
                 shown: entries.length.toLocaleString(),
                 total: total.toLocaleString(),
               })
-            : t('files.list.count_entries', {count: entries.length.toLocaleString()})}
+            : ''}
           {hasMore && !isDefaultOrder(order)
             ? t('files.list.sorted_note')
             : ''}

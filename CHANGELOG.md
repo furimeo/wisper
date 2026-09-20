@@ -3,6 +3,27 @@
 All notable changes to wisper are documented here. The panel and the node
 daemon are versioned together — a tag `vX.Y.Z` builds both.
 
+## v0.1.12 — 2026-09-20
+
+### Fixed
+
+- **Upload 500 on chunk endpoint.** `FileOperationFailed`,
+  `FileOperationTimedOut`, `NodeOffline` and `TerminalUnavailable` had no
+  `@ResponseStatus`, so when the node rejected or timed out on a chunk the
+  panel returned 500 instead of 422/503/504. The browser could not
+  distinguish a retryable refusal from a server crash, so the upload stalled
+  at "0 bytes on 1.4 MB".
+
+- **Duplicate item count in the file list.** The list footer and the
+  status bar both rendered a count ("1 mục" / "1 mục") on two lines. The
+  footer now only shows "showing X of Y" when paging — the status bar owns
+  the count.
+
+- **File manager trapped inside a Card frame.** Replaced the `Card` wrapper
+  with a plain full-bleed container so the listing, path bar and status bar
+  fill the page width like a real file manager instead of sitting inside a
+  bordered box.
+
 ## v0.1.11 — 2026-09-20
 
 ### Fixed

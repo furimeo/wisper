@@ -2,6 +2,9 @@ package lhqm.furimeo.wisper.node;
 
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 /**
  * The node has no open control stream, so nothing could be handed to it.
  *
@@ -14,6 +17,7 @@ import java.util.UUID;
  * been cut is still running every container it was given; a screen that reports this as
  * an outage teaches operators to ignore outages.
  */
+@ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
 public class NodeOffline extends RuntimeException {
 
     private final UUID nodeId;

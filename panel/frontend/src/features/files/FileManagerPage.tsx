@@ -2,7 +2,6 @@ import {Head, router, usePage} from '@inertiajs/react'
 import {useCallback, useEffect, useMemo, useState} from 'react'
 
 import {
-  Card,
   ErrorState,
   PageHeader,
   Spinner,
@@ -347,7 +346,7 @@ function FileManagerBrowser({
         description={t('files.page.page_desc', {root: root.label, service: service.name})}
       />
 
-      <Card padded={false} className="overflow-hidden shadow-sm">
+      <div className="overflow-hidden rounded-card border border-border-subtle bg-surface-raised shadow-sm">
         <FileChromeBar
           serviceId={serviceId}
           roots={roots}
@@ -430,7 +429,7 @@ function FileManagerBrowser({
         )}
 
         <FileStatusBar entries={entries} selected={selection.entries} />
-      </Card>
+      </div>
 
       <FileActionMenu
         open={menu !== null}

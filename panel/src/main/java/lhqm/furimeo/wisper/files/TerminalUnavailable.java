@@ -2,6 +2,9 @@ package lhqm.furimeo.wisper.files;
 
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 /**
  * A terminal could not be opened.
  *
@@ -14,6 +17,7 @@ import java.util.UUID;
  * workload has no running container to attach to, or when the node refused the session
  * outright.
  */
+@ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
 public class TerminalUnavailable extends RuntimeException {
 
     private final UUID nodeId;

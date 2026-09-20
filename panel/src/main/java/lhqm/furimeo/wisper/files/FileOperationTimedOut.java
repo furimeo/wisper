@@ -2,6 +2,9 @@ package lhqm.furimeo.wisper.files;
 
 import java.time.Duration;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 /**
  * A node accepted a file operation and did not answer in time.
  *
@@ -14,6 +17,7 @@ import java.time.Duration;
  * is reachable. Telling a customer their node is down when it is merely slow sends them to
  * the wrong screen.
  */
+@ResponseStatus(HttpStatus.GATEWAY_TIMEOUT)
 public class FileOperationTimedOut extends RuntimeException {
 
     private final String path;

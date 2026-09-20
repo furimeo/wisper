@@ -3,6 +3,9 @@ package lhqm.furimeo.wisper.files;
 import lhqm.furimeo.wisper.proto.v1.FileError;
 import lhqm.furimeo.wisper.proto.v1.FileErrorCode;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 /**
  * The node refused or could not complete a file operation.
  *
@@ -28,6 +31,7 @@ import lhqm.furimeo.wisper.proto.v1.FileErrorCode;
  * in front of a customer. {@code path} is relative to the root and says which entry an
  * archive extraction stopped on.
  */
+@ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
 public class FileOperationFailed extends RuntimeException {
 
     private final FileError error;
